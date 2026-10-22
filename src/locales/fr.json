@@ -2405,7 +2405,10 @@
     "view_settings": "Paramètres des vues",
     "weather_in_the_header": "Météo dans l’en-tête",
     "who_is_home_right": "Qui est à la maison en ce moment",
-    "your_own_images_saved": "Vos propres images enregistrées dans la disposition : elles apparaissent sous Fond d’écran et dans l’écran de veille"
+    "your_own_images_saved": "Vos propres images enregistrées dans la disposition : elles apparaissent sous Fond d’écran et dans l’écran de veille",
+    "visible_people": "Personnes visibles",
+    "visible_people_help": "Choisissez les personnes affichées dans le bandeau du foyer, les cartes famille et la carte automatique. Les comptes et autorisations Home Assistant restent inchangés.",
+    "show_person": "Afficher {name}"
   },
   "looks": {
     "a_ready_made_set": "Un ensemble prêt à l’emploi : accent, fond d’écran et verre. Vous pourrez ensuite modifier l’accent et le fond d’écran ci-dessous.",

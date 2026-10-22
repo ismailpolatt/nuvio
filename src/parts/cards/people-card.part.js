@@ -6,7 +6,7 @@ const hgZoneName = (hass, st) => {
 /* --- lista osób + strefy --- */
 class HGPeopleCard extends HGBase {
   defaults() { return { title: hgT('common.household'), icon: 'mdi:account-group-outline', persons: [], zones: [] }; }
-  ents() { return this._config.persons.concat(this._config.zones); }
+  ents() { return hgVisiblePersons(this._config.persons).concat(this._config.zones); }
   _extraSig() { return Math.floor(Date.now() / 60000); }
   css() {
     return U(`
@@ -31,7 +31,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); overflow:auto
   }
   render() {
     const c = this._config, h = this._hass;
-    const rows = c.persons.map((e) => {
+    const rows = hgVisiblePersons(c.persons).map((e) => {
       const s = H.st(h, e); if (!s) return '';
       const home = s.state === 'home', since = new Date(s.last_changed);
       return `<button class="p lr ${home ? 'home' : ''}" data-act="more" data-e="${e}" title="${H.esc(s.attributes.friendly_name)} – ${hgT('cards.people.details')}">${hgAvatar(h, e, 'av')}

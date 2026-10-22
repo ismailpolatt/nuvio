@@ -102,7 +102,7 @@ Object.assign(HGWall, {
     this._glt = now; const G = this.gget(), root = el.querySelector('.ng'); el.style.setProperty('--nw-dim', this.get().dim); this.glRender(root, G, h, {}); },
   glNight(h) { const s = h && h.states['sun.sun']; if (s) return s.state === 'below_horizon'; const hr = new Date().getHours(); return hr >= 22 || hr < 6; },
   glPut(root, sel, html, key) { const n = root.querySelector(sel); if (!n) return null; const k = key || sel; root._gk = root._gk || {}; if (root._gk[k] !== html) { root._gk[k] = html; n.innerHTML = html; } return n; },
-  glPeople(h, G) { const S = h.states, L = G.fam.who.length ? G.fam.who : Object.keys(S).filter((e) => e.startsWith('person.')).sort(); return L.filter((e) => S[e]); },
+  glPeople(h, G) { const S = h.states, L = G.fam.who.length ? G.fam.who : Object.keys(S).filter((e) => e.startsWith('person.')).sort(); return hgVisiblePersons(L).filter((e) => S[e]); },
   glRender(root, G, h, o) { const B = G.bg, pv = !!o.pv, rm = G.rm === 'on';
     root.classList.toggle('rm', rm); root.classList.toggle('nh', !G.hint.on || pv); root.classList.toggle('pv', pv);
     root.style.cssText = `--c1:${B.c1};--c2:${B.c2};--c3:${B.c3};--o1:${B.o1};--o2:${B.o2};--oi:${B.oi};--rad:24;--nd:${B.night && this.glNight(h) ? (1 - B.nd).toFixed(2) : 1}${o.pu ? ';--pu:' + o.pu : ''}`;

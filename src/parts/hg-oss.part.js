@@ -6,6 +6,12 @@ const HG_ASSET = (() => { try { const u = import.meta.url; if (u) return u.repla
 const hgCdn = window.hgCdn = (u) => { try { const v = String(HG_BUILD).split('+')[0]; if (!/^\d+\.\d+\.\d+$/.test(v) || typeof u !== 'string' || !u.startsWith(HG_ASSET)) return '';
   return 'https://cdn.jsdelivr.net/gh/kczepiec/nuvio@v' + v + '/dist/' + u.slice(HG_ASSET.length).replace(/[?#].*$/, ''); } catch (e) { return ''; } };
 window.__hgNoVer = true;   /* wersję pilnuje HACS (hacstag) – bez własnego komunikatu o nowej wersji */
+/* Display preference only: Home Assistant accounts and permissions are unchanged. */
+const hgVisiblePersons = (persons, wiz) => {
+  const w = wiz === undefined ? (typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz) : wiz;
+  const hidden = new Set(w && Array.isArray(w.hiddenPersons) ? w.hiddenPersons : []);
+  return (Array.isArray(persons) ? persons : []).filter((e) => !hidden.has(e));
+};
 const HG_DASH = () => (location.pathname.split('/')[1] || 'home-glass');
 const HG_P = (v) => `/${HG_DASH()}/${v}`;
 /* ===== Wspólny dashboard: jeden układ dla wszystkich użytkowników HA, ustawiany przez admina.
@@ -106,7 +112,7 @@ async function hgGenerate(hass, opt) {
   /* nawigacja i tytuły widoków dopiero z katalogiem języka (maks. 3 s, potem angielski i hg-lang, gdy dotrze); model wczytywany równolegle */
   const lang = hgLang(hass, HGLang.get() || opt.language || hgWizLang(wiz)), [M0] = await Promise.all([HGModel.load(hass), HGI18n.ready(lang)]);
   /* _empty: tylko testy – symulacja instancji bez danych */
-  const M = opt._empty ? Object.assign({}, M0, { weather: null, sun: null, climate: [], scenes: [], power: [], persons: [], media: [], cams: [], trackers: [], calendars: [] }) : M0;
+  const M = opt._empty ? Object.assign({}, M0, { weather: null, sun: null, climate: [], scenes: [], power: [], persons: [], media: [], cams: [], trackers: [], calendars: [] }) : Object.assign({}, M0, { persons: hgVisiblePersons(M0.persons, wiz) });
   const want = (v) => (!wiz || !wiz.views || wiz.views.includes(v)) && !vOff(v);
   const V = [['dashboard', hgT('nav.panel'), 'mdi:view-dashboard-outline', true], ['rooms', hgT('nav.rooms'), 'mdi:sofa-outline', Object.keys(M.areas).length > 0 || !!(wiz && wiz.areas && (wiz.areas.virtual || []).length)],
     ['multimedia', hgT('nav.media'), 'mdi:play-box-multiple-outline', M.media.length > 0], ['kamery', hgT('nav.cams'), 'mdi:cctv', M.cams.length > 0],

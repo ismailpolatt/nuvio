@@ -23,6 +23,12 @@ Derleme Windows üzerinde npm kabuk betiği yerine Node ile esbuild giriş nokta
 
 ## Geliştirme sırası
 
+### Görünür kişiler
+
+Görünüm ayarlarında **Başlık ve gezinme / Görünür kişiler** bölümünden kişi anahtarlarını kapatıp başlık ayarlarını kaydet. Dil çevirisine göre bölüm adı farklı görünebilir. Seçim ev halkı şeridine, aile/kişi listelerine, otomatik Aile sayfasına, otomatik haritadaki kişi listesine ve duvar ekranının aile bölümüne uygulanır. Tüm kişiler gizlenebilir; yeni kişiler varsayılan olarak görünür.
+
+Bu bir görünüm tercihidir. Home Assistant hesaplarını, oturum açmış kullanıcının profilini veya erişim izinlerini değiştirmez. Açıkça eklenmiş bağımsız kişi kartları, cihaz takipçileri ve Home Assistant'ın diğer panoları için erişim sınırı sağlamaz. Tercih mevcut Nuvio düzeninin ortak veya kişisel kayıt kapsamını kullanır; dışa/içe aktarmayla taşınır. Kişisel düzen isteyen kullanıcı önce Nuvio'nun kendi düzen seçeneğini kullanmalıdır.
+
 Türkçe kaynak kataloğu ve tekrarlanabilir derleme ilk adımdır. Sonraki çalışma Samsung Tab S9+ yatay ekranındaki kart hizaları, görünür termostatlar ve yoğunluğu ayarlanabilen yerleşimdir. Bu yerleşim değişiklikleri henüz uygulanmadı.
 
 Canlı Home Assistant adresleri, kimlik bilgileri ve kişisel cihaz kimlikleri bu depoya eklenmez. Üretilen dosyalar önce test panelinde doğrulanır.

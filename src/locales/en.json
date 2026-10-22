@@ -2370,7 +2370,10 @@
     "view_settings": "View settings",
     "weather_in_the_header": "Weather in the header",
     "who_is_home_right": "Who is home right now",
-    "your_own_images_saved": "Your own images saved in the layout: they show up under Background and in the screensaver"
+    "your_own_images_saved": "Your own images saved in the layout: they show up under Background and in the screensaver",
+    "visible_people": "Visible people",
+    "visible_people_help": "Choose who appears in the household strip, family cards and automatic map. This does not change Home Assistant accounts or permissions.",
+    "show_person": "Show {name}"
   },
   "looks": {
     "a_ready_made_set": "A ready-made set: accent, background and glass. You can change the accent and background below afterwards.",

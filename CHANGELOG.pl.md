@@ -5,6 +5,7 @@
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
 ### Niewydane (fork)
+- Dodano wybór widocznych osób w ustawieniach wyglądu.
 - Dodano pełny katalog turecki i obsługę kompilacji w Windows.
 
 ### 2.19.0

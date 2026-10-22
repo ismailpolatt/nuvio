@@ -861,6 +861,8 @@ class HGPage extends HTMLElement {
     let hb = this._config.hub; const WH = typeof HGL !== 'undefined' && HGL.data && HGL.data.wiz && HGL.data.wiz.hub;
     /* tytuł i podtytuł paska z bieżącego układu (jedno źródło: wiz.hub), więc zmiana w Ustawieniach działa bez przebudowy pulpitu */
     if (hb && WH && typeof WH === 'object') hb = Object.assign({}, hb, { title: WH.title || hgT('common.household'), subtitle: WH.subtitle || hgT('page.who_is_home_right') });
+    if (WH === false) hb = null;
+    if (hb) hb = Object.assign({}, hb, { persons: hgVisiblePersons(hb.persons) });
     this.toggleAttribute('hub-right', !!(hb && hb.pos === 'right')); if (!hb) { this._hubEl.style.display = 'none'; return; }
     const sig = hb.title + '|' + hb.subtitle + JSON.stringify((hb.persons || []).map((p) => { const s = H.st(this._hass, p); return s ? [s.state, s.attributes.entity_picture, s.attributes.friendly_name] : null; }));
     if (!force && sig === this._sigHub) return; this._sigHub = sig;

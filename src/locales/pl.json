@@ -2440,7 +2440,10 @@
     "view_settings": "Ustawienia widoków",
     "weather_in_the_header": "Pogoda w nagłówku",
     "who_is_home_right": "Kto jest teraz w domu",
-    "your_own_images_saved": "Własne zdjęcia zapisane w układzie: pojawiają się w sekcji Tło i w wygaszaczu"
+    "your_own_images_saved": "Własne zdjęcia zapisane w układzie: pojawiają się w sekcji Tło i w wygaszaczu",
+    "visible_people": "Widoczne osoby",
+    "visible_people_help": "Wybierz osoby widoczne na pasku domowników, kartach rodziny i automatycznej mapie. Konta i uprawnienia Home Assistant pozostają bez zmian.",
+    "show_person": "Pokaż {name}"
   },
   "looks": {
     "a_ready_made_set": "Gotowy zestaw: akcent, tło i szkło. Akcent i tło zmienisz potem niżej.",

@@ -2370,7 +2370,10 @@
     "view_settings": "Ayarları görüntüle",
     "weather_in_the_header": "Başlıktaki hava durumu",
     "who_is_home_right": "Şu an evde olanlar",
-    "your_own_images_saved": "Düzene kaydedilen kendi resimleriniz: Arka Plan altında ve ekran koruyucuda görünürler"
+    "your_own_images_saved": "Düzene kaydedilen kendi resimleriniz: Arka Plan altında ve ekran koruyucuda görünürler",
+    "visible_people": "Görünür kişiler",
+    "visible_people_help": "Ev halkı şeridinde, aile kartlarında ve otomatik haritada gösterilecek kişileri seç. Home Assistant hesapları ve izinleri değişmez.",
+    "show_person": "{name} gösterilsin"
   },
   "looks": {
     "a_ready_made_set": "Hazır bir set: vurgu, arka plan ve cam. Daha sonra aksanı ve arka planı aşağıdan değiştirebilirsiniz.",

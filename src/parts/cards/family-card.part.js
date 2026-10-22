@@ -2,7 +2,7 @@
 class HGFamilyCard extends HGBase {
   static getStubConfig() { return {}; }
   defaults() { return { title: hgT('cards.family.family'), persons: null, add: true }; }
-  list() { const c = this._config, h = this._hass; return c.persons && c.persons.length ? c.persons : Object.keys((h && h.states) || {}).filter((e) => e.startsWith('person.')).sort(); }
+  list() { const c = this._config, h = this._hass; return hgVisiblePersons(c.persons && c.persons.length ? c.persons : Object.keys((h && h.states) || {}).filter((e) => e.startsWith('person.')).sort()); }
   ents() { return this.list(); }
   _changed() { this._entsC = null; return super._changed(); }
   css() { return HG_NV_CSS + U(`
