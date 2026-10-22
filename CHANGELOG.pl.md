@@ -5,6 +5,7 @@
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
 ### Niewydane (fork)
+- Dodano ustawienia kart strony głównej, podsumowanie stanu domu, filtry pokoju, nocny wygaszacz i porównanie zużycia energii.
 - Ustabilizowano przejścia stron i rozmiary górnej nawigacji.
 - Usunięto powieloną nawigację boczną na komputerach i tabletach.
 - Dodano siatkę strony głównej na tablecie w poziomie i dwa kompaktowe termostaty.

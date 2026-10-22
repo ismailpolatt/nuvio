@@ -1156,6 +1156,7 @@ const HG_EDIT = {
     for (const c of out) { const z = L.size[c._k]; if (z && !areas) { if (z === 'l') c.span = 'full'; else if (z === 'm') c.span = 2; else c.span = 1; } c._hid = L.hidden.includes(c._k); }
     if (tl.added.some((x) => areas || !x.c)) { out.push({ type: 'custom:hg-tiles-card', scope: sc + ':tiles', _k: '_tiles', span: 'full', min_h: 40, _tiles: true, ...(areas ? {} : { nocomp: true }) });
       const hi = out.findIndex((c) => c.hint_sc); if (hi >= 0) out.push(out.splice(hi, 1)[0]); }   /* podpowiedź pod kafelkami */
+    for (const c of out) if (c.home_optional && !(L.conf[c._k] || {}).home_visible) c._hid = true;
     return out;
   },
   _isAdmin() { return !!(this._hass && this._hass.user && this._hass.user.is_admin); },
@@ -1180,6 +1181,7 @@ const HG_EDIT = {
       fetch(HG_ASSET + 'nuvio.js?nocache=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((t) => { const m = new RegExp('HG_BUILD = ' + "'" + "([^']+)'").exec(t || '');
         if (m && m[1] !== HG_BUILD) this._eToast(hgT('edit.version_mismatch', { version: HG_BUILD.split('+')[0], server: m[1].split('+')[0] })); }).catch(() => {}); }
     if (this._editing || !this._canEdit()) return;
+    if (window.HGDashboard) { HGDashboard.draft = null; HGDashboard.energyDraft = null; }
     this._editing = true; HGL.editing = true; this._eSnap = JSON.stringify(HGL.data);
     this._menuOpen = false; this._paintTop(true);
     this.setAttribute('editing', '');
@@ -1290,6 +1292,7 @@ const HG_EDIT = {
   _eCtl(b, e) {
     this._eTrig = b;
     const a = b.dataset.hge;
+    if (a.startsWith('home-') && window.HGDashboard) return HGDashboard.act(this, b, a);
     if (a === 'done') return this._editExit(true);
     if (a === 'cancel') return this._editExit(false);
     if (a === 'reset') { const ps = this._pageScope(); const sc = new Set(this._eConts().map((c) => c.scope)); if (ps) { sc.add(ps); sc.add(ps + ':tiles'); }
@@ -1660,7 +1663,7 @@ const HG_EDIT = {
     const T = HGApp.tokens(acc);
     const isC = !HG_ACCENTS.some(([c]) => c.toUpperCase() === acc), c1 = bg && (bg.kind === 'color' || bg.kind === 'gradient') ? bg.v : ('#' + '16202B'), c2 = bg && bg.v2 ? bg.v2 : ('#' + '05070A'), dv = Math.round(dim * 100);
     const ck = H.icon('mdi:check');
-    const TB = [['look', 'mdi:palette-outline', hgT('edit.appearance')], ['views', 'mdi:view-carousel-outline', hgT('edit.views')], ['rooms', 'mdi:sofa-outline', hgT('common.rooms')], ['head', 'mdi:page-layout-header', hgT('edit.header_and_navigation')], ['bg', 'mdi:image-multiple-outline', hgT('edit.backgrounds')], ['wall', 'mdi:tablet-dashboard', hgT('edit.screensaver')], ['users', 'mdi:account-multiple-outline', hgT('edit.users')], ['bk', 'mdi:backup-restore', hgT('edit.backup')]];
+    const TB = [['home', 'mdi:view-dashboard-outline', hgT('dashboardx.personalize')], ['look', 'mdi:palette-outline', hgT('edit.appearance')], ['views', 'mdi:view-carousel-outline', hgT('edit.views')], ['rooms', 'mdi:sofa-outline', hgT('common.rooms')], ['head', 'mdi:page-layout-header', hgT('edit.header_and_navigation')], ['bg', 'mdi:image-multiple-outline', hgT('edit.backgrounds')], ['wall', 'mdi:tablet-dashboard', hgT('edit.screensaver')], ['users', 'mdi:account-multiple-outline', hgT('edit.users')], ['bk', 'mdi:backup-restore', hgT('edit.backup')]];
     if (!TB.some((t) => t[0] === this._lkTab)) this._lkTab = 'look'; const at = this._lkTab;
     const html0 = `<div class="hs-sc lk-sc">
       ${window.HGLooks ? HGLooks.html(this) : ''}
@@ -1684,6 +1687,7 @@ const HG_EDIT = {
       ${this._ePerfHtml()}
       ${window.HGLookX ? HGLookX.html(this) : ''}
       ${window.HGRoomsX ? HGRoomsX.html(this) : ''}
+      ${window.HGDashboard ? HGDashboard.html(this) : ''}
       ${window.HGAssistUI ? HGAssistUI.html(this) : ''}
       ${window.HGWall ? HGWall.html(this) : ''}
       ${window.HGUsers ? HGUsers.html(this) : ''}

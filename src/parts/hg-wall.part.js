@@ -134,7 +134,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   last: Date.now(), active: false, page: null, hass: null, el: null, _t: null, _ck: null, _sl: null, _dr: null, _wl: null, _wired: false, _ms: undefined, _foc: null, _sv: null, _ev: null, _evt: 0, _evk: '', _fc: null, _fcb: false,
   /* ---- ustawienia ---- */
   get() { const w = (window.__hgL && window.__hgL.data && window.__hgL.data.wall) || {}, n = (v, a, b, d) => { v = Number(v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
-    return { on: w.on === true, idle: n(w.idle, 15, 7200, 120), dim: n(w.dim, 0, 0.9, 0.5), src: this.SRCS.some((s) => s[0] === w.src) ? w.src : 'bg',
+    return { on: w.on === true, nightOn: w.nightOn === true, nightStart: /^([01]\d|2[0-3]):[0-5]\d$/.test(w.nightStart || '') ? w.nightStart : '23:00', nightEnd: /^([01]\d|2[0-3]):[0-5]\d$/.test(w.nightEnd || '') ? w.nightEnd : '07:00', idle: n(w.idle, 15, 7200, 120), dim: n(w.dim, 0, 0.9, 0.5), src: this.SRCS.some((s) => s[0] === w.src) ? w.src : 'bg',
       url: typeof w.url === 'string' && /^(\/|https?:\/\/)/.test(w.url) && !/[\s"'()<>\\]/.test(w.url) ? w.url : '',
       sensor: typeof w.sensor === 'string' && /^binary_sensor\.[a-z0-9_]+$/.test(w.sensor) ? w.sensor : '',
       lock: w.lock === true, pinH: typeof w.pinH === 'string' && /^[0-9a-z]{6,40}$/.test(w.pinH) ? w.pinH : '', pinN: n(w.pinN, 4, 8, 4), lockAfter: this.LOCKS.includes(Number(w.lockAfter)) ? Number(w.lockAfter) : 0, lk: w.lk !== false }; },
@@ -196,7 +196,7 @@ const HGWall = window.__hgWall || (window.__hgWall = {
       document.addEventListener('visibilitychange', () => { if (!document.hidden) { this.last = Date.now(); this.arm(); } }); }
     if (!c.on) { clearTimeout(this._t); this._t = null; if (this.active) this.hide(); return; }
     if (!this._t && !this.active) this.arm();
-    else if (this.active && this.el) { this.el.style.setProperty('--nw-dim', c.dim); if (this.el.classList.contains('gl')) this.gl(); else if (this.el.classList.contains('bd')) this.bd(); else if (this.el.classList.contains('xs')) this.xsDraw(); else { this.wx(); this.kid(); } } },
+    else if (this.active && this.el) { const night = c.nightOn && HGDashboard.nightRange(new Date(), c.nightStart, c.nightEnd); this.el.style.setProperty('--nw-dim', night ? Math.max(.8, c.dim) : c.dim); if (this.el.classList.contains('gl')) this.gl(); else if (this.el.classList.contains('bd')) this.bd(); else if (this.el.classList.contains('xs')) this.xsDraw(); else { this.wx(); this.kid(); } } },
   arm(ms) { clearTimeout(this._t); const c = this.get(); if (!c.on) { this._t = null; return; }
     this._t = setTimeout(() => this.check(), Math.max(1000, ms != null ? ms : c.idle * 1000 - (Date.now() - this.last))); },
   /* nakładka tylko na widocznym dashboardzie Nuvio, nie w trybie edycji i nie w tle przeglądarki */
@@ -221,8 +221,9 @@ const HGWall = window.__hgWall || (window.__hgWall = {
   show() { if (this.active) return; const c = this.get(), h = this.hass, rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.active = true; clearTimeout(this._t); this._t = null; this._foc = document.activeElement;
     const el = this.el = document.createElement('div'); el.className = 'nw'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', hgT('wall.screensaver')); el.tabIndex = -1;
-    el.style.setProperty('--nw-dim', c.dim);
-    const gl = !!(this.glass && this.glass()), bd = !gl && !!(this.board && this.board()), xs = !gl && !bd && this.xs ? this.xs() : '';
+    const night = c.nightOn && HGDashboard.nightRange(new Date(), c.nightStart, c.nightEnd);
+    el.style.setProperty('--nw-dim', night ? Math.max(.8, c.dim) : c.dim);
+    const gl = !night && !!(this.glass && this.glass()), bd = !night && !gl && !!(this.board && this.board()), xs = night ? 'night' : !gl && !bd && this.xs ? this.xs() : '';
     el.innerHTML = gl ? this.glShell() : bd ? this.bdShell() : xs ? this.xsShell(xs) : `<style>${HG_WALL_SS}</style><div class="nw-bg" aria-hidden="true"></div><div class="nw-bg" aria-hidden="true"></div><div class="nw-sh" aria-hidden="true"></div>
       <div class="nw-c"><div class="nw-g"><time class="nw-t"></time><div class="nw-d"></div></div></div><div class="nw-r"><div class="nw-p nw-w" hidden></div><div class="nw-p nw-k" hidden></div><div class="nw-p nw-e" hidden></div></div><p class="nw-h">${H.esc(hgT('common.touch_to_wake'))}</p>`;
     if (this.locked) { el.classList.add('lk'); this.flag(true); el.querySelector('.nw-h').textContent = hgT('wall.touch_to_unlock'); }
@@ -341,6 +342,8 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     const BD = this.bdHtml ? this.bdHtml(c, h) : { top: '', board: '' }, xk = this.xs ? this.xs() : '', pic = !(this.glass && this.glass()) && (!xk || this.xsPic(xk));   /* zdjęcie jest tłem zegara na zdjęciu, tablicy i zegara analogowego */
     const body = !c.on ? '' : `
       ${BD.top}${BD.board}
+      <button type="button" class="wl-sw" role="switch" data-hge="wl-night" aria-checked="${c.nightOn}"><span>${hgT('dashboardx.night')}<small>${hgT('dashboardx.night_help')}</small></span><i></i></button>
+      ${c.nightOn ? `<div class="wl-f"><span>${hgT('dashboardx.night_hours')}</span><div class="rx-fu"><input type="time" name="wl-night-start" value="${c.nightStart}" aria-label="${hgT('dashboardx.night_start')}"><input type="time" name="wl-night-end" value="${c.nightEnd}" aria-label="${hgT('dashboardx.night_end')}"></div></div>` : ''}
       <div class="wl-f" role="group" aria-labelledby="wl-i"><span id="wl-i">${hgT('wall.start_after_inactivity')}</span><div class="wl-seg six" style="--n:${idles.length}">${idles.map((s) => `<button type="button" data-hge="wl-idle" data-v="${s}" aria-pressed="${c.idle === s}">${this.fmt(s)}</button>`).join('')}</div></div>
       <div class="wl-f"><span>${hgT('wall.dimming')}<em class="wl-dv">${H.pct(dv)}</em></span><input class="lk-rg" type="range" min="0" max="90" step="5" name="wl-dim" value="${Math.round(dv / 5) * 5}" style="--v:${dv / 0.9}%" aria-label="${hgT('wall.screensaver_dimming')}"></div>
       ${pic ? `<div class="wl-f" role="group" aria-labelledby="wl-s"><span id="wl-s">${hgT('wall.photo')}</span><div class="wl-seg" style="--n:3">${this.SRCS.map(([k, t]) => `<button type="button" data-hge="wl-src" data-v="${k}" aria-pressed="${c.src === k}">${t}</button>`).join('')}</div>
@@ -370,10 +373,12 @@ const HGWall = window.__hgWall || (window.__hgWall = {
     if (this.pkWire) this.pkWire(p, S);
     if (this.glWire) this.glWire(p, S);
     const se = S.querySelector('[name=wl-sensor]'); if (se) se.addEventListener('change', () => { this._ms = undefined; this.set({ sensor: se.value }); });
+    for (const [name, key] of [['wl-night-start', 'nightStart'], ['wl-night-end', 'nightEnd']]) { const input = S.querySelector(`[name=${name}]`); if (input) input.addEventListener('change', () => { if (/^([01]\d|2[0-3]):[0-5]\d$/.test(input.value)) this.set({ [key]: input.value }); }); }
     const u = S.querySelector('[name=wl-url]'); if (u) u.addEventListener('change', () => { const v = u.value.trim();
       if (v && !/^(\/|https?:\/\/)/.test(v)) return p._eToast(hgT('wall.image_url_invalid'));
       this.set({ url: v }); }); },
   act(p, b, a) { if (!this.admin(p)) return;
+    if (a === 'wl-night') { this.set({ nightOn: !this.get().nightOn }); return p._eLook(); }
     if (this.glAct && this.glAct(p, b, a)) return;
     if (this.bdAct && this.bdAct(p, b, a)) return;
     if (a === 'wl-on') { this.last = Date.now(); this.set({ on: !this.get().on }); return p._eLook(); }

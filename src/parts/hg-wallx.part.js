@@ -75,7 +75,7 @@ Object.assign(HGWall, {
     const dt = '<p class="nx-dt"></p>', wx = '<div class="nx-wx" hidden></div>';
     const body = k === 'analog' ? `<div class="nx-face" role="img"><i class="nx-hd nx-hh"></i><i class="nx-hd nx-mm"></i><i class="nx-hd nx-ss"></i><i class="nx-cap"></i></div><div class="nx-side">${dt}${wx}</div>`
       : k === 'flip' ? `<div class="nx-fr"><div class="nx-fc"><b data-p="h"></b><small hidden></small></div><div class="nx-fc"><b data-p="m"></b></div></div>${dt}${wx}`
-      : k === 'aurora' ? `<time class="nx-t"></time>${dt}${wx}` : `<time class="nx-t"></time>${dt}`;
+      : k === 'aurora' ? `<time class="nx-t"></time>${dt}${wx}` : `<time class="nx-t"></time>${dt}${wx}`;
     return `<style>${HG_WALL_SS}${HG_WX_SS}</style>${bg}<div class="nx nx-${{ analog: 'a', flip: 'f', aurora: 'u', night: 'n' }[k]}">${k === 'aurora' ? '<i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i>' : ''}<div class="nx-in">${body}</div></div>
       <p class="nw-h">${H.esc(hgT('common.touch_to_wake'))}</p>`; },
   xsStart(k, rm) { const el = this.el; el.classList.add('xs'); el.dataset.xs = k;

@@ -63,3 +63,5 @@ Fork: tablet_home home-page landscape grid, automatic at available widths 780..1
 Fork: generated pages use navigation:top, with all view links; desktop/tablet rail removed and grid space reclaimed. Phone navigation preserved.
 
 Fork: top-navigation pages skip card/indicator entrance fades and glass filter resets; stable label rendering and fixed top control sizes.
+
+Fork: home settings use native dashboard order/hidden/size storage; health summary; room groups; idle night schedule; daily recorded energy comparison. Full behavior and limitations in dashboard-features-tr.md.

@@ -365,3 +365,8 @@ forecast_entities:
 # forecast_attribute: detailedHourly   # hourly instead of every 30 minutes
 # forecast_value: pv_estimate90        # optimistic variant (pv_estimate10 = pessimistic)
 ```
+
+## Fork additions
+
+- custom:nuvio-health-card: home status from contact, battery and problem sensors; optional xclude list.
+- custom:nuvio-daily-energy-card: recorded energy today versus the same time yesterday; optional ntity, otherwise the selected home meter or HA Energy grid sources. See [Turkish feature guide](dashboard-features-tr.md).

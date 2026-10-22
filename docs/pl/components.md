@@ -365,3 +365,8 @@ forecast_entities:
 # forecast_attribute: detailedHourly   # co godzinę zamiast co 30 minut
 # forecast_value: pv_estimate90        # wariant optymistyczny (pv_estimate10 = pesymistyczny)
 ```
+
+## Karty forka
+
+- custom:nuvio-health-card: stan domu, kontakty, baterie i problemy czujników.
+- custom:nuvio-daily-energy-card: energia dziś w porównaniu z tą samą godziną wczoraj.

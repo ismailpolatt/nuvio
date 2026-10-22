@@ -5,6 +5,7 @@
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
 ### Unreleased (fork)
+- Add a home-card settings section, home status summary, room group filters, scheduled idle night screen and hourly daily-energy comparison.
 - Stabilize page navigation: remove repeated card fades and glass refresh flashes; keep navigation labels and control sizes consistent.
 - Use a single top navigation on desktop and tablets, keeping all destinations reachable; phones retain the bottom navigation.
 - Align the landscape tablet home on a responsive grid; show two compact thermostats and keep touch controls at least 44 px.

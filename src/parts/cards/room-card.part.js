@@ -92,6 +92,7 @@ class HGRoomCard extends HGBase {
   css() {
     return U(`
 :host{ height:auto; }
+.room-tabs [aria-pressed=true]{ background:var(--hg-accent); color:var(--hg-on-accent); }
 .wrap{ column-width: max(280px, calc(var(--k) * 250)); column-gap:11u; }
 .blk{ break-inside:avoid; -webkit-column-break-inside:avoid; display:block; margin:0 0 11u; }
 .wrap.gsz{ columns:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, max(280px, calc(var(--k) * 250))), 1fr)); gap:11u; align-items:start; }
@@ -659,12 +660,16 @@ ha-card.wmc{ gap:var(--s2); }
       const nmO = RL.names && RL.names[k]; const html2 = nmO ? html.replace(/(class="sh">[\s\S]*?<\/ha-icon>)([^<]+)/, (m0, a1) => a1 + H.esc(nmO)) : html;
       const cf = RL.conf[k] || {}; let html3 = cf.i ? html2.replace(/(class="sh">\s*<ha-icon class="[^"]*" icon=")[^"]*/, `$1${H.esc(cf.i)}`) : html2;
       if (cf.t) html3 = html3.replace(/^(\s*<div class="blk)/, `$1 hgm-${cf.t}`);
-      return { k, html: RL.size[k] ? html3.replace(/^(\s*<div class="blk)/, `$1 ${HGL.szc(RL.size[k])}`) : html3 }; });
+      const group = HGDashboard.roomGroup(k, b, HG_SEC);
+      return { k, group, html: RL.size[k] ? html3.replace(/^(\s*<div class="blk)/, `$1 ${HGL.szc(RL.size[k])}`) : html3 }; });
     const hidR = new Set(RL.hidden);
-    blocks.length = 0; for (const x of HGL.sort(keyed.filter((x) => !hidR.has(x.k)), (x) => x.k, RL.order)) blocks.push(x.html);
+    if (this._filterArea !== a.id) { this._filterArea = a.id; this._roomFilter = ''; }
+    const visible = keyed.filter((x) => !hidR.has(x.k)), groups = [['', hgT('dashboardx.all')], ['light', hgT('shared.areas.sections.light')], ['clim', hgT('shared.areas.sections.clim')], ['devices', hgT('dashboardx.devices')], ['sens', hgT('shared.areas.sections.sens')]].filter(([g]) => !g || visible.some((x) => x.group === g));
+    const toolbar = !HGL.editing ? `<div class="room-tabs" role="group" aria-label="${hgT('dashboardx.room_groups')}" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">${groups.map(([g, label]) => `<button class="glass" style="min-height:44px;padding:8px 16px;border-radius:16px" data-act="roomfilter" data-filter="${g}" aria-pressed="${(this._roomFilter || '') === g}">${H.esc(label)}</button>`).join('')}</div>` : '';
+    blocks.length = 0; for (const x of HGL.sort(visible, (x) => x.k, RL.order)) if (HGL.editing || !this._roomFilter || x.group === this._roomFilter) blocks.push(x.html);
     if (!blocks.length) return HGL.editing ? `<div class="wrap" data-hgl="${H.esc(RS)}" data-hgsz="1"></div>` : HGRoomX.emptyHtml(h, a, RS);
     /* zawsze siatka (jak widoki): ten sam układ w edycji i po zapisie, w szerokim widoku i w panelu z boku */
-    return `<div class="wrap gsz" data-hgl="${H.esc(RS)}" data-hgsz="1">${blocks.join('')}</div>`;
+    return `${toolbar}<div class="wrap gsz" data-hgl="${H.esc(RS)}" data-hgsz="1">${blocks.join('')}</div>`;
   }
   afterRender() {
     clearInterval(this._stT); this._stT = 0;
@@ -693,6 +698,7 @@ ha-card.wmc{ gap:var(--s2); }
     if (typeof hgCmSlots === 'function') hgCmSlots(this);
   }
   onAct(act, t) {
+    if (act === 'roomfilter') { this._roomFilter = t.dataset.filter || ''; this.rerender(); return; }
     if (hgNP.act(this, act, t)) return;
     const h = this._hass, e = t.dataset.e;
     if (act[0] === 't' && hgTileAct(this, act, t)) return;
