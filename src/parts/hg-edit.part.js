@@ -1157,6 +1157,7 @@ const HG_EDIT = {
     if (tl.added.some((x) => areas || !x.c)) { out.push({ type: 'custom:hg-tiles-card', scope: sc + ':tiles', _k: '_tiles', span: 'full', min_h: 40, _tiles: true, ...(areas ? {} : { nocomp: true }) });
       const hi = out.findIndex((c) => c.hint_sc); if (hi >= 0) out.push(out.splice(hi, 1)[0]); }   /* podpowiedź pod kafelkami */
     for (const c of out) if (c.home_optional && !(L.conf[c._k] || {}).home_visible) c._hid = true;
+    if (sc === 'dashboard' && !this._editing && window.HGPersonal) out = HGPersonal.apply(out);
     return out;
   },
   _isAdmin() { return !!(this._hass && this._hass.user && this._hass.user.is_admin); },

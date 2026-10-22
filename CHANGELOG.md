@@ -469,3 +469,5 @@ The new design is complete: every card is built from the shared glass blocks, up
 
 ### 0.1.1
 - Component-first "+ Add" gallery with live preview; kiosk drawer fix; component catalog in the README.
+
+- Fork: add a personal Control page with favorites, previewed home modes, energy history/rate estimate, tablet diagnostics and per-account home/people preferences; enrich room summaries.

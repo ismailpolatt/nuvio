@@ -370,3 +370,5 @@ forecast_entities:
 
 - custom:nuvio-health-card: home status from contact, battery and problem sensors; optional xclude list.
 - custom:nuvio-daily-energy-card: recorded energy today versus the same time yesterday; optional ntity, otherwise the selected home meter or HA Energy grid sources. See [Turkish feature guide](dashboard-features-tr.md).
+
+- custom:nuvio-control-card: per-account control center; see [Turkish usage guide](personal-controls-tr.md).

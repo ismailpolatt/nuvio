@@ -51,7 +51,7 @@ class HGAreasCard extends HGBase {
 .env .u{ display:inline-flex; align-items:center; gap:2px; font-size:var(--fs-sm); font-weight:400; color:#4A4E54; line-height:1.15; }
 .env ha-icon{ align-self:center; } .env .t ha-icon{ display:none; } .env .u ha-icon{ width:14px; height:14px; color:inherit; }
 .mt{ grid-column:1 / -1; grid-row:4; align-self:end; display:flex; align-items:center; gap:5u; min-width:0; height:max(14u, 17px); font-size:var(--fs-sm); color:#4A4E54; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; }
-.mt > span{ overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.mt{flex-wrap:wrap;height:auto;min-height:24px;overflow:visible}.mt ha-icon{width:14px;height:14px;vertical-align:middle}.mt > span{ overflow:hidden; text-overflow:ellipsis; min-width:0; }
 .mt .lt{ color:var(--hg-accent-tx); } .mt .xp{ margin-left:auto; flex:none; width:16px; height:16px; opacity:.8; transition:transform .25s cubic-bezier(.2,0,0,1), opacity .25s; } @media (hover:hover) and (pointer:fine){ .tile:hover .xp{ opacity:1; transform:translate(2px,-2px); } }
 .dot{ width:7px; height:7px; border-radius:50%; flex:none; background:var(--c); }
 .cl{ display:inline-flex; align-items:center; gap:4u; flex:none; color:#3A3D42; }
@@ -71,6 +71,7 @@ class HGAreasCard extends HGBase {
     const LZ = HGL.get('rooms').size;
     for (const a of this._rooms(m)) {
       const env = HGAreas.env(h, a);
+      const summary = typeof HGPersonal !== 'undefined' ? HGPersonal.room(h, a) : null;
       const okL = a.lights.filter((e) => H.ok(h.states[e]));
       const on = a.lights.filter((e) => h.states[e].state === 'on').length;
       const cl = a.sec.clim.map((e) => h.states[e]).find((s) => s.entity_id.startsWith('climate.') && H.ok(s) && s.state !== 'off');
@@ -82,7 +83,7 @@ class HGAreasCard extends HGBase {
       const prOn = prs.some((e) => h.states[e].state === 'on');
       const pr = prs.length ? `<span class="pr ${prOn ? 'on' : ''}" role="img" aria-label="${H.esc(prOn ? (occ ? hgT('cards.areas.someone_is_in_the') : hgT('cards.areas.motion_detected')) : (occ ? hgT('cards.areas.no_presence') : hgT('cards.areas.no_motion')))}" title="${prOn ? (occ ? hgT('cards.areas.presence') : hgT('common.motion')) : (occ ? hgT('cards.areas.no_presence') : hgT('cards.areas.no_motion'))}">${H.icon(occ ? (prOn ? 'mdi:account' : 'mdi:account-outline') : 'mdi:motion-sensor')}</span>` : '';
       const envH = env.t != null || env.u != null ? `<div class="env">${env.t != null ? `<span class="t">${H.icon('mdi:thermometer')}${H.fmt(env.t, 1)}°</span>` : ''}${env.u != null ? `<span class="u">${H.icon('mdi:water-percent')}${H.pct(H.fmt(env.u, 0))}</span>` : ''}</div>` : '';
-      const mt = [on ? `<span class="lt">${hgT('cards.areas.lights_count', { count: on })}</span>` : '',
+      const mt = [summary ? `<span class="lt">${on}/${a.lights.length} ${hgT('controlx.lights_on')}</span>${summary.contacts ? `<span>${H.icon(summary.open ? 'mdi:window-open' : 'mdi:window-closed')} ${summary.open} ${hgT('controlx.open_contacts')}</span>` : ''}${summary.missing + summary.lightMissing ? `<span>${summary.missing + summary.lightMissing} ${hgT('controlx.missing_entities')}</span>` : ''}` : on ? `<span class="lt">${hgT('cards.areas.lights_count', { count: on })}</span>` : '',
         cl ? `<span class="cl"><i class="dot" style="--c:${clm.c}"></i>${H.esc(lbl(cl.state) || H.stateLabel(cl.state))}</span>` : ''].filter(Boolean).join('<span aria-hidden="true">·</span>');
       const lb = okL.length ? `<button class="lb ${on ? 'on' : ''}" data-act="lights" data-a="${H.esc(a.id)}" aria-pressed="${!!on}" aria-label="${H.esc(on ? hgT('cards.areas.lights_turn_off_aria', { name: a.name }) : hgT('cards.areas.lights_turn_on_aria', { name: a.name }))}" title="${on ? hgT('cards.areas.turn_off_lights') : hgT('cards.areas.turn_on_lights')}">${H.icon(on ? 'mdi:lightbulb-on' : 'mdi:lightbulb-outline')}</button>` : '';
       const al = [a.name, ...env.txt, on ? hgT('cards.areas.lights_on_count', { count: on }) : '', prs.length ? (prOn ? (occ ? hgT('cards.areas.state_presence') : hgT('common.state_motion')) : '') : '', cl ? (lbl(cl.state) || cl.state) : ''].filter(Boolean).join(', ');
