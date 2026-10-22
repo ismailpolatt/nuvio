@@ -175,9 +175,14 @@ def minify(js):
     """esbuild (npm install, devDependency): spaces, comments and local names out of the code; strings (CSS, HTML) stay as written.
     Without esbuild the build still works, unminified. The file name hash is taken before this step, from the source."""
     eb = os.path.join(R, 'node_modules', '.bin', 'esbuild')
+    command = None
+    if os.name == 'nt':
+        entry = os.path.join(R, 'node_modules', 'esbuild', 'bin', 'esbuild')
+        node = shutil.which('node')
+        if node and os.path.exists(entry): command = [node, entry]
     if not os.path.exists(eb): eb = shutil.which('esbuild')
-    if not eb: return js, False
-    r = subprocess.run([eb, '--minify', '--format=esm', '--charset=utf8', '--legal-comments=none', '--log-level=error', '--target=es2020'],
+    if not command and not eb: return js, False
+    r = subprocess.run((command or [eb]) + ['--minify', '--format=esm', '--charset=utf8', '--legal-comments=none', '--log-level=error', '--target=es2020'],
                        input=js.encode(), capture_output=True)
     if r.returncode: sys.exit('esbuild failed (syntax error in a part?):\n' + r.stderr.decode('utf-8', 'replace')[:3000])
     return r.stdout.decode(), True

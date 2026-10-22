@@ -4,6 +4,9 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### Niewydane (fork)
+- Dodano pełny katalog turecki i obsługę kompilacji w Windows.
+
 ### 2.19.0
 - Nowość: Nuvio mówi po francusku. Wybierz **Français** w przełączniku języka albo zostaw język automatyczny, a Nuvio dopasuje się do przeglądarki. Dziękuję [@cbailly42](https://github.com/cbailly42) za tłumaczenie i pracę opisaną niżej ([#10](https://github.com/kczepiec/nuvio/pull/10)).
 - Zmiana: wszystkie teksty interfejsu są teraz w katalogach językowych z kluczami (`src/locales/en.json`, `pl.json`, `fr.json`). Pobierany jest tylko używany język, obok głównego pliku, więc nowy język nie powiększa pulpitu dla wszystkich. Język automatyczny nie trzyma się już języka, który kreator tylko pokazał, a którego nie wybrałeś.

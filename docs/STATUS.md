@@ -53,3 +53,5 @@ Done: (a) no house-specific ids in dist (tools/guard.py, CI); (b) dashboard stra
 - Roles and permissions: who may edit the shared dashboard, open Settings or use the PIN lock; hidden cards or rooms per person (planned)
 - Accessibility pass: screen reader labels, focus order and contrast audit for all cards and edit mode (planned)
 
+
+Fork development: Turkish source catalog added with full key coverage; Windows esbuild invocation and PYTHON override for loader tests. Tablet layout work is pending. See fork-tr.md.

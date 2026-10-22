@@ -4,6 +4,9 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### Unreleased (fork)
+- Add a complete Turkish source catalog and Windows build support.
+
 ### 2.19.0
 - New: Nuvio speaks French. Pick **Français** in the language switch, or leave the language on automatic and Nuvio follows the browser. Thanks to [@cbailly42](https://github.com/cbailly42) for the translation and the work below ([#10](https://github.com/kczepiec/nuvio/pull/10)).
 - Changed: all interface texts now live in keyed language catalogs (`src/locales/en.json`, `pl.json`, `fr.json`). Only the language you use is downloaded, next to the main file, so adding a language no longer makes the dashboard bigger for everyone. The automatic language no longer sticks to a language the setup wizard showed but you never picked.

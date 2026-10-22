@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CORE = 'nuvio-core.abc123.js', FILE = 'nuvio-locale-fr.0123abcd.json';
 const render = () => {
-  const r = spawnSync('python3', ['-c', "import sys; import tools.build as b; sys.stdout.write(b.LOADER.replace('__V__','1.0.0+abc123').replace('__CORE__','" + CORE + "'))"], { cwd: ROOT, encoding: 'utf8' });
+  const r = spawnSync(process.env.PYTHON || 'python3', ['-c', "import sys; import tools.build as b; sys.stdout.write(b.LOADER.replace('__V__','1.0.0+abc123').replace('__CORE__','" + CORE + "'))"], { cwd: ROOT, encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr); return r.stdout;
 };
 let n = 0;
