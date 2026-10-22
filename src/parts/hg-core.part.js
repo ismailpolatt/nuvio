@@ -248,7 +248,7 @@ class HGBase extends HTMLElement {
     this._sig = null; this._entsC = null; this._prevStates = null; this._html = null;
     if (!this._styled) {
       const st = document.createElement('style');
-      st.textContent = HG_BASE + (typeof hgUI !== 'undefined' ? hgUI.css() : '') + this.css();
+      st.textContent = HG_BASE + (typeof hgUI !== 'undefined' ? hgUI.css() : '') + this.css() + ':host([panel-fill]) .root > ha-card.glass{min-height:100%;box-sizing:border-box}';
       this.shadowRoot.appendChild(st);
       this.$ = document.createElement('div');
       this.$.className = 'root';

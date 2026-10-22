@@ -183,6 +183,19 @@ test('edit mode: language switch repaints the edit bar, Look sheet and cards onl
   assert.ok(['_eBar:pl', '_eLook:pl', '_eRefresh:pl', '_eToast:pl'].every((s) => seen.includes(s)), seen.join(','));
 });
 
+test('added standalone components fill their panel row and clear that state when reused in a tile group', () => {
+  const m = mk({ parts: ['hg-edit.part.js'], names: ['hgCmSlots', 'HG_CM'], globals: { HGPage: class {}, HG_TOGGLE_DOM: stub(), HG_FLOW_RX: stub(), customElements: { get: () => true, define() {} } } });
+  const attrs = new Set(), slot = { dataset: { cm: 'added' } }, el = { parentElement: slot, toggleAttribute(k, on) { if (on) attrs.add(k); else attrs.delete(k); } };
+  m.HG_CM.set('added', { c: 'hg-scenes-card', cfg: {} });
+  const card = { _config: { one: 'added' }, _hass: { states: {} }, $: { querySelectorAll: () => [slot] }, _cmM: new Map([['added{}', el]]) };
+  m.hgCmSlots(card);
+  assert.ok(attrs.has('panel-fill'));
+  assert.equal(el.hass, card._hass);
+  card._config = {};
+  m.hgCmSlots(card);
+  assert.ok(!attrs.has('panel-fill'), 'group cards keep their natural height');
+});
+
 test('hgReg: customCards name / description are enumerable getters resolved at read time (lazy values)', () => {
   const m = mk({ lang: 'en', names: ['hgReg', 'hgTLazy'] });
   class C extends m.HGBase {}

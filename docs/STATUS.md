@@ -69,3 +69,5 @@ Fork: home settings use native dashboard order/hidden/size storage; health summa
 Fork: account-owned Control page adds favorites, explicit previewed home modes, daily/weekly energy history and simple tariff estimates, tablet diagnostics and personal home/people overrides. Rooms show open/missing contacts. See personal-controls-tr.md. Existing shared edit mode is unchanged.
 
 Fork: home scenes use stacked actions and fill their grid row; health summary defaults to full width. Home width settings respect a full-width card default on the first toggle.
+
+2026-10-22: Yeni eklenen bağımsız bileşen kartları da satır yüksekliğini doldurur; karo grupları doğal yüksekliğini korur. Önbellekteki bileşen gruba dönerse dolgu niteliği temizlenir.

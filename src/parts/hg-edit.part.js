@@ -580,6 +580,7 @@ const hgCmHtml = (x, sz) => { HG_CM.set(x.e, { c: x.c, cfg: Object.assign({}, x.
 const hgCmSlots = (card) => { const h = card._hass; card._cmM = card._cmM || new Map();
   for (const slot of card.$.querySelectorAll('.cmslot[data-cm]')) { const k = slot.dataset.cm, m = HG_CM.get(k); if (!m || !customElements.get(m.c)) continue; const sig = k + JSON.stringify(m.cfg); let el = card._cmM.get(sig);
     if (!el) { el = document.createElement(m.c); try { el.setConfig(Object.assign({ type: 'custom:' + m.c }, m.cfg)); } catch (e) { /* zła konfiguracja – pusta karta */ } card._cmM.set(sig, el); }
+    el.toggleAttribute('panel-fill', !!card._config.one);
     if (el.parentElement !== slot) slot.appendChild(el); el.hass = h; } };
 /* ===== makiety podglądu w galerii „Dodaj komponent”: przykładowe dane, ten sam system wizualny (szkło, akcent, czarny na akcencie) ===== */
 const HG_MOCK_CSS = `
@@ -947,12 +948,13 @@ const HG_COMP_EDIT = {
 
 /* karta dodanych kafli widoku (zakres „<widok>:tiles”) */
 class HGTilesCard extends HGBase {
+  setConfig(c) { this.toggleAttribute('panel-fill', !!(c && c.one)); super.setConfig(c); }
   constructor() { super(); this._sub = () => this.rerender(); }
   connectedCallback() { super.connectedCallback(); HGL.subs.add(this._sub); }
   disconnectedCallback() { HGL.subs.delete(this._sub); }
   ents() { if (this._config.group) return this._config.group.es.slice(); if (this._config.single) return [this._config.single.e]; const o = []; for (const x of HGL.get(this._config.scope).added) { if (this._config.one && x.e !== this._config.one) continue; if (!x.c) { if (x.e) o.push(x.e); continue; } for (const v of Object.values(x.v || {})) for (const y of [].concat(v)) { const e = typeof y === 'string' ? y : y && y.entity; if (e) o.push(e); } } return o; }
   _extraSig() { return this._config.single ? (HG_HIST.m.get(this._config.single.e) || {}).t || 0 : [HGL.data.s[this._config.scope] || null, [...HG_HIST.m.values()].map((x) => x.t).join()]; }
-  css() { return `:host{ display:block; height:auto; container-type:inline-size; }` + HG_TILE_CSS; }
+  css() { return `:host{ display:block; height:auto; container-type:inline-size; }:host([panel-fill]){height:100%;min-height:0}` + HG_TILE_CSS; }
   render() {
     const h = this._hass; if (this._config.group) { const G = this._config.group, tt = G.lay === 'g-list' ? 'compact' : G.lay === 'g-clist' ? 'minimal' : '';
       return `<div class="hgg ${G.lay}">${G.n ? `<div class="hgg-h">${G.i ? H.icon(G.i) : ''}<b>${H.esc(G.n)}</b><small>${G.es.length}</small></div>` : ''}<div class="hgg-b">${G.es.map((e) => `<div class="tg2 one">${hgTileHtml(h, e, 's', tt && hgTypesFor(h, e).includes(tt) ? { t: tt } : {})}</div>`).join('')}</div></div>`; }
