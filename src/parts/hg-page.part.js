@@ -299,6 +299,7 @@ class HGPage extends HTMLElement {
     /* skala tabletu ograniczona też wysokością, żeby niskie okno nie rozciągało paneli */
     else { mode = 'tablet'; u = Math.max(1, Math.min(1.45, W / 620, Hh / 640)); }
     const z = this._zoom();
+    this.toggleAttribute('single-nav', this._config.navigation === 'top' && mode !== 'phone');
     const home = !!this._config.tablet_home && mode === 'wide' && W <= 1600 && Hh >= 540;
     this.toggleAttribute('tablet-home', home);
     this.toggleAttribute('tablet-home-tight', home && W < 1000);
@@ -812,6 +813,7 @@ class HGPage extends HTMLElement {
       this._placeInd(); return;
     }
     if (this._sheetOpen && this._sheetMode !== 'rail') this._openSheet(false);
+    if (c.navigation === 'top') { this._railEl.innerHTML = ''; delete this._railEl.dataset.pn; this._sigRail = ''; return; }
     delete this._railEl.dataset.pn;
     const all = c.rail.map((r, i) => ({ ...r, i, act: r.match ? hgMatch(r.match, path) : false }));
     // szyna nie mieści wszystkiego: nadmiar (najpierw wg rail_overflow, potem od końca, bez ostatniej = Ustawienia) do „Więcej”
@@ -1478,6 +1480,20 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([tablet-home]) .more{ display:none !important; }
 :host([tablet-home][wide-panel]) .page{ grid-template-columns:52px minmax(185px,.75fr) minmax(0,2fr); grid-template-rows:48px minmax(0,1fr) 52px; }
 :host([tablet-home][wide-panel]) .hub, :host([tablet-home][wide-panel]) .tools{ display:flex; }
+:host([single-nav]) .rail{ display:none; }
+:host([single-nav]) .top .tabs{ position:relative; inset:auto; flex:1; min-width:0; max-width:none; margin-inline:16px; overflow-x:auto; scrollbar-width:none; justify-content:flex-start; }
+:host([single-nav]) .tab{ flex:none; }
+:host([single-nav]) .tabs .tab .tl{ display:inline; }
+:host([single-nav][mode=wide][wide-panel]) .page{ grid-template-columns:minmax(0,1fr); }
+:host([single-nav][mode=wide][wide-panel]) .panel{ grid-column:1; }
+:host([single-nav][mode=tablet]) .page{ grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"top top" "head head" "panel panel" "hub tools"; }
+:host([single-nav][mode=tablet]) .back{ display:none; }
+:host([single-nav][tablet-home]) .page{ grid-template-columns:minmax(185px,.75fr) minmax(0,2fr); }
+:host([single-nav][tablet-home]) .head{ grid-column:1; }
+:host([single-nav][tablet-home]) .panel{ grid-column:2; }
+:host([single-nav][tablet-home]) .hub{ grid-column:1; }
+:host([single-nav][tablet-home]) .tools{ grid-column:2; }
+:host([single-nav][tablet-home]) .back{ display:none; }
 `);
   }
 }

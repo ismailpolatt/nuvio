@@ -11,6 +11,18 @@ const MAN = [{ code: 'en', name: meta('en').name, locale: meta('en').locale, fil
 const MAN_FR = [...MAN, { code: 'fr', name: 'Français', locale: 'fr-FR', file: 'nuvio-locale-fr.aaaa.json' }];
 const FILES = ['hg-i18n.part.js', 'hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.js'];
 const NAMES = ['HGI18n', 'HGLang', 'HGStrategy', 'HGBase', 'hgLang', 'hgCurLang', 'HG_LOC', 'HG_LIVE'];
+
+test('generated views expose all destinations in one top navigation', async () => {
+  const m = mk({ lang: 'en' });
+  const paths = ['dashboard', 'rooms', 'multimedia', 'kamery', 'family', 'energia', 'mapa'];
+  const hass = { states: {}, areas: {}, devices: {}, entities: {}, user: { id: 'example', is_admin: true }, callWS: () => Promise.reject(new Error('no ws')) };
+  const cfg = await m.HGStrategy.generate({ _wiz: { lang: 'en', views: paths } }, hass);
+  for (const v of cfg.views) {
+    assert.equal(v.cards[0].navigation, 'top');
+    assert.equal(v.cards[0].tabs.length, paths.length);
+    assert.ok(v.cards[0].phone_nav.more.length, 'phone keeps access to remaining destinations');
+  }
+});
 const tick = (n = 5) => new Promise((r) => { const s = () => (n-- ? setImmediate(s) : r()); s(); });
 const stub = () => new Proxy(function () {}, { get: (t, k) => (k === Symbol.iterator ? function* () {} : k === 'length' ? 0 : k === Symbol.toPrimitive ? () => '' : k === 'then' ? undefined : stub()), apply: () => stub(), construct: () => stub() });
 /* deferred fetch: each call waits until release() */

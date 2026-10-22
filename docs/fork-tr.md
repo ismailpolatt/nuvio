@@ -32,3 +32,7 @@ Bu bir görünüm tercihidir. Home Assistant hesaplarını, oturum açmış kull
 Samsung Galaxy Tab A9+ için yatay ana ekran ızgarası eklendi. İki kompakt termostat, hava durumu ve alt kişi şeridi ayrı alanlarda durur. Kullanılabilir yüksekliğe Home Assistant üst başlığı dahil edilmez. Dokunmatik kontroller en az 44 piksel hedef alanı kullanır. Stratejide tablet_home: false bu yerleşimi kapatır; dikey ve telefon görünümleri mevcut akışı kullanır. Çok sayıda özel kart eklenirse içerik güvenle kaydırılabilir, kontroller kırpılarak saklanmaz. Fiziksel tablet geri bildirimi ayrıca gereklidir. Sonraki çalışma etkileşimli ev planıdır.
 
 Canlı Home Assistant adresleri, kimlik bilgileri ve kişisel cihaz kimlikleri bu depoya eklenmez. Üretilen dosyalar önce test panelinde doğrulanır.
+
+### Tek gezinme menüsü
+
+Otomatik sayfalar masaüstü/tablette yalnız üst menüyü kullanır; tüm sayfa bağlantıları burada bulunur ve dar alanda yatay kaydırılabilir. Telefonda alt menü korunur. Home Assistant dış menüleri kurulu Kiosk Mode ile panel bazında gizlenebilir. Yönetici profil menüsünden kiosk modunu kapatabilir; kurtarma için panel adresine ?disable_km eklenebilir.
