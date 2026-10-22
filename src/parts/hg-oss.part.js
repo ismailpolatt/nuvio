@@ -150,12 +150,12 @@ async function hgGenerate(hass, opt) {
 const hint = (k) => ({ type: 'custom:hg-hint-card', hint: k });
     if (!M.weather) dash.push(hint('weather'));
   for (const entity of M.climate.slice(0, 2)) dash.push({ type: 'custom:hg-ac-card', entity, title: hass.states[entity].attributes.friendly_name || hgT('nav.climate'), compact: true, min_h: 150 });
-  if (M.scenes.length) dash.push({ type: 'custom:hg-scenes-card', _hgid: 'scenes', title: hgT('nav.scenes'), min_h: 0, scripts: M.scenes.map((e) => ({ entity: e, name: (hass.states[e].attributes.friendly_name || e), icon: hass.states[e].attributes.icon || (e.startsWith('scene.') ? 'mdi:palette' : 'mdi:play') })) });
+  if (M.scenes.length) dash.push({ type: 'custom:hg-scenes-card', _hgid: 'scenes', title: hgT('nav.scenes'), stacked: true, min_h: 0, scripts: M.scenes.map((e) => ({ entity: e, name: (hass.states[e].attributes.friendly_name || e), icon: hass.states[e].attributes.icon || (e.startsWith('scene.') ? 'mdi:palette' : 'mdi:play') })) });
   if (M.power.length) dash.push({ type: 'custom:hg-power-card', _hgid: 'power', title: hgT('nav.power'), min_h: 130, entities: [M.power[0]], max_power: 10000, hours: 6, ...(want('energia') ? { expand: { navigate: HG_P('energia') } } : {}) });
   if (!M.scenes.length) dash.push(hint('scenes'));
   if (!M.power.length) dash.push(hint('power'));
   if (!M.persons.length) dash.push(hint('people'));
-  dash.push({ type: 'custom:hg-health-card', _hgid: 'health', title: hgT('dashboardx.health'), min_h: 70 });
+  dash.push({ type: 'custom:hg-health-card', _hgid: 'health', title: hgT('dashboardx.health'), span: 'full', min_h: 70 });
   dash.push({ type: 'custom:hg-daily-energy-card', _hgid: 'daily-energy', title: hgT('dashboardx.daily_energy'), home_optional: true, min_h: 160 });
   if (M.media.length) dash.push({ type: 'custom:hg-players-card', _hgid: 'home-media', title: hgT('common.media'), entities: M.media, home_optional: true, min_h: 140 });
   if (M.persons.length) dash.push({ type: 'custom:hg-family-card', _hgid: 'home-family', title: hgT('common.household'), persons: M.persons, home_optional: true, min_h: 110 });

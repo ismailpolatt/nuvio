@@ -67,3 +67,5 @@ Fork: top-navigation pages skip card/indicator entrance fades and glass filter r
 Fork: home settings use native dashboard order/hidden/size storage; health summary; room groups; idle night schedule; daily recorded energy comparison. Full behavior and limitations in dashboard-features-tr.md.
 
 Fork: account-owned Control page adds favorites, explicit previewed home modes, daily/weekly energy history and simple tariff estimates, tablet diagnostics and personal home/people overrides. Rooms show open/missing contacts. See personal-controls-tr.md. Existing shared edit mode is unchanged.
+
+Fork: home scenes use stacked actions and fill their grid row; health summary defaults to full width. Home width settings respect a full-width card default on the first toggle.

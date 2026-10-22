@@ -43,7 +43,7 @@ const HGDashboard = window.HGDashboard = {
       <div class="lx-l">${rows.map(({ c, k }, i) => `<div class="lx-r"><span class="lx-t"><b>${H.esc(c.title || c.entity || c.type)}</b></span>
         <button class="lx-a" data-hge="home-up" data-k="${H.esc(k)}" ${i ? '' : 'disabled'} aria-label="${hgT('lookr.move_up')}">${H.icon('mdi:chevron-up')}</button>
         <button class="lx-a" data-hge="home-down" data-k="${H.esc(k)}" ${i < rows.length - 1 ? '' : 'disabled'} aria-label="${hgT('lookr.move_down')}">${H.icon('mdi:chevron-down')}</button>
-        <button class="lx-hbtn" data-hge="home-size" data-k="${H.esc(k)}">${L.size[k] === 'l' ? hgT('dashboardx.full') : hgT('dashboardx.half')}</button>
+        <button class="lx-hbtn" data-hge="home-size" data-k="${H.esc(k)}">${(L.size[k] ? L.size[k] === 'l' : c.span === 'full') ? hgT('dashboardx.full') : hgT('dashboardx.half')}</button>
         <button class="lx-sw" role="switch" data-hge="home-toggle" data-k="${H.esc(k)}" aria-label="${H.esc(c.title || c.entity || c.type)}" aria-checked="${!L.hidden.includes(k) && (!c.home_optional || !!(L.conf[k] || {}).home_visible)}"><i></i></button></div>`).join('')}</div>
       <div class="rx-f"><span>${hgT('dashboardx.energy_source')}</span><select name="home-energy"><option value="">${hgT('dashboardx.energy_auto')}</option>${Object.keys(page._hass.states).filter((e) => e.startsWith('sensor.') && page._hass.states[e].attributes.device_class === 'energy' && ['Wh', 'kWh', 'MWh'].includes(page._hass.states[e].attributes.unit_of_measurement)).map((e) => `<option value="${H.esc(e)}"${e === energy ? ' selected' : ''}>${H.esc(H.name(page._hass, e))}</option>`).join('')}</select></div>
       <button class="lk-mini" data-hge="home-save">${hgT('common.save')}</button><small class="lk-hn">${hgT('dashboardx.scope_help')}</small></section>`;
@@ -56,7 +56,7 @@ const HGDashboard = window.HGDashboard = {
       L.hidden = visible ? [...new Set([...L.hidden, k])] : L.hidden.filter((x) => x !== k);
       L.conf[k] = Object.assign({}, L.conf[k], { home_visible: !visible });
     }
-    if (a === 'home-size') L.size[k] = L.size[k] === 'l' ? 's' : 'l';
+    if (a === 'home-size') { const c = this.cards[page._keys(this.cards).indexOf(k)]; L.size[k] = (L.size[k] ? L.size[k] === 'l' : c && c.span === 'full') ? 's' : 'l'; }
     if (a === 'home-up' || a === 'home-down') {
       const keys = page._keys(this.cards), order = HGL.sort(keys, (x) => x, L.order), i = order.indexOf(k), j = i + (a === 'home-up' ? -1 : 1);
       if (i >= 0 && j >= 0 && j < order.length) { [order[i], order[j]] = [order[j], order[i]]; L.order = order; }

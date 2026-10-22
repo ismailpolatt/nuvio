@@ -2,13 +2,17 @@
 /* hg-scenes-card: skrypty jako duże pigułki. Tap -> script.turn_on (w tle), fala (ripple) od miejsca dotyku, potem ✓;
    gdy skrypt działa (stan „on”) – obracający się pierścień, „Działa…”, przycisk zablokowany. */
 class HGScenesCard extends HGBase {
-  defaults() { return { title: hgT('cards.scenes.scenes'), icon: 'mdi:play-circle-outline', scripts: [] }; }
+  defaults() { return { title: hgT('cards.scenes.scenes'), icon: 'mdi:play-circle-outline', scripts: [], stacked: false }; }
   ents() { return this._config.scripts.map((x) => x.entity); }
   _extraSig() { return [this._ok || '']; }
   css() {
     return U(`
 .hd{ min-height:16u; }
 ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(--s2) var(--s2) var(--s2); height:auto; }
+ha-card.glass.fill{ height:100%; box-sizing:border-box; }
+.fill .row{ grid-template-columns:minmax(0,1fr); flex:1; align-content:center; }
+.fill .p{ height:auto; min-height:52px; }
+.fill .tx{ white-space:normal; overflow-wrap:anywhere; }
 .row{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s1); }
 .p{ position:relative; overflow:hidden; display:flex; align-items:center; gap:10px; height:52px; padding:0 12px 0 10px; border-radius:var(--r-md); min-width:0;
   background:var(--hg-tile-bg); border:0; box-shadow:0 4px 14px rgba(0,0,0,.12); text-align:left; cursor:pointer; transition:background .3s, transform .15s cubic-bezier(.2,0,0,1), box-shadow .2s; }
@@ -39,7 +43,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s1); padding:var(-
       return `<button class="p lift ${run ? 'run' : ''} ${ok ? 'ok' : ''} ${un ? 'un' : ''}" style="--c:${x.color || 'var(--hg-accent)'}" data-act="run" data-i="${i}" ${un || run ? 'disabled' : ''} aria-label="${H.lv(H.esc(nm), `${sub}`)}" title="${H.esc(nm)} – ${sub}" aria-busy="${!!run}">
         <span class="ic">${H.icon(ok ? 'mdi:check' : x.icon || (s && s.attributes.icon) || 'mdi:play')}</span><span class="tx">${H.esc(nm)}</span></button>`;
     }).join('');
-    return `<ha-card class="glass"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span></div><div class="row">${items}</div></ha-card>`;
+    return `<ha-card class="glass ${c.stacked ? 'fill' : ''}"><div class="hd">${H.icon(c.icon, 'ic')}<span class="tt">${H.esc(c.title)}</span></div><div class="row">${items}</div></ha-card>`;
   }
   onAct(a, t, e) {
     if (a !== 'run') return;

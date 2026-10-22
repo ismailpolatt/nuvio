@@ -51,6 +51,12 @@ test('daily energy gives a setup state when no Home Assistant energy source exis
   card.isConnected = true; card._config = {}; card._hass = { callWS: async () => ({ energy_sources: [] }) };
   await card._load(); assert.deepEqual(card._result, { missing: true }); assert.equal(card._loading, false);
 });
+test('home width toggle starts from a full-width card default and then alternates', async () => {
+  const { HGDashboard: x, layout } = setup(); x.cards = [{ span: 'full' }]; x.draft = structuredClone(layout);
+  const page = { _canEdit: () => true, _keys: () => ['health'], _eLook() {}, _eSheetEl: { querySelector: () => null } };
+  await x.act(page, { dataset: { k: 'health' } }, 'home-size'); assert.equal(x.draft.size.health, 's');
+  await x.act(page, { dataset: { k: 'health' } }, 'home-size'); assert.equal(x.draft.size.health, 'l');
+});
 test('room filtering keeps thermostat slots and contact chips in their control groups', () => {
   const { HGDashboard: x } = setup(), sections = [['light', 'lights'], ['sens', 'sensors'], ['sw', 'switches']];
   assert.equal(x.roomGroup('lights', '', sections), 'light');
