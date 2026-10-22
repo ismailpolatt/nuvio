@@ -57,3 +57,5 @@ Done: (a) no house-specific ids in dist (tools/guard.py, CI); (b) dashboard stra
 Fork development: Turkish source catalog added with full key coverage; Windows esbuild invocation and PYTHON override for loader tests. Tablet layout work is pending. See fork-tr.md.
 
 Fork: wiz.hiddenPersons display preference, appearance header switches; applied to generated family/map persons, household hub, family/people cards and glass wall family. No account permission changes.
+
+Fork: tablet_home home-page landscape grid, automatic at available widths 780..1600 with sufficient height; two compact climate cards; 44px touch targets. Explicit strategy tablet_home:false opts out. Portrait and phones retain the existing layouts.

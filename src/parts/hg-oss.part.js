@@ -146,7 +146,7 @@ async function hgGenerate(hass, opt) {
   const dash = [];
 const hint = (k) => ({ type: 'custom:hg-hint-card', hint: k });
     if (!M.weather) dash.push(hint('weather'));
-  if (M.climate[0]) dash.push({ type: 'custom:hg-ac-card', entity: M.climate[0], title: hgT('nav.climate'), min_h: 253 });
+  for (const entity of M.climate.slice(0, 2)) dash.push({ type: 'custom:hg-ac-card', entity, title: hass.states[entity].attributes.friendly_name || hgT('nav.climate'), compact: true, min_h: 190 });
   if (M.scenes.length) dash.push({ type: 'custom:hg-scenes-card', _hgid: 'scenes', title: hgT('nav.scenes'), min_h: 0, scripts: M.scenes.map((e) => ({ entity: e, name: (hass.states[e].attributes.friendly_name || e), icon: hass.states[e].attributes.icon || (e.startsWith('scene.') ? 'mdi:palette' : 'mdi:play') })) });
   if (M.power.length) dash.push({ type: 'custom:hg-power-card', _hgid: 'power', title: hgT('nav.power'), min_h: 130, entities: [M.power[0]], max_power: 10000, hours: 6, ...(want('energia') ? { expand: { navigate: HG_P('energia') } } : {}) });
   if (!M.scenes.length) dash.push(hint('scenes'));
@@ -154,7 +154,7 @@ const hint = (k) => ({ type: 'custom:hg-hint-card', hint: k });
   if (!M.persons.length) dash.push(hint('people'));
   const views = [];
   const view = (path, title, card, sub) => ({ title, path, type: 'panel', ...(sub ? { subview: true } : {}), cards: [card] });
-  views.push(view('dashboard', hgT('nav.panel'), base('dashboard', hgT('nav.hello', { name: '{name}' }), hgT('nav.hello_sub'), dash, scroll, { ...(weather ? { weather } : {}), ...(wiz && Array.isArray(wiz.fuel) && wiz.fuel.length ? { fuel: wiz.fuel.filter((f) => f && f.entity) } : {}) })));
+  views.push(view('dashboard', hgT('nav.panel'), base('dashboard', hgT('nav.hello', { name: '{name}' }), hgT('nav.hello_sub'), dash, scroll, { tablet_home: opt.tablet_home !== false, ...(weather ? { weather } : {}), ...(wiz && Array.isArray(wiz.fuel) && wiz.fuel.length ? { fuel: wiz.fuel.filter((f) => f && f.entity) } : {}) })));
   if (V.some((v) => v[0] === 'rooms')) {
     views.push(view('rooms', hgT('nav.rooms'), base('rooms', hgT('nav.rooms'), hgT('nav.rooms_sub'), [{ type: 'custom:hg-areas-card', area: 'grid', min_h: 200, room_path: HG_P('pokoj'), areas: areasCfg }], one('grid'))));
     views.push(view('pokoj', hgT('nav.room'), base('pokoj', hgT('nav.room'), '', [{ type: 'custom:hg-room-card', area: 'room', min_h: 200, areas: areasCfg }], one('room'), { room_back: HG_P('rooms'), room_head: true }), true));

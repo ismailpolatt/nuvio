@@ -295,17 +295,22 @@ class HGPage extends HTMLElement {
     let mode, u;
     if (W < 600) { mode = 'phone'; u = Math.max(0.92, Math.min(1.15, W / 375)); }
     /* poziomo (od 900 px i proporcji 1,2) zawsze układ szeroki, także na tablecie dotykowym; pionowo układ tabletu */
-    else if (W >= 900 && W / Hh >= 1.2) { mode = 'wide'; u = Math.min(W / 912, Hh / 597); }
+    else if ((W >= 900 && W / Hh >= 1.2) || (this._config.tablet_home && W >= 780 && W / Hh >= 1.1)) { mode = 'wide'; u = Math.min(W / 912, Hh / 597); }
     /* skala tabletu ograniczona też wysokością, żeby niskie okno nie rozciągało paneli */
     else { mode = 'tablet'; u = Math.max(1, Math.min(1.45, W / 620, Hh / 640)); }
     const z = this._zoom();
+    const home = !!this._config.tablet_home && mode === 'wide' && W <= 1600 && Hh >= 540;
+    this.toggleAttribute('tablet-home', home);
+    this.toggleAttribute('tablet-home-tight', home && W < 1000);
+    if (home) this.style.setProperty('--hg-home-h', Math.max(480, Hh - Math.max(0, this.getBoundingClientRect().top)) + 'px');
+    else this.style.removeProperty('--hg-home-h');
     if (this.getAttribute('mode') !== mode) { this.setAttribute('mode', mode); this._placeWx(); }
     this.style.setProperty('--hg-u0', u.toFixed(4) + 'px');
     this.style.setProperty('--hg-zoom', z);
     if (this._panel) this._panelGrid(mode);
     const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     this.toggleAttribute('touch', touch);
-    if (mode === 'phone' || (mode === 'tablet' && touch)) this.style.setProperty('--hg-tgt', '44px'); else this.style.removeProperty('--hg-tgt');
+    if (mode === 'phone' || touch) this.style.setProperty('--hg-tgt', '44px'); else this.style.removeProperty('--hg-tgt');
     if (this._built) { this._placeInd(); this._railClear(); }
     if (this._panelEl && this._config.panel.fit) {
       // panel dopasowany do treści (Kamery): dostępna wysokość dla kafli w trybie wide, żeby zmieścić się bez przewijania
@@ -1451,6 +1456,28 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .hge-sheet .hs-s:focus-within{ box-shadow:inset 0 0 0 1.5px var(--hg-accent); }
 .hge-sheet input[type=color]:focus-visible{ outline:none !important; } .hge-sheet :has(> input[type=color]:focus-visible){ outline:2px solid var(--hg-accent); outline-offset:2px; }
 @media (prefers-reduced-motion:reduce){ .hge-sheet *{ transition:none !important; } .hge-sheet button:active{ transform:none !important; } }
+/* Landscape home: reserve real space for header, weather and footer instead of overlapping absolute panels. */
+:host([tablet-home]) .page{ display:grid; grid-template-columns:52px minmax(185px,.75fr) minmax(0,2fr); grid-template-rows:48px minmax(0,1fr) 52px; gap:14px; padding:16px; box-sizing:border-box; height:var(--hg-home-h); min-height:480px; overflow:visible; }
+:host([tablet-home]) .top{ position:relative; inset:auto; grid-column:1 / -1; grid-row:1; height:48px; min-width:0; }
+:host([tablet-home]) .tabs{ position:relative; left:auto; top:auto; margin-inline:auto; }
+:host([tablet-home-tight]) .tabs .tl{ display:none; }
+:host([tablet-home-tight]) .tab{ padding-inline:12px; }
+:host([tablet-home]) .head{ position:relative; inset:auto; grid-column:2; grid-row:2; max-width:none; min-width:0; margin:0; padding:8px 0; }
+:host([tablet-home]) .head h1{ font-size:clamp(22px,2.2vw,32px); line-height:1.15; }
+:host([tablet-home]) .head > p{ font-size:16px; line-height:1.4; margin-top:8px; }
+:host([tablet-home]) .wxh{ position:relative; inset:auto; width:100%; margin-top:24px; }
+:host([tablet-home]) .rail{ position:relative; inset:auto; grid-column:1; grid-row:2; width:52px; align-self:start; padding:6px; }
+:host([tablet-home]) .ri{ width:40px; height:44px; }
+:host([tablet-home]) .panel{ position:relative; inset:auto; grid-column:3; grid-row:2; width:auto; min-width:0; min-height:0; align-self:stretch; margin:0; padding:12px; gap:12px; --hg-u:min(var(--hg-u0),1.15px); }
+:host([tablet-home]) .hub{ position:relative; inset:auto; grid-column:2; grid-row:3; width:100%; height:52px; min-width:0; box-sizing:border-box; }
+:host([tablet-home]) .hub .ht{ min-width:0; }
+:host([tablet-home]) .hub .ht span{ display:none; }
+:host([tablet-home]) .hub .avs{ min-width:0; overflow-x:auto; }
+:host([tablet-home]) .tools{ position:relative; inset:auto; grid-column:3; grid-row:3; justify-self:end; align-self:center; }
+:host([tablet-home]) .back{ position:relative; inset:auto; grid-column:1; grid-row:3; align-self:center; }
+:host([tablet-home]) .more{ display:none !important; }
+:host([tablet-home][wide-panel]) .page{ grid-template-columns:52px minmax(185px,.75fr) minmax(0,2fr); grid-template-rows:48px minmax(0,1fr) 52px; }
+:host([tablet-home][wide-panel]) .hub, :host([tablet-home][wide-panel]) .tools{ display:flex; }
 `);
   }
 }

@@ -5,6 +5,7 @@
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
 ### Unreleased (fork)
+- Align the landscape tablet home on a responsive grid; show two compact thermostats and keep touch controls at least 44 px.
 - Add visible-person switches in appearance settings, applied to household and family displays.
 - Add a complete Turkish source catalog and Windows build support.
 

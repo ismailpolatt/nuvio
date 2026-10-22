@@ -29,6 +29,6 @@ Görünüm ayarlarında **Başlık ve gezinme / Görünür kişiler** bölümün
 
 Bu bir görünüm tercihidir. Home Assistant hesaplarını, oturum açmış kullanıcının profilini veya erişim izinlerini değiştirmez. Açıkça eklenmiş bağımsız kişi kartları, cihaz takipçileri ve Home Assistant'ın diğer panoları için erişim sınırı sağlamaz. Tercih mevcut Nuvio düzeninin ortak veya kişisel kayıt kapsamını kullanır; dışa/içe aktarmayla taşınır. Kişisel düzen isteyen kullanıcı önce Nuvio'nun kendi düzen seçeneğini kullanmalıdır.
 
-Türkçe kaynak kataloğu ve tekrarlanabilir derleme ilk adımdır. Sonraki çalışma Samsung Tab S9+ yatay ekranındaki kart hizaları, görünür termostatlar ve yoğunluğu ayarlanabilen yerleşimdir. Bu yerleşim değişiklikleri henüz uygulanmadı.
+Samsung Galaxy Tab A9+ için yatay ana ekran ızgarası eklendi. İki kompakt termostat, hava durumu ve alt kişi şeridi ayrı alanlarda durur. Kullanılabilir yüksekliğe Home Assistant üst başlığı dahil edilmez. Dokunmatik kontroller en az 44 piksel hedef alanı kullanır. Stratejide tablet_home: false bu yerleşimi kapatır; dikey ve telefon görünümleri mevcut akışı kullanır. Çok sayıda özel kart eklenirse içerik güvenle kaydırılabilir, kontroller kırpılarak saklanmaz. Fiziksel tablet geri bildirimi ayrıca gereklidir. Sonraki çalışma etkileşimli ev planıdır.
 
 Canlı Home Assistant adresleri, kimlik bilgileri ve kişisel cihaz kimlikleri bu depoya eklenmez. Üretilen dosyalar önce test panelinde doğrulanır.
