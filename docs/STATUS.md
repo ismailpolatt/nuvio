@@ -73,3 +73,5 @@ Fork: home scenes use stacked actions and fill their grid row; health summary de
 2026-10-22: Yeni eklenen bağımsız bileşen kartları da satır yüksekliğini doldurur; karo grupları doğal yüksekliğini korur. Önbellekteki bileşen gruba dönerse dolgu niteliği temizlenir.
 
 2026-10-22: Tablet sayfa geçişlerinde üst menü tek satır, sabit ölçü/yazı/boşluk; eski tablet order/width kuralları kaldırıldı. Taşan sekmelerde seçili sekme görünür alana alınır; telefon menüsü korunur.70JS testi geçti.
+
+2026-10-22: Günlük kullanım araçları: oda hızlı paneli; Kontrol'de öneriler, çıkış önizlemesi, öncelikli/okundu bildirimleri, kayıtlı oda filtresiyle otomasyon listesi; Tablet'te tarayıcı/hesap/panel bazında yatay/dikey gizleme, düzen kilidi ve48px hedefler.82JS+83Python geçti. Servis akışı mock ile test edilir, görsel QA cihaz komutu çalıştırmaz. docs/daily-use-tools-tr.md ayrıntılar. Yeni TR/EN çeviriler, FR/PL İngilizce yedek.

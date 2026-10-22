@@ -311,6 +311,7 @@ class HGPage extends HTMLElement {
     if (this._panel) this._panelGrid(mode);
     const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     this.toggleAttribute('touch', touch);
+    if (window.HGLiving && this._hass) HGLiving.applyTouch(this);
     if (mode === 'phone' || touch) this.style.setProperty('--hg-tgt', '44px'); else this.style.removeProperty('--hg-tgt');
     if (this._built) { this._placeInd(); this._railClear(); }
     if (this._panelEl && this._config.panel.fit) {
@@ -1510,6 +1511,7 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([single-nav][tablet-home]) .hub{ grid-column:1; }
 :host([single-nav][tablet-home]) .tools{ grid-column:2; }
 :host([single-nav][tablet-home]) .back{ display:none; }
+:host([living-large]) .panel button{min-height:48px;min-width:48px}
 `);
   }
 }

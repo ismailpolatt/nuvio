@@ -248,7 +248,7 @@ class HGBase extends HTMLElement {
     this._sig = null; this._entsC = null; this._prevStates = null; this._html = null;
     if (!this._styled) {
       const st = document.createElement('style');
-      st.textContent = HG_BASE + (typeof hgUI !== 'undefined' ? hgUI.css() : '') + this.css() + ':host([panel-fill]) .root > ha-card.glass{min-height:100%;box-sizing:border-box}';
+      st.textContent = HG_BASE + (typeof hgUI !== 'undefined' ? hgUI.css() : '') + this.css() + ':host([panel-fill]) .root > ha-card.glass{min-height:100%;box-sizing:border-box}:host([large-targets]) button{min-height:48px;min-width:48px}';
       this.shadowRoot.appendChild(st);
       this.$ = document.createElement('div');
       this.$.className = 'root';
@@ -258,7 +258,7 @@ class HGBase extends HTMLElement {
     }
     if (this._hass) this._update();
   }
-  set hass(h) { this._hass = h; window.__hgHass = h; if (typeof HGTheme !== 'undefined') HGTheme.pick(h); this._update(); }
+  set hass(h) { this._hass = h; if (window.HGLiving) this.toggleAttribute('large-targets', HGLiving.tabletHere() && !!HGLiving.tabletPrefs(h).large); window.__hgHass = h; if (typeof HGTheme !== 'undefined') HGTheme.pick(h); this._update(); }
   get hass() { return this._hass; }
   ents() { return [this._config.entity].filter(Boolean); }
   /* szybka ścieżka: HA podmienia obiekt stanu tylko dla zmienionej encji -> porównanie referencji, bez JSON */

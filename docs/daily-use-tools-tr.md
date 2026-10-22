@@ -1,0 +1,13 @@
+# Günlük kullanım araçları
+
+Odalar sayfasında odaya dokununca hızlı panel açılır. Odanın ışık ve anahtarları ayrı güç düğmeleriyle yönetilir; iklim ve sensör ayrıntıları Home Assistant'ın kendi penceresinde açılır. Kullanılamayan cihazın güç düğmesi kapalıdır. Tam oda sayfası bağlantısı korunur. Panel klavyeyle kapatılabilir ve odak açan karta döner.
+
+Kontrol sayfasındaki ek bölümler:
+
+1. **Öneriler:** Aynı odada açık temas + gerçek `heating/cooling` eylemi, oda neminin %70'i aşması ve %20/altı pil. `heat` modu tek başına çalışıyor sayılmaz. Oda veya sensör verisi eksikse ilgili kural sonuç üretmeyebilir. Kendiliğinden komut göndermez.
+2. **Çıkış kontrolü:** Açık ışık/anahtar, açık veya kullanılamayan temas, açık iklim modu ve oynayan medya. Başlangıçta hiçbir cihaz seçili değildir. Yalnız ışık/anahtar kapatma seçilebilir. Önizleme ve ayrı Onayla adımı vardır. Priz bağlı cihazın elektriğini kesebilir. Hedefler güncel durumla doğrulanır; servis hatasında işlem durur ve kabul edilen komut sayısı gösterilir. Geri alma veya fiziksel sonuç garantisi yoktur.
+3. **Tablet:** Mevcut bağlantı/pil ayarlarının altında bu tarayıcı+hesap+panel için yatay/dikey kart gizleme, düzen kilidi ve 48 piksel dokunma hedefleri. Ortak veya kişisel düzende gizli kartları açmaz. 600–1600 piksel genişlikte dokunmatik tarayıcıda uygulanır. Kilit güvenlik/erişim yetkisi değildir; Kontrol → Tablet'ten kaldırılır. Cihaz işletim sistemi ayarlarını değiştirmez. Fazladan büyük hedefler bazı içeriklerde kaydırma gerektirebilir.
+4. **Bildirimler:** Güncel sağlık uyarıları ve Home Assistant kalıcı bildirimleri; kritik, dikkat, pil, bağlantı sırası. Okundu bilgisi `nuvio_personal_controls_v1.readAlerts` ile hesaba kaydedilir (en çok100). Olayın `last_changed` veya bildirim içeriği/tarihi değişirse yeniden okunmamış olur. Okundu, HA bildirimini silmez ve sensörün fiziksel sorununu çözmez.
+5. **Otomasyonlar:** Mevcut otomasyonları kayıtlı oda atamasına göre filtreler; oda adı tahmini yapmaz. Son tetiklenme `last_triggered` üzerinden gösterilir. Yönetici ayrı önizleme/onay ile etkinleştirir veya devre dışı bırakır. Yeni otomasyon oluşturmaz veya `automation.trigger` çağırmaz. Devre dışı bırakırken `stop_actions:false` gönderilir; çalışan adımlar durdurulmaz. [Home Assistant servis tanımı](https://github.com/home-assistant/core/blob/dev/homeassistant/components/automation/services.yaml).
+
+Türkçe/İngilizce metinler çevrildi; bu yeni bölümde Fransızca/Lehçe kataloglar İngilizce yedek metin içerir. Önceki çeviriler korunur. Varsayılan tablet gizleme/kilit/büyük hedef ayarları kapalıdır. Fiziksel cihaz komutları görsel doğrulama için çalıştırılmaz; servis akışı sahte HA ile test edilir.

@@ -117,6 +117,7 @@ CARDS = [
 PAGE = ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-looks.part.js', 'hg-lookr.part.js', 'hg-backup.part.js', 'hg-wall.part.js', 'hg-wallboard.part.js', 'hg-wallglass.part.js', 'hg-wallx.part.js', 'hg-wallnotify.part.js', 'hg-users.part.js', 'hg-assist.part.js']
 PAGE.append('hg-dashboardx.part.js')
 PAGE.append('hg-controlx.part.js')
+PAGE.append('hg-livingx.part.js')
 PARTS = CORE + UI + SHARED + CARDS + PAGE
 import re
 def brand_tags(js):

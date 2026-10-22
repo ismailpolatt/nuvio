@@ -797,6 +797,7 @@ const HG_COMP_EDIT = {
       if (g) { if (d) d.remove(); it.classList.add('hge-ghost'); } else if (it.classList.contains('hge-ghost')) { it.classList.remove('hge-ghost'); } } },
   /* krok 1: galeria komponentów */
   _eGallery(ct, scOver) {
+    if (window.HGLiving && HGLiving.tabletLocked(this)) { this._eToast(hgT('living.locked_help')); return; }
     const kN = (this._eKidStk || []).length, kid = kN > 0; if (!kid) { this._eStk = []; this._eShT = (this._eShT || 0) + 1; this._eShSnap = null; }   /* galeria to poziom główny, bez szkicu; w kontenerze to krok formularza */
     const h = this._hass; this._eSheet('cfg'); const S = this._eSheetEl; const sc = scOver || (ct ? (ct.page ? ct.scope + ':tiles' : ct.scope) : (this._pageScope() + ':tiles')); this._eGalSc = sc; this._eGalCt = ct;
     const list0 = HG_COMP.filter(hgCompOk),   /* wszędzie ta sama galeria: widok, pokój i kontener */
@@ -1160,6 +1161,7 @@ const HG_EDIT = {
       const hi = out.findIndex((c) => c.hint_sc); if (hi >= 0) out.push(out.splice(hi, 1)[0]); }   /* podpowiedź pod kafelkami */
     for (const c of out) if (c.home_optional && !(L.conf[c._k] || {}).home_visible) c._hid = true;
     if (sc === 'dashboard' && !this._editing && window.HGPersonal) out = HGPersonal.apply(out);
+    if (sc === 'dashboard' && !this._editing && window.HGLiving) out = HGLiving.tabletApply(out, this);
     return out;
   },
   _isAdmin() { return !!(this._hass && this._hass.user && this._hass.user.is_admin); },
@@ -1179,6 +1181,7 @@ const HG_EDIT = {
   _eMap(ct, k) { return ct.page && k && k[0] === '+' ? [Object.assign({}, ct, { scope: this._pageScope() + ':tiles', page: false, sz: true, via: ct }), k.slice(1)] : [ct, k]; },
   _eItems(ct) { return ct.page ? [...ct.el.children].filter((w) => w.classList.contains('cw') && !w.hidden && w.dataset.hgk && w.dataset.hgk !== '_tiles') : [...ct.el.children].filter((x) => x.dataset && x.dataset.hgk); },
   _editEnter() {
+    if (window.HGLiving && HGLiving.tabletLocked(this)) { this._eToast(hgT('living.locked_help')); return; }
     /* paczka z pamięci przeglądarki starsza niż na serwerze: raz na sesję komunikat z prośbą o odświeżenie */
     if (!window.__hgVerChk && typeof HG_ASSET === 'string' && typeof HG_BUILD === 'string' && !HG_BUILD.startsWith('__')) { window.__hgVerChk = 1;
       fetch(HG_ASSET + 'nuvio.js?nocache=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((t) => { const m = new RegExp('HG_BUILD = ' + "'" + "([^']+)'").exec(t || '');

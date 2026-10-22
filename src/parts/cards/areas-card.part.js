@@ -102,7 +102,10 @@ class HGAreasCard extends HGBase {
     const h = this._hass, c = this._config;
     if (act === 'tog') { const e = t.dataset.e, s = h.states[e]; if (!H.ok(s)) return; return H.call(h, 'homeassistant', s.state === 'on' ? 'turn_off' : 'turn_on', { entity_id: e }); }
     const a = this._m().byId[t.dataset.a]; if (!a) return;
-    if (act === 'open') return H.navigate(`${c.room_path}?area=${encodeURIComponent(a.id)}`);
+    if (act === 'open') {
+      if (window.HGLiving) return HGLiving.openRoom(this, a, c, t);
+      return H.navigate(`${c.room_path}?area=${encodeURIComponent(a.id)}`);
+    }
     if (act === 'lights') {
       const on = a.lights.filter((e) => h.states[e].state === 'on'), av = a.lights.filter((e) => H.ok(h.states[e]));
       if (on.length) return H.call(h, 'homeassistant', 'turn_off', { entity_id: on });
