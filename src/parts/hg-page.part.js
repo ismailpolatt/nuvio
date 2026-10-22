@@ -506,6 +506,7 @@ class HGPage extends HTMLElement {
     }, () => { if (tok === this._pTok) { this._pBusy = undefined; this.removeAttribute('panel-anim'); HG_FREEZE.release(); } });
   }
   _glassRefresh() {
+    if (this._config && this._config.navigation === 'top') return;
     const sr = this.shadowRoot; if (!sr || this._grRaf) return;
     this._grRaf = requestAnimationFrame(() => requestAnimationFrame(() => {
       this._grRaf = 0;
@@ -520,7 +521,7 @@ class HGPage extends HTMLElement {
     this._paintTop(); this._paintRail();
     const p = HGNav.prev; HGNav.prev = null;
     const fresh = p && p.view !== this._config.view && performance.now() - p.t < 2500 && p.mode === this.getAttribute('mode');
-    if (fresh && !hgReduced() && this._panelEl.animate) this._animIn(p);
+    if (fresh && this._config.navigation !== 'top' && !hgReduced() && this._panelEl.animate) this._animIn(p);
     HGNav.ready();
     clearTimeout(this._grT); this._grT = setTimeout(() => this._glassRefresh(), 260);   // po przejściu widoku
   }
@@ -692,6 +693,7 @@ class HGPage extends HTMLElement {
   }
   /* zakładki u góry (tryb wide): gdy z etykietami nie mieszczą się przed prawą grupą, same ikony (etykieta w title/aria-label) */
   _tabsFit() {
+    if (this._config.navigation === 'top') { this.removeAttribute('tabs-compact'); return; }
     const t = this._topEl && this._topEl.querySelector('.tabs'), r = this._topEl && this._topEl.querySelector('.right');
     if (!t || !r) return;
     const was = this.hasAttribute('tabs-compact');
@@ -1484,6 +1486,13 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([single-nav]) .top .tabs{ position:relative; inset:auto; flex:1; min-width:0; max-width:none; margin-inline:16px; overflow-x:auto; scrollbar-width:none; justify-content:flex-start; }
 :host([single-nav]) .tab{ flex:none; }
 :host([single-nav]) .tabs .tab .tl{ display:inline; }
+:host([single-nav]) .cw{ animation:none; }
+:host([single-nav]) .top{ --hg-u:1px; --k:1px; height:48px; }
+:host([single-nav][mode=wide]:not([tablet-home])) .top{ top:16px; left:16px; right:16px; }
+:host([single-nav]) .top .tab{ height:44px; font-size:14px; }
+:host([single-nav]) .top .brand{ font-size:16px; }
+:host([single-nav]) .top .cir, :host([single-nav]) .top .user{ height:44px; }
+:host([single-nav]) .top .cir{ width:44px; }
 :host([single-nav][mode=wide][wide-panel]) .page{ grid-template-columns:minmax(0,1fr); }
 :host([single-nav][mode=wide][wide-panel]) .panel{ grid-column:1; }
 :host([single-nav][mode=tablet]) .page{ grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"top top" "head head" "panel panel" "hub tools"; }

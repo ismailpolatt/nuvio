@@ -61,3 +61,5 @@ Fork: wiz.hiddenPersons display preference, appearance header switches; applied 
 Fork: tablet_home home-page landscape grid, automatic at available widths 780..1600 with sufficient height; two compact climate cards; 44px touch targets. Explicit strategy tablet_home:false opts out. Portrait and phones retain the existing layouts.
 
 Fork: generated pages use navigation:top, with all view links; desktop/tablet rail removed and grid space reclaimed. Phone navigation preserved.
+
+Fork: top-navigation pages skip card/indicator entrance fades and glass filter resets; stable label rendering and fixed top control sizes.
