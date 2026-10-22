@@ -783,6 +783,11 @@ class HGPage extends HTMLElement {
     const put = (box, act, ind, sel) => {
       if (!box || !ind) return;
       if (!act) { ind.style.opacity = '0'; return; }
+      if (box.classList.contains('tabs') && this._config.navigation === 'top' && this.getAttribute('mode') !== 'phone') {
+        const left = act.offsetLeft, right = left + act.offsetWidth;
+        if (left < box.scrollLeft) box.scrollLeft = Math.max(0, left - 4);
+        else if (right > box.scrollLeft + box.clientWidth) box.scrollLeft = Math.max(0, right - box.clientWidth + 4);
+      }
       ind.style.opacity = '';
       ind.style.width = act.offsetWidth + 'px'; ind.style.height = act.offsetHeight + 'px';
       ind.style.transform = `translate(${act.offsetLeft}px, ${act.offsetTop}px)`;
@@ -1483,11 +1488,13 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 :host([tablet-home][wide-panel]) .page{ grid-template-columns:52px minmax(185px,.75fr) minmax(0,2fr); grid-template-rows:48px minmax(0,1fr) 52px; }
 :host([tablet-home][wide-panel]) .hub, :host([tablet-home][wide-panel]) .tools{ display:flex; }
 :host([single-nav]) .rail{ display:none; }
-:host([single-nav]) .top .tabs{ position:relative; inset:auto; flex:1; min-width:0; max-width:none; margin-inline:16px; overflow-x:auto; scrollbar-width:none; justify-content:flex-start; }
+:host([single-nav]) .top .tabs{ position:relative; inset:auto; flex:1 1 0; order:0; width:auto; height:48px; box-sizing:border-box; min-width:0; max-width:none; margin-inline:16px; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; justify-content:flex-start; }
 :host([single-nav]) .tab{ flex:none; }
 :host([single-nav]) .tabs .tab .tl{ display:inline; }
 :host([single-nav]) .cw{ animation:none; }
-:host([single-nav]) .top{ --hg-u:1px; --k:1px; height:48px; }
+:host([single-nav]) .top{ --hg-u:1px; --k:1px; --s1:8px; --s2:12px; --s3:16px; --fs-xs:11px; --fs-sm:12px; --fs-md:16px; height:48px; min-width:0; flex-wrap:nowrap; gap:0; }
+:host([single-nav]) .top .brand, :host([single-nav]) .top .right{ flex:none; }
+:host([single-nav][mode=tablet]) .page{ padding:16px 16px calc(16px + env(safe-area-inset-bottom)); }
 :host([single-nav][mode=wide]:not([tablet-home])) .top{ top:16px; left:16px; right:16px; }
 :host([single-nav]) .top .tab{ height:44px; font-size:14px; }
 :host([single-nav]) .top .brand{ font-size:16px; }

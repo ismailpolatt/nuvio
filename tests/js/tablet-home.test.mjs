@@ -25,3 +25,14 @@ test('portrait, phones, short windows and an explicit opt-out keep the existing 
   for (const [w, h, on] of [[800, 1280, true], [390, 844, true], [1120, 500, true], [1120, 700, false], [1920, 1080, true]])
     assert.equal(layout(w, h, 0, on).attrs.has('tablet-home'), false, `${w}x${h}, enabled=${on}`);
 });
+
+const indBody = source.slice(source.indexOf('  _placeInd() {') + '  _placeInd() {'.length, source.indexOf('  _paintRail(force)')).trim().replace(/\}$/, '');
+test('top navigation keeps the active tab visible after page changes without scrolling the page', () => {
+  for (const [left, start, expected] of [[500, 0, 304], [20, 300, 16], [120, 0, 0]]) {
+    const box = { classList: { contains: () => true }, scrollLeft: start, clientWidth: 300 }, act = { offsetLeft: left, offsetWidth: 100, offsetTop: 4, offsetHeight: 44 }, ind = { style: {} };
+    const page = { _config: { navigation: 'top' }, getAttribute: () => 'tablet', _topEl: { querySelector: (s) => s === '.tabs' ? box : s === '.tab.act' ? act : ind } };
+    new Function(indBody).call(page);
+    assert.equal(box.scrollLeft, expected);
+    assert.equal(ind.style.transform, `translate(${left}px, 4px)`);
+  }
+});

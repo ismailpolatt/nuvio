@@ -71,3 +71,5 @@ Fork: account-owned Control page adds favorites, explicit previewed home modes, 
 Fork: home scenes use stacked actions and fill their grid row; health summary defaults to full width. Home width settings respect a full-width card default on the first toggle.
 
 2026-10-22: Yeni eklenen bağımsız bileşen kartları da satır yüksekliğini doldurur; karo grupları doğal yüksekliğini korur. Önbellekteki bileşen gruba dönerse dolgu niteliği temizlenir.
+
+2026-10-22: Tablet sayfa geçişlerinde üst menü tek satır, sabit ölçü/yazı/boşluk; eski tablet order/width kuralları kaldırıldı. Taşan sekmelerde seçili sekme görünür alana alınır; telefon menüsü korunur.70JS testi geçti.
