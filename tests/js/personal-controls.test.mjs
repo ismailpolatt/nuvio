@@ -22,6 +22,36 @@ test('failed preference read blocks saving instead of overwriting server prefere
   const { HGPersonal: p } = setup(); const h = { user: { id: 'one' }, callWS: async () => { throw Error('offline'); } };
   await p.load(h); assert.equal(p.failed, true); await assert.rejects(p.save(h, { favorites: [] }));
 });
+
+test('an old account save completing after account switch cannot replace the new account preferences', async () => {
+  const { HGPersonal: p } = setup(); let release;
+  const one = { user: { id: 'one' }, callWS: async (q) => q.type === 'frontend/get_user_data' ? { value: { favorites: ['light.one'] } } : new Promise((r) => { release = r; }) };
+  await p.load(one);
+  const save = p.save(one, { favorites: ['light.old'] });
+  await p.load({ user: { id: 'two' }, callWS: async () => ({ value: { favorites: ['light.two'] } }) });
+  release(); await assert.rejects(save);
+  assert.equal(p.uid, 'two'); assert.deepEqual(p.data.favorites, ['light.two']);
+});
+
+test('saving visibility without a move inherits shared ordering; an explicit move saves the displayed order', () => {
+  const { HGPersonal: p, HGControlCard } = setup(), c = new HGControlCard();
+  p.data.cards = { retained: { visible: false } };
+  const rows = ['second', 'first'].map((key) => ({ dataset: { card: key }, querySelector: () => ({ value: '' }) }));
+  c.shadowRoot = { querySelector: () => ({ checked: true }), querySelectorAll: (q) => q === '[data-card]' ? rows : [] };
+  assert.deepEqual(c._profileCollect().order, []);
+  assert.deepEqual(c._profileCollect().cards.retained, { visible: false });
+  c._profileOrderChanged = true; assert.deepEqual(c._profileCollect().order, ['second', 'first']);
+});
+
+test('executing a mode uses exactly the previewed steps even if the saved mode changes meanwhile', async () => {
+  const { HGPersonal: p, HGControlCard } = setup(), c = new HGControlCard(), calls = [];
+  c.shadowRoot = {}; c._hass = { user: { id: 'one' }, states: { 'light.one': { state: 'on' }, 'light.two': { state: 'on' } }, callService: async (...q) => calls.push(q) };
+  p.data.modes.home = [{ e: 'light.one', state: 'off' }];
+  await c.onAct('preview', { dataset: { mode: 'home' } });
+  p.data.modes.home = [{ e: 'light.two', state: 'off' }];
+  await c.onAct('execute', {});
+  assert.deepEqual(calls, [['light', 'turn_off', { entity_id: 'light.one' }]]);
+});
 test('personal home overlay can show optional cards, hide others and reorder without changing shared cards', () => {
   const { HGPersonal: p } = setup(); const cards = [{ _k: 'a', _hid: false }, { _k: 'b', _hid: true }];
   p.data = p.clean({ active: true, order: ['b', 'a'], cards: { a: { visible: false }, b: { visible: true, size: 'l' } } });

@@ -35,3 +35,5 @@ Bu bölüm ve favoriler, ev modları, tarife/sayaç ve tablet seçimleri **oturu
 Üst kalemle açılan mevcut Nuvio düzenleme modu ortak düzen kullanılıyorsa ortak düzeni değiştirmeye devam eder. Kişisel maske bu düzenleme sırasında uygulanmaz. Ortak dashboard izinleri ve Kullanıcılar bölümündeki yerel Nuvio ortak/kendi düzen seçimi değişmez.
 
 Türkçe ve İngilizce yeni metinler kaynak kataloglarında bulunur; yeni Kontrol alanları Fransızca/Lehçe kataloglarında şimdilik İngilizce yedek metinler kullanır.
+
+2026-10-22 incelemesi: Ana sayfam ve yerel Tablet profili, sonradan eklenen bileşenleri de listeler ve ortak sırayı/özel adları izler. Yalnız görünürlüğü kaydetmek ortak sırayı sabitlemez; yukarı ok kullanıldığında kişisel sıra kaydedilir. Kişisel genişlik ortak genişlikten önce uygulanır; tam geniş kartlar seçilen sıranın önüne taşınmaz. Ev modu onayı önizlenen adımları kullanır. Telefonda Kontrol bölümleri tek seçiciyle açılır.

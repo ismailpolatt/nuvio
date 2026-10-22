@@ -64,8 +64,8 @@ const HGLiving = window.HGLiving = {
     return Array.isArray(hidden) ? cards.map((c) => hidden.includes(c._k) ? { ...c, _hid: true } : c) : cards;
   },
   tabletHtml(card) {
-    const p = this.tabletPrefs(card._hass), keys = HGDashboard.cards.map((c) => `${String(c.type || '').replace('custom:', '')}|${c._hgid || c.entity || (c.entities && c.entities[0]) || c.title || c.area || ''}`);
-    return `<div class="cx-box" style="margin-top:12px"><h3>${HG_LIVING_TEXT.tablet_profile}</h3><p class="cx-note">${HG_LIVING_TEXT.tablet_help}</p><label class="cx-row"><input type="checkbox" name="living-lock" ${p.locked ? 'checked' : ''}><span>${HG_LIVING_TEXT.edit_lock}</span></label><label class="cx-row"><input type="checkbox" name="living-large" ${p.large ? 'checked' : ''}><span>${HG_LIVING_TEXT.large_touch}</span></label><div class="cx-grid">${['landscape', 'portrait'].map((o) => `<div><h3>${HG_LIVING_TEXT[o]}</h3>${HGDashboard.cards.map((c, i) => `<label class="cx-row"><input type="checkbox" name="living-${o}" value="${H.esc(keys[i])}" ${!(p[o] || []).includes(keys[i]) ? 'checked' : ''}><span>${H.esc(c.title || c.entity || c.type)}</span></label>`).join('')}</div>`).join('')}</div><button class="cx-btn cx-primary" data-act="living-tablet-save">${hgT('common.save')}</button></div>`;
+    const p = this.tabletPrefs(card._hass), cards = HGDashboard.catalog(), keys = cards.map((c) => c._k);
+    return `<div class="cx-box" style="margin-top:12px"><h3>${HG_LIVING_TEXT.tablet_profile}</h3><p class="cx-note">${HG_LIVING_TEXT.tablet_help}</p><label class="cx-row"><input type="checkbox" name="living-lock" ${p.locked ? 'checked' : ''}><span>${HG_LIVING_TEXT.edit_lock}</span></label><label class="cx-row"><input type="checkbox" name="living-large" ${p.large ? 'checked' : ''}><span>${HG_LIVING_TEXT.large_touch}</span></label><div class="cx-grid">${['landscape', 'portrait'].map((o) => `<div><h3>${HG_LIVING_TEXT[o]}</h3>${cards.map((c, i) => `<label class="cx-row"><input type="checkbox" name="living-${o}" value="${H.esc(keys[i])}" ${!(p[o] || []).includes(keys[i]) ? 'checked' : ''}><span>${H.esc(c.title || c.entity || c.type)}</span></label>`).join('')}</div>`).join('')}</div><button class="cx-btn cx-primary" data-act="living-tablet-save">${hgT('common.save')}</button></div>`;
   },
   html(card, tab) {
     const h = card._hass, details = (e) => `<button class="cx-btn" data-act="details" data-e="${H.esc(e)}" aria-label="${HG_LIVING_TEXT.details}">${H.icon('mdi:information-outline')}</button>`;
@@ -91,13 +91,13 @@ const HGLiving = window.HGLiving = {
   },
   bind(card) {
     const modal = card.shadowRoot.querySelector('.living-modal');
-    if (modal && !modal.open) { modal.showModal(); modal.oncancel = (e) => { e.preventDefault(); if (!card._running) { card._livingConfirm = null; card.rerender(); } }; }
+    if (modal && !modal.open) { modal.showModal(); modal.oncancel = (e) => { e.preventDefault(); if (!card._running) { card._livingConfirm = null; card._preview = null; card.rerender(); } }; }
     const area = card.shadowRoot.querySelector('[data-living-area]');
     if (area) area.onchange = () => { card._autoArea = area.value; card.rerender(); };
     if (!card._livingKey) {
       card._livingKey = (e) => {
-        const dialog = card.shadowRoot.querySelector('.cx-dialog'); if (!dialog || !card._livingConfirm) return;
-        if (e.key === 'Escape' && !card._running) { e.preventDefault(); e.stopPropagation(); card._livingConfirm = null; card.rerender(); }
+        const dialog = card.shadowRoot.querySelector('.cx-dialog'); if (!dialog || !(card._livingConfirm || card._preview)) return;
+        if (e.key === 'Escape' && !card._running) { e.preventDefault(); e.stopPropagation(); card._livingConfirm = null; card._preview = null; card.rerender(); }
         if (e.key === 'Tab') {
           const buttons = [...dialog.querySelectorAll('button:not(:disabled)')], i = buttons.indexOf(card.shadowRoot.activeElement);
           if ((e.shiftKey && i <= 0) || (!e.shiftKey && i === buttons.length - 1)) { e.preventDefault(); buttons[e.shiftKey ? buttons.length - 1 : 0]?.focus(); }
@@ -105,8 +105,9 @@ const HGLiving = window.HGLiving = {
       };
       card.shadowRoot.addEventListener('keydown', card._livingKey);
     }
-    if (card._livingConfirm && card._livingFocus !== card._livingConfirm) card.shadowRoot.querySelector('[data-act=living-cancel]')?.focus();
-    card._livingFocus = card._livingConfirm;
+    const focus = card._livingConfirm || card._preview;
+    if (focus && card._livingFocus !== focus) card.shadowRoot.querySelector('[data-act=living-cancel],[data-act=cancel-preview]')?.focus();
+    card._livingFocus = focus;
   },
   async act(card, action, b) {
     const h = card._hass, R = card.shadowRoot;

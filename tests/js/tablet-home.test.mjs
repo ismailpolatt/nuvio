@@ -36,3 +36,16 @@ test('top navigation keeps the active tab visible after page changes without scr
     assert.equal(ind.style.transform, `translate(${left}px, 4px)`);
   }
 });
+
+test('personal card width wins over shared width and personal order disables dense backfilling', () => {
+  const start = source.indexOf('  _panelGrid(mode) {') + '  _panelGrid(mode) {'.length;
+  const body = source.slice(start, source.indexOf('\n  }', start));
+  const style = () => ({ setProperty() {}, removeProperty(k) { delete this[k]; } });
+  for (const [span, shared, expected] of [[1, 'full', 'span 1'], ['full', 'half', '1 / -1']]) {
+    const w = { style: style(), dataset: { hgk: 'card' } }, el = { style: style() };
+    const page = { _config: { panel: { columns: '1fr 1fr', scroll: true } }, _panelEl: el, _lc: [{ span, _personalSize: true }], _cardWraps: [w], _hasTiles2: () => false, _pageScope: () => 'dashboard', _pwSet: () => null, toggleAttribute() {}, _moreUpd() {} };
+    const HGL = { get: () => ({ order: [], conf: { card: { w: shared } } }) }, HGPersonal = { data: { active: true, order: ['card'] } };
+    new Function('mode', 'HGL', 'window', 'HGPersonal', body).call(page, 'tablet', HGL, { HGPersonal }, HGPersonal);
+    assert.equal(w.style.gridColumn, expected); assert.equal(el.style.gridAutoFlow, 'row');
+  }
+});

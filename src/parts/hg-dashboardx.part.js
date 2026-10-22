@@ -1,6 +1,18 @@
 /* Dashboard preferences reuse the native layout store and save permissions. */
 const HGDashboard = window.HGDashboard = {
   cards: [], draft: null,
+  keys(cards) {
+    const seen = {};
+    return cards.map((c) => { const k = `${String(c.type || '').replace('custom:', '')}|${c._hgid || c.entity || (c.entities && c.entities[0]) || c.title || c.area || ''}`; seen[k] = (seen[k] || 0) + 1; return seen[k] > 1 ? `${k}#${seen[k]}` : k; });
+  },
+  catalog() {
+    const L = HGL.get('dashboard'), tl = HGL.get('dashboard:tiles'), keys = this.keys(this.cards);
+    let cards = this.cards.map((c, i) => ({ ...c, _k: keys[i] }));
+    for (const x of tl.added || []) if (x.c && customElements.get(x.c)) cards.push({ type: 'custom:hg-tiles-card', _k: '+' + x.e, title: x.n || (x.cfg || {}).title || x.e });
+    if ((tl.added || []).some((x) => !x.c)) cards.push({ type: 'custom:hg-tiles-card', _k: '_tiles', title: hgT('edit.tiles_card.picker_name') });
+    cards = cards.map((c) => (L.conf[c._k] || {}).n ? { ...c, title: L.conf[c._k].n } : c);
+    return HGL.sort(cards, (c) => c._k, L.order);
+  },
   health(h, exclude = []) {
     const hidden = new Set(exclude), rows = [];
     for (const [e, s] of Object.entries(h.states || {})) {

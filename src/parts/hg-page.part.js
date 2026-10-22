@@ -386,7 +386,7 @@ class HGPage extends HTMLElement {
       w.style.minHeight = fixed ? '0px' : `calc(var(--k) * ${cc.min_h ?? 60})`;
       /* szerokość sekcji z ustawień (Pełna szerokość / Połowa); na telefonie zawsze pełna */
       const wv = (() => { try { const c = HGL.get(this._pageScope()).conf[w.dataset.hgk]; return c && c.w; } catch (e) { return ''; } })();
-      const span = wv === 'full' ? 'full' : wv === 'half' ? 1 : cc.span;
+      const span = cc._personalSize ? cc.span : wv === 'full' ? 'full' : wv === 'half' ? 1 : cc.span;
       if (span === 'full') w.style.gridColumn = '1 / -1';
       else if (wv === 'half' && mode !== 'phone') w.style.gridColumn = 'span 1';
       else if (mode !== 'phone' && span && !cc.area) w.style.gridColumn = `span ${span}`;
@@ -396,7 +396,7 @@ class HGPage extends HTMLElement {
     const pw = this._pwSet(), wd = pw ? pw === 'wide' : !!p.wide;
     if (pw === 'narrow' && mode === 'wide' && !p.areas) { const cs = el.style.gridTemplateColumns || '', m = /repeat\((\d+)/.exec(cs), n = m ? +m[1] : cs.split(/\s+/).filter(Boolean).length; if (n > 2) el.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))'; }
     { const cs = el.style.gridTemplateColumns || '', m = /^repeat\((\d+), minmax\(0(px)?, 1fr\)\)$/.exec(cs); if (m && mode !== 'phone' && !p.areas) el.style.setProperty('--hg-vcols-tpl', 'repeat(' + m[1] + ', minmax(0, 1fr))'); else el.style.removeProperty('--hg-vcols-tpl'); } /* „dense” dosuwa wąskie karty w dziury, ale tylko w układzie domyślnym: po zmianie kolejności karty stoją dokładnie w kolejności użytkownika (inaczej przeniesiona karta wracała na stare miejsce) */
-    const ord = (() => { try { const sc = this._pageScope(); return !!sc && HGL.get(sc).order.length > 0; } catch (e) { return false; } })();
+    const ord = (() => { try { const sc = this._pageScope(); return !!sc && (HGL.get(sc).order.length > 0 || sc === 'dashboard' && !this._editing && window.HGPersonal && HGPersonal.data.active && HGPersonal.data.order.length > 0); } catch (e) { return false; } })();
     el.style.gridAutoFlow = (mode !== 'phone' && !p.areas) ? (ord ? 'row' : 'row dense') : '';
     /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
     el.style.maxWidth = p.max_w ? p.max_w + 'px' : ''; el.style.marginInline = p.max_w ? 'auto' : ''; el.style.width = p.max_w ? '100%' : '';
@@ -463,7 +463,7 @@ class HGPage extends HTMLElement {
       const w = document.createElement('div'); w.className = 'cw'; w.dataset.hgk = cc._k;
       if (cc._hid) { w.hidden = true; w.style.display = 'none'; }
       let el;
-      let conf = Object.assign({}, cc); delete conf.area; delete conf.min_h; delete conf.span; delete conf._k; delete conf._hid; delete conf._tiles; delete conf._hgid;
+      let conf = Object.assign({}, cc); delete conf.area; delete conf.min_h; delete conf.span; delete conf._k; delete conf._hid; delete conf._tiles; delete conf._hgid; delete conf._personalSize;
       conf = hgFromHA(conf);   // grid / vertical-stack / horizontal-stack z HA -> kontenery Nuvio (keep_ha: true zostawia kartę HA)
       try {
         if (helpers) el = helpers.createCardElement(conf);

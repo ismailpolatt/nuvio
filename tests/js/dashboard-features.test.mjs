@@ -3,10 +3,20 @@ import assert from 'node:assert/strict';
 import { loadParts } from './harness.mjs';
 function setup(wiz = {}) {
   const layout = { hidden: [], order: [], conf: {}, size: {} }, HGL = { data: { wiz }, get: () => layout, set: (k, v) => Object.assign(layout, v), save: async () => 'ha', sort: (xs, key, order) => [...xs].sort((a, b) => { const rank = (x) => order.includes(key(x)) ? order.indexOf(key(x)) : 999; return rank(a) - rank(b); }) };
-  const out = loadParts(['hg-dashboardx.part.js'], { window: {}, HGBase: class { rerender() {} }, hgReg() {}, hgTLazy: (k) => k, hgT: (k) => k, HGL }, ['HGDashboard', 'HGDailyEnergyCard']);
+  const out = loadParts(['hg-dashboardx.part.js'], { window: {}, customElements: { get: () => true }, HGBase: class { rerender() {} }, hgReg() {}, hgTLazy: (k) => k, hgT: (k) => k, HGL }, ['HGDashboard', 'HGDailyEnergyCard']);
   return { ...out, HGL, layout };
 }
 const state = (value, dc, unit) => ({ state: value, attributes: { device_class: dc, unit_of_measurement: unit } });
+
+test('personal/tablet catalog follows shared order and includes added components with their real panel keys', () => {
+  const { HGDashboard: d, HGL, layout } = setup();
+  d.cards = [{ type: 'custom:hg-scenes-card', title: 'One' }, { type: 'custom:hg-scenes-card', title: 'One' }];
+  const keys = d.keys(d.cards); assert.equal(keys[1], keys[0] + '#2');
+  layout.order = ['+new', keys[1], keys[0]]; layout.conf = { '+new': { n: 'Renamed' } };
+  HGL.get = (sc) => sc === 'dashboard' ? layout : { added: [{ c: 'hg-scenes-card', e: 'new', n: 'New' }] };
+  const list = d.catalog();
+  assert.deepEqual(list.map((c) => c._k), ['+new', keys[1], keys[0]]); assert.equal(list[0].title, 'Renamed');
+});
 test('home health distinguishes open, offline and low battery without treating zero or unknown as healthy', () => {
   const { HGDashboard } = setup();
   const h = { states: { 'binary_sensor.contact': state('on', 'window'), 'binary_sensor.lost': state('unavailable', 'door'), 'sensor.zero': state('0', 'battery', '%'), 'sensor.unknown': state('unknown', 'battery', '%'), 'sensor.normal': state('70', 'battery', '%'), 'sensor.voltage': state('2.7', 'battery', 'V'), 'sensor.hidden': state('0', 'battery', '%') }, entities: { 'sensor.hidden': { hidden: true } } };
