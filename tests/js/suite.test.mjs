@@ -127,7 +127,7 @@ test('embedded sidebar suppression tolerates cross-origin or removed frames with
 });
 
 test('personal application lists validate IDs, preserve empty lists, and respect current account and panel permissions',()=>{
- const {HGApps:a,HGPersonal:p,h}=setup();h.panels={terminal:{title:'Terminal',require_admin:true},map:{title:'Map'},'javascript:bad':{title:'Unsafe'},'dashboard-test':{title:'Self'}};
+ const {HGApps:a,HGPersonal:p,h}=setup();h.panels={internal:{},terminal:{title:'Terminal',require_admin:true},map:{title:'Map'},'javascript:bad':{title:'Unsafe'},'dashboard-test':{title:'Self'}};
  assert.deepEqual(a.available(h).map(x=>x.path),['/map','/terminal']);
  p.data=p.clean({apps:[{id:'panel:terminal',title:'My terminal'},{id:'panel:terminal'},{id:'panel:javascript:bad'},{id:'panel:map',title:'Map'}]});
  assert.equal(p.data.apps.length,2);assert.deepEqual(a.list(h).map(x=>x.title),['My terminal','Map']);

@@ -33,7 +33,7 @@ const HGApps = window.HGApps = {
     const seen=new Set();return v.filter(r=>r && typeof r.id==='string' && /^(hacs|music|zigbee|blueprint|panel:[a-zA-Z0-9_-]+)$/.test(r.id) && !seen.has(r.id) && seen.add(r.id)).slice(0,32).map(r=>({id:r.id,title:typeof r.title==='string'?r.title.trim().slice(0,60):''}));
   },
   available(h) {
-    return Object.entries(h.panels||{}).filter(([path,p])=>/^[a-zA-Z0-9_-]+$/.test(path) && (!p.require_admin || h.user?.is_admin) && path!==location.pathname.split('/').filter(Boolean)[0]).map(([path,p])=>({id:'panel:'+path,title:p.title||path,icon:/^mdi:[a-z0-9-]+$/.test(p.icon||'')?p.icon:'mdi:application-outline',admin:!!p.require_admin,path:'/'+path})).sort((a,b)=>a.title.localeCompare(b.title));
+    return Object.entries(h.panels||{}).filter(([path,p])=>/^[a-zA-Z0-9_-]+$/.test(path) && typeof p.title==='string' && p.title.trim() && (!p.require_admin || h.user?.is_admin) && path!==location.pathname.split('/').filter(Boolean)[0]).map(([path,p])=>({id:'panel:'+path,title:p.title,icon:/^mdi:[a-z0-9-]+$/.test(p.icon||'')?p.icon:'mdi:application-outline',admin:!!p.require_admin,path:'/'+path})).sort((a,b)=>a.title.localeCompare(b.title));
   },
   prefs(h){return HGPersonal.uid===h.user?.id?this.clean(HGPersonal.data.apps):null;},
   chrome(frame, every=setInterval, stop=clearInterval) {
