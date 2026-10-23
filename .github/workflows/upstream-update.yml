@@ -67,13 +67,14 @@ jobs:
           PYTHONUTF8: '1'
           PYTHON: python3
         run: |
+          python3 tools/fork_version.py
           node --test 'tests/js/**/*.test.mjs'
           python3 -m unittest discover -s tests/py
           python3 tools/build.py
           python3 tools/guard.py
           python3 tools/i18n_check.py --lang tr
           git diff --check
-          git add dist
+          git add dist package.json package-lock.json
           git commit -m 'Merge tested upstream stable release'
           git bundle create "$RUNNER_TEMP/candidate.bundle" HEAD
       - uses: actions/upload-artifact@v4

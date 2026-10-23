@@ -2,6 +2,8 @@
 
 Bu depo, [orijinal Nuvio](https://github.com/kczepiec/nuvio) üzerine Türkçe ve kişisel kullanım geliştirmelerini ekler. Kurulum kaynağı **ismailpolatt/nuvio**, ana dal **main** olmalıdır. İlk birleşim: upstream v2.22.3.
 
+Fork sürümleri `X.Y.Z` biçimindedir. Güncel fork sürümü **2.22.4**, orijinal tabanı **2.22.3**’tür. GitHub etiketi `v2.22.4`, paket ve ekranda `2.22.4` kullanılır. Önceden yayımlanan etiketin içeriği değiştirilmez; düzeltmede yama numarası artırılır. Önbellek için kullanılan dahili derleme özeti kullanıcıya sürüm numarası olarak gösterilmez. Gelecek aday birleştirilirken paket sürümü mevcut fork sürümünden ileri olmalı; daha düşük upstream sürümüne geçilmez.
+
 ## HACS geçişi
 
 HACS özel depolarına `https://github.com/ismailpolatt/nuvio` adresini Dashboard türünde ekle ve bu depodan indir. Orijinal ve fork aynı `www/community/nuvio` hedefini kullanır; ikisini birlikte güncelleme. Orijinal kaydı kaldırmak bu klasörü de kaldırabilir. Böyle bir durumda fork'u yeniden indir; dashboard veya Home Assistant tercihlerini silme.
