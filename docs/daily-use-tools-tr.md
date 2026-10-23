@@ -11,3 +11,12 @@ Kontrol sayfasındaki ek bölümler:
 5. **Otomasyonlar:** Mevcut otomasyonları kayıtlı oda atamasına göre filtreler; oda adı tahmini yapmaz. Son tetiklenme `last_triggered` üzerinden gösterilir. Yönetici ayrı önizleme/onay ile etkinleştirir veya devre dışı bırakır. Yeni otomasyon oluşturmaz veya `automation.trigger` çağırmaz. Devre dışı bırakırken `stop_actions:false` gönderilir; çalışan adımlar durdurulmaz. [Home Assistant servis tanımı](https://github.com/home-assistant/core/blob/dev/homeassistant/components/automation/services.yaml).
 
 Türkçe/İngilizce metinler çevrildi; bu yeni bölümde Fransızca/Lehçe kataloglar İngilizce yedek metin içerir. Önceki çeviriler korunur. Varsayılan tablet gizleme/kilit/büyük hedef ayarları kapalıdır. Fiziksel cihaz komutları görsel doğrulama için çalıştırılmaz; servis akışı sahte HA ile test edilir.
+
+
+## İşlem günlüğü (2026-10-23)
+
+Kontrol → İşlem günlüğü, bu panelden favoriler, ev modları, çıkış kontrolü, oda güç düğmeleri ve otomasyon açma/kapatma üzerinden gönderilen son 100 işlemi oturum açan hesabın Home Assistant kullanıcı verisinde saklar. Kişisel görünüm ayarlarından ayrı tutulur. Önizleme ve iptal kayıt oluşturmaz.
+
+Komut kabul edildi, kısmen tamamlandı ve başarısız durumları ayrı gösterilir. Kabul edilen adım sayısı, hedefler ve istenen aç/kapat komutları incelenebilir. Kabul, fiziksel cihaz durumunun doğrulandığı anlamına gelmez; diğer uygulamalar ve geçmiş işlemler içe aktarılmaz.
+
+Günlük okuma/yazma hatası cihaz komutunu tekrar göndermez ve komut sonucunu değiştirmez. Aynı tarayıcıdaki eklemeler sıraya alınır ve her eklemeden önce sunucudaki son kayıt okunur. Home Assistant bu veri alanında koşullu yazma sunmadığı için farklı tarayıcıların tam eşzamanlı yazıları arasında kayıt kaybı yine mümkündür; bu bir eksiksiz denetim kaydı değildir. Hesap değişiminde eski yanıtlar yeni hesabın ekranını değiştirmez.

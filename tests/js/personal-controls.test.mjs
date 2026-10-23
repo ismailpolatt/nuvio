@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadParts } from './harness.mjs';
-function setup() {
+function setup(journal) {
   const HGL = { data: { wiz: {} }, notify() {}, sort: (xs, key, order) => [...xs].sort((a, b) => (order.includes(key(a)) ? order.indexOf(key(a)) : 999) - (order.includes(key(b)) ? order.indexOf(key(b)) : 999)) };
   const H = { ok: (s) => !!s && !['unknown', 'unavailable'].includes(s.state), name: (h, e) => e };
-  const globals = { window: {}, HGBase: class { rerender() {} }, HGL, H, hgTO: (o, map) => Object.assign(o, map), hgReg() {}, hgTLazy: (s) => s, hgT: (s) => s };
+  const globals = { HGJournal: journal, window: journal ? { HGJournal: journal } : {}, HGBase: class { rerender() {} }, HGL, H, hgTO: (o, map) => Object.assign(o, map), hgReg() {}, hgTLazy: (s) => s, hgT: (s) => s };
   const x = loadParts(['hg-controlx.part.js'], globals, ['HGPersonal', 'HGControlCard']);
   x.HGPersonal.data = x.HGPersonal.clean({}); return { ...x, HGL };
 }
@@ -81,4 +81,26 @@ test('energy day windows use complete local days across month boundaries and rat
   const { HGPersonal: p } = setup(), days = p.days(new Date(2026, 10, 2, 14));
   assert.equal(days.length, 14); assert.equal(new Date(days.at(-1).to).getDate(), 2); assert.equal(new Date(days[0].from).getHours(), 0);
   assert.equal(p.clean({ rate: 0 }).rate, 0); assert.equal(p.clean({ rate: -5 }).rate, 0); assert.equal(p.clean({ favorites: ['a', 'a'] }).favorites.length, 1);
+});
+
+
+test('mode journal records partial completion once and previews create no records', async () => {
+  const records = [], calls = [], journal = { record: (h, r) => records.push(r) };
+  const { HGPersonal: p, HGControlCard } = setup(journal), c = new HGControlCard();
+  p.data.modes.home = [{ e: 'light.one', state: 'off' }, { e: 'switch.two', state: 'on' }, { e: 'light.three', state: 'on' }];
+  c.shadowRoot = {}; c._hass = { user: { id: 'one' }, states: { 'light.one': { state: 'on' }, 'switch.two': { state: 'off' }, 'light.three': { state: 'off' } }, callService: async (...q) => { calls.push(q); if (calls.length === 2) throw Error('failed'); } };
+  await c.onAct('preview', { dataset: { mode: 'home' } }); assert.equal(records.length, 0); assert.equal(calls.length, 0);
+  await c.onAct('execute', {});
+  assert.equal(calls.length, 2); assert.equal(records.length, 1);
+  assert.deepEqual(records[0], { source: 'mode', targets: [{ e: 'light.one', action: 'turn_off' }, { e: 'switch.two', action: 'turn_on' }, { e: 'light.three', action: 'turn_on' }], accepted: 1, failed: true });
+});
+
+test('favorite journal distinguishes accepted and failed commands without repeating the service', async () => {
+  const records = [], calls = [], { HGPersonal: p, HGControlCard } = setup({ record: (h, r) => records.push(r) }), c = new HGControlCard();
+  p.data.favorites = ['light.one']; c.shadowRoot = {};
+  c._hass = { states: { 'light.one': { state: 'on' } }, callService: async (...q) => { calls.push(q); if (calls.length === 2) throw Error('failed'); } };
+  await c.onAct('toggle', { dataset: { e: 'light.one' } }); await c.onAct('toggle', { dataset: { e: 'light.one' } });
+  assert.equal(calls.length, 2); assert.equal(records.length, 2);
+  assert.equal(records[0].accepted, 1); assert.equal(records[0].failed, false);
+  assert.equal(records[1].accepted, 0); assert.equal(records[1].failed, true);
 });

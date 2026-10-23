@@ -3397,6 +3397,26 @@
     "enable": "Enable",
     "disable": "Disable",
     "no_automations": "No automations in this filter.",
-    "auto_confirm": "This changes the enabled state of the automation. Disabling does not stop actions already running."
+    "auto_confirm": "This changes the enabled state of the automation. Disabling does not stop actions already running.",
+    "journal": "Activity log"
+  },
+  "journal": {
+    "title": "Activity log",
+    "help": "Results of the last 100 operations made with your account in this panel. Service acceptance does not verify the physical device outcome. Previews and cancellations do not create records; earlier operations and commands from other apps are not imported.",
+    "empty": "No records in this filter. New operations from this panel will appear here.",
+    "error": "The log could not be read or saved. Device command results are independent; check the connection and refresh.",
+    "all": "All",
+    "accepted": "Accepted",
+    "partial": "Partially completed",
+    "failed": "Failed",
+    "skipped": "No command sent",
+    "targets": "Targets and commands",
+    "count": "commands accepted",
+    "favorites": "Favorites",
+    "mode": "Home mode",
+    "exit": "Before leaving",
+    "automation": "Automation",
+    "room": "Room controls",
+    "pending": "Saving"
   }
 }

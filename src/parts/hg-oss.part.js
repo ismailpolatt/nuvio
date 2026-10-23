@@ -107,6 +107,7 @@ const hgViewOff = (hass, w) => { const id = hass && hass.user && hass.user.id, V
 /* --- generator konfiguracji (strategia pulpitu) --- */
 async function hgGenerate(hass, opt) {
   if (typeof HGPersonal !== 'undefined') await HGPersonal.load(hass);
+  if (typeof HGJournal !== 'undefined') HGJournal.load(hass);
   opt = opt || {}; let wiz = opt._wiz || null;   /* _wiz: tylko testy */
   let E = null; if (!wiz) try { E = await HGShared.eff(hass); wiz = E.data && E.data.wiz; } catch (e) { /* brak */ }
   /* widoczność widoków per osoba (Wygląd → Widoki, wspólny dashboard): wiz.vu[ścieżka] = [user_id ukrytych]; Panel zawsze widoczny */

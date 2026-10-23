@@ -1,7 +1,7 @@
-const HG_LIVING_TEXT = hgTO({}, { suggestions: 'living.suggestions', exit: 'living.exit', notices: 'living.notices', automations: 'living.automations', quick_title: 'living.quick_title', quick_help: 'living.quick_help', lights: 'living.lights', climate: 'living.climate', switches: 'living.switches', sensors: 'living.sensors', full_room: 'living.full_room', details: 'living.details', suggestions_help: 'living.suggestions_help', rule_window_climate: 'living.rule_window_climate', rule_humidity: 'living.rule_humidity', rule_battery: 'living.rule_battery', no_suggestions: 'living.no_suggestions', exit_help: 'living.exit_help', no_exit_items: 'living.no_exit_items', preview_off: 'living.preview_off', exit_confirm: 'living.exit_confirm', command_help: 'living.command_help', confirm: 'living.confirm', commands_sent: 'living.commands_sent', action_failed: 'living.action_failed', notices_help: 'living.notices_help', notification: 'living.notification', priority_0: 'living.priority_0', priority_1: 'living.priority_1', priority_2: 'living.priority_2', priority_3: 'living.priority_3', read: 'living.read', mark_read: 'living.mark_read', no_alerts: 'living.no_alerts', tablet_profile: 'living.tablet_profile', tablet_help: 'living.tablet_help', edit_lock: 'living.edit_lock', locked_help: 'living.locked_help', large_touch: 'living.large_touch', landscape: 'living.landscape', portrait: 'living.portrait', automation_help: 'living.automation_help', area: 'living.area', all: 'living.all', unassigned: 'living.unassigned', filter: 'living.filter', last_run: 'living.last_run', enable: 'living.enable', disable: 'living.disable', no_automations: 'living.no_automations', auto_confirm: 'living.auto_confirm' });
+const HG_LIVING_TEXT = hgTO({}, { journal: 'living.journal', suggestions: 'living.suggestions', exit: 'living.exit', notices: 'living.notices', automations: 'living.automations', quick_title: 'living.quick_title', quick_help: 'living.quick_help', lights: 'living.lights', climate: 'living.climate', switches: 'living.switches', sensors: 'living.sensors', full_room: 'living.full_room', details: 'living.details', suggestions_help: 'living.suggestions_help', rule_window_climate: 'living.rule_window_climate', rule_humidity: 'living.rule_humidity', rule_battery: 'living.rule_battery', no_suggestions: 'living.no_suggestions', exit_help: 'living.exit_help', no_exit_items: 'living.no_exit_items', preview_off: 'living.preview_off', exit_confirm: 'living.exit_confirm', command_help: 'living.command_help', confirm: 'living.confirm', commands_sent: 'living.commands_sent', action_failed: 'living.action_failed', notices_help: 'living.notices_help', notification: 'living.notification', priority_0: 'living.priority_0', priority_1: 'living.priority_1', priority_2: 'living.priority_2', priority_3: 'living.priority_3', read: 'living.read', mark_read: 'living.mark_read', no_alerts: 'living.no_alerts', tablet_profile: 'living.tablet_profile', tablet_help: 'living.tablet_help', edit_lock: 'living.edit_lock', locked_help: 'living.locked_help', large_touch: 'living.large_touch', landscape: 'living.landscape', portrait: 'living.portrait', automation_help: 'living.automation_help', area: 'living.area', all: 'living.all', unassigned: 'living.unassigned', filter: 'living.filter', last_run: 'living.last_run', enable: 'living.enable', disable: 'living.disable', no_automations: 'living.no_automations', auto_confirm: 'living.auto_confirm' });
 /* Daily-use tools: derived from current HA state, with explicit actions only. */
 const HGLiving = window.HGLiving = {
-  tabs: ['suggestions', 'exit', 'notices', 'automations'],
+  tabs: ['suggestions', 'exit', 'notices', 'automations', 'journal'],
   text(k) { return HG_LIVING_TEXT[k]; },
   visible(h, e) { const r = (h.entities || {})[e] || {}; return !!h.states[e] && !r.hidden && !r.hidden_by && !r.disabled_by && r.entity_category !== 'config'; },
   model(h) { return HGAreas.model(h, ((HGL.data.wiz || {}).areas || {})); },
@@ -68,6 +68,7 @@ const HGLiving = window.HGLiving = {
     return `<div class="cx-box" style="margin-top:12px"><h3>${HG_LIVING_TEXT.tablet_profile}</h3><p class="cx-note">${HG_LIVING_TEXT.tablet_help}</p><label class="cx-row"><input type="checkbox" name="living-lock" ${p.locked ? 'checked' : ''}><span>${HG_LIVING_TEXT.edit_lock}</span></label><label class="cx-row"><input type="checkbox" name="living-large" ${p.large ? 'checked' : ''}><span>${HG_LIVING_TEXT.large_touch}</span></label><div class="cx-grid">${['landscape', 'portrait'].map((o) => `<div><h3>${HG_LIVING_TEXT[o]}</h3>${cards.map((c, i) => `<label class="cx-row"><input type="checkbox" name="living-${o}" value="${H.esc(keys[i])}" ${!(p[o] || []).includes(keys[i]) ? 'checked' : ''}><span>${H.esc(c.title || c.entity || c.type)}</span></label>`).join('')}</div>`).join('')}</div><button class="cx-btn cx-primary" data-act="living-tablet-save">${hgT('common.save')}</button></div>`;
   },
   html(card, tab) {
+    if (tab === 'journal' && window.HGJournal) return HGJournal.html(card);
     const h = card._hass, details = (e) => `<button class="cx-btn" data-act="details" data-e="${H.esc(e)}" aria-label="${HG_LIVING_TEXT.details}">${H.icon('mdi:information-outline')}</button>`;
     if (tab === 'suggestions') {
       const rows = this.suggestions(h);
@@ -110,8 +111,10 @@ const HGLiving = window.HGLiving = {
     card._livingFocus = focus;
   },
   async act(card, action, b) {
-    const h = card._hass, R = card.shadowRoot;
+    const h = card._hass, R = card.shadowRoot; let journal;
     try {
+      if (action === 'living-journal-refresh' && window.HGJournal) await HGJournal.load(h, true);
+      if (action === 'living-journal-filter' && ['all','accepted','partial','failed'].includes(b.dataset.status)) card._journalFilter = b.dataset.status;
       if (action === 'living-cancel') card._livingConfirm = null;
       if (action === 'living-filter') card._autoArea = R.querySelector('[data-living-area]').value;
       if (action === 'living-read') {
@@ -132,13 +135,14 @@ const HGLiving = window.HGLiving = {
       }
       if (action === 'living-execute') {
         const p = card._livingConfirm; if (!p || p.uid !== h.user.id) return;
+        journal = { source: p.kind === 'off' ? 'exit' : 'automation', targets: p.es.map((e) => ({ e, action: p.kind === 'off' ? 'turn_off' : p.service })), accepted: 0, failed: true };
         card._running = true; card.rerender();
-        if (p.kind === 'off') { const result = await this.turnOff(h, p.es, () => card._hass); card._message = (result.failed ? hgT('controlx.failed') : HG_LIVING_TEXT.commands_sent) + ` (${result.done}/${result.total})`; }
+        if (p.kind === 'off') { const result = await this.turnOff(h, p.es, () => card._hass); journal.accepted = result.done; journal.failed = result.failed; card._message = (result.failed ? hgT('controlx.failed') : HG_LIVING_TEXT.commands_sent) + ` (${result.done}/${result.total})`; }
         else {
           const e = p.es[0];
           if (!h.user.is_admin || !e.startsWith('automation.') || !this.visible(h, e) || !H.ok(h.states[e]) || (h.states[e].state === 'on' ? 'turn_off' : 'turn_on') !== p.service) throw new Error('Changed');
           await h.callService('automation', p.service, { entity_id: e, ...(p.service === 'turn_off' ? { stop_actions: false } : {}) });
-          card._message = HG_LIVING_TEXT.commands_sent;
+          journal.accepted = 1; journal.failed = false; card._message = HG_LIVING_TEXT.commands_sent;
         }
         card._livingConfirm = null;
       }
@@ -149,7 +153,7 @@ const HGLiving = window.HGLiving = {
         const page = this.page(card); if (page) this.applyTouch(page);
       }
     } catch (err) { card._message = HG_LIVING_TEXT.action_failed; card._livingConfirm = null; }
-    finally { card._running = false; card._saving = false; card.rerender(); }
+    finally { if (journal && window.HGJournal) HGJournal.record(h, journal); card._running = false; card._saving = false; card.rerender(); }
   },
   applyTouch(page) {
     const prefs = this.tabletPrefs(page._hass || {}), large = this.tabletHere() && !!prefs.large;
@@ -198,10 +202,10 @@ class HGQuickRoomCard extends HGBase {
     if (!a || !(a.ents || []).includes(e) || !HGLiving.visible(h, e)) return;
     if (act === 'details') { const owner = this._owner; this.close(); return H.fire(owner, 'hass-more-info', { entityId: e }); }
     if (act === 'power' && !this._busy && /^(light|switch)\./.test(e) && H.ok(h.states[e])) {
-      this._busy = true;
-      try { await h.callService(e.split('.')[0], h.states[e].state === 'on' ? 'turn_off' : 'turn_on', { entity_id: e }); this._message = HG_LIVING_TEXT.commands_sent; }
-      catch (err) { this._message = hgT('controlx.failed'); }
-      finally { this._busy = false; this.rerender(); }
+      this._busy = true; const action = h.states[e].state === 'on' ? 'turn_off' : 'turn_on'; let failed = false;
+      try { await h.callService(e.split('.')[0], action, { entity_id: e }); this._message = HG_LIVING_TEXT.commands_sent; }
+      catch (err) { failed = true; this._message = hgT('controlx.failed'); }
+      finally { if (window.HGJournal) HGJournal.record(h, { source: 'room', targets: [{ e, action }], accepted: failed ? 0 : 1, failed }); this._busy = false; this.rerender(); }
     }
   }
 }

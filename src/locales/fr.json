@@ -3450,6 +3450,26 @@
     "enable": "Enable",
     "disable": "Disable",
     "no_automations": "No automations in this filter.",
-    "auto_confirm": "This changes the enabled state of the automation. Disabling does not stop actions already running."
+    "auto_confirm": "This changes the enabled state of the automation. Disabling does not stop actions already running.",
+    "journal": "Journal des actions"
+  },
+  "journal": {
+    "title": "Journal des actions",
+    "help": "Résultats des 100 dernières opérations de votre compte dans ce panneau. L’acceptation ne confirme pas le résultat physique. Les aperçus et annulations ne créent pas de trace ; les actions antérieures ou provenant d’autres applications ne sont pas importées.",
+    "empty": "Aucune entrée pour ce filtre. Les nouvelles opérations du panneau apparaîtront ici.",
+    "error": "Impossible de lire ou d’enregistrer le journal. Le résultat des commandes est indépendant ; vérifiez la connexion puis actualisez.",
+    "all": "Tout",
+    "accepted": "Acceptée",
+    "partial": "Partiellement terminée",
+    "failed": "Échec",
+    "skipped": "Aucune commande envoyée",
+    "targets": "Cibles et commandes",
+    "count": "commandes acceptées",
+    "favorites": "Favoris",
+    "mode": "Mode maison",
+    "exit": "Avant de partir",
+    "automation": "Automatisation",
+    "room": "Commandes de la pièce",
+    "pending": "Enregistrement"
   }
 }

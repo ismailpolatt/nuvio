@@ -3397,6 +3397,26 @@
     "enable": "Etkinleştir",
     "disable": "Devre dışı bırak",
     "no_automations": "Bu filtrede otomasyon yok.",
-    "auto_confirm": "Bu işlem otomasyonun etkinlik durumunu değiştirir. Devre dışı bırakılırken halen çalışan adımları durdurmaz."
+    "auto_confirm": "Bu işlem otomasyonun etkinlik durumunu değiştirir. Devre dışı bırakılırken halen çalışan adımları durdurmaz.",
+    "journal": "İşlem günlüğü"
+  },
+  "journal": {
+    "title": "İşlem günlüğü",
+    "help": "Bu panelde hesabınla yapılan son 100 işlemin sonuçları. Komut kabulü fiziksel cihaz sonucunu doğrulamaz. Önizleme ve iptaller kayıt oluşturmaz; eski işlemler ve diğer uygulamalardaki komutlar buraya aktarılmaz.",
+    "empty": "Bu filtrede kayıt yok. Panelden yapılan yeni işlemler burada görünecek.",
+    "error": "Günlük okunamadı veya kaydedilemedi. Cihaz komutu sonucu bundan bağımsızdır; bağlantıyı kontrol edip Yenile düğmesine dokun.",
+    "all": "Tümü",
+    "accepted": "Kabul edildi",
+    "partial": "Kısmen tamamlandı",
+    "failed": "Başarısız",
+    "skipped": "Komut gönderilmedi",
+    "targets": "Hedefler ve komutlar",
+    "count": "komut kabul edildi",
+    "favorites": "Favoriler",
+    "mode": "Ev modu",
+    "exit": "Çıkış kontrolü",
+    "automation": "Otomasyon",
+    "room": "Oda kontrolü",
+    "pending": "Kaydediliyor"
   }
 }

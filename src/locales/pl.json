@@ -3503,6 +3503,26 @@
     "enable": "Enable",
     "disable": "Disable",
     "no_automations": "No automations in this filter.",
-    "auto_confirm": "This changes the enabled state of the automation. Disabling does not stop actions already running."
+    "auto_confirm": "This changes the enabled state of the automation. Disabling does not stop actions already running.",
+    "journal": "Dziennik działań"
+  },
+  "journal": {
+    "title": "Dziennik działań",
+    "help": "Wyniki ostatnich 100 operacji Twojego konta w tym panelu. Przyjęcie polecenia nie potwierdza fizycznego stanu urządzenia. Podglądy i anulowania nie tworzą wpisów; wcześniejsze operacje i polecenia z innych aplikacji nie są importowane.",
+    "empty": "Brak wpisów dla tego filtra. Nowe operacje z panelu pojawią się tutaj.",
+    "error": "Nie można odczytać lub zapisać dziennika. Wynik poleceń jest niezależny; sprawdź połączenie i odśwież.",
+    "all": "Wszystkie",
+    "accepted": "Przyjęto",
+    "partial": "Częściowo wykonano",
+    "failed": "Błąd",
+    "skipped": "Nie wysłano polecenia",
+    "targets": "Cele i polecenia",
+    "count": "przyjętych poleceń",
+    "favorites": "Ulubione",
+    "mode": "Tryb domu",
+    "exit": "Przed wyjściem",
+    "automation": "Automatyzacja",
+    "room": "Sterowanie pokojem",
+    "pending": "Zapisywanie"
   }
 }
