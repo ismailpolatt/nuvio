@@ -41,3 +41,9 @@ Uygulamalar → Uygulamaları düzenle. Kayıtlı ve hesabın erişebildiği HA 
 
 ### Oda hızlı kontrolünde komut geri bildirimi (2.23.3)
 Yeni güç komutu eski mesajı temizler; cihaz adı ve aç/kapat hedefiyle gönderiliyor, gönderildi veya gönderilemedi gösterilir. Başarı mesajı 3,5 saniye, hata 6 saniye sonra kalkar. Yeni komut eski zamanlayıcıyı iptal eder; pencere kapandığında zamanlayıcı temizlenir. Gönderildi hizmet isteğinin kabulüdür; cihazın fiziksel durumunun doğrulanması değildir. Satırdaki durum HA verisini izler.
+
+
+### Mobil uygulama açılışı ve sürüm kontrolü (2.23.4–2.23.5)
+Sürüm uyarısı, önbellekte eski olabilen nuvio.js yükleyicisi yerine aynı paket yolundaki nuvio-version.json manifestini okur. Daha düşük sürüm için yeniden yükleme önermez. Yeni çekirdek veya daha yeni sürüm için öneri korunur. Menü ve düzenleyici aynı HGVersion yardımcısını kullanır.
+
+Android/iOS, dar dokunmatik ekranlar ve HA Companion dış oturumunda uygulamalar ikinci bir Home Assistant iframe'i yerine mevcut oturumda H.navigate ile açılır. Bu pushState + location-changed üzerinden doğal HA sayfa geçişidir; window.open/location.href/reload kullanılmaz. Geri ile panele dönülür. Masaüstü gömülü pencereyi korur. Yetki ve kayıtlı panel kontrolleri her iki yolda da uygulanır. Mobilde açılan yerel panelin kendi menüsü HA tarafından yönetilir; masaüstü iframe menüsü gizleme sadece masaüstünde geçerlidir. Bir eklentinin kendi yüklenme veya oturum sorunu ayrı olabilir; fiziksel telefon testi beklenir.

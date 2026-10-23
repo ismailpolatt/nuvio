@@ -28,6 +28,7 @@ const HGDataQuality = window.HGDataQuality = {
 };
 
 const HGApps = window.HGApps = {
+  native(h){return !!h.auth?.external || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'') || (navigator.maxTouchPoints>0 && window.innerWidth<=700);},
   clean(v) {
     if(!Array.isArray(v))return null;
     const seen=new Set();return v.filter(r=>r && typeof r.id==='string' && /^(hacs|music|zigbee|blueprint|panel:[a-zA-Z0-9_-]+)$/.test(r.id) && !seen.has(r.id) && seen.add(r.id)).slice(0,32).map(r=>({id:r.id,title:typeof r.title==='string'?r.title.trim().slice(0,60):''}));
@@ -91,6 +92,7 @@ class HGAppsCard extends HGBase {
   _openApp(id,opener){
     const apps=HGApps.list(this._hass).filter(p=>p.path),app=apps.find(p=>p.id===id),uid=this._hass.user?.id;
     if(!app || !uid)return;
+    if(HGApps.native(this._hass)){this._closeApp();return H.navigate(app.path);}
     if(this._appDialog && this._appUid!==uid)this._closeApp();
     if(!this._appDialog){
       const d=document.createElement('dialog');d.className='suite-app-viewer';d.setAttribute('aria-label',app.title);

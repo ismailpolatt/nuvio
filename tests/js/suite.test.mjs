@@ -25,7 +25,7 @@ function setup(){
  configs.set('dashboard-test',{strategy:{type:'custom:nuvio'}});
  configs.set('nuvio-shared',{nuvio_shared:1,own:['one'],data:{s:{},wiz:{hiddenPersons:['person.hidden']}},views:[]});
  const card={_hass:h,rerender(){},shadowRoot:{querySelector:()=>null}};
- return {...x,h,card,values,configs,writes,store,navigator,dialogs,frames};
+ return {...x,h,card,values,configs,writes,store,navigator,dialogs,frames,H};
 }
 const stamp=(age=0)=>new Date(Date.now()-age).toISOString();
 
@@ -152,4 +152,11 @@ test('application drafts cannot write after account switch and titles are escape
  assert.match(a.html(h),/&lt;img/);assert.doesNotMatch(a.html(h),/<img/);
  const c=new C();c._hass=h;c.rerender=()=>{};c.shadowRoot={appendChild(){},querySelectorAll:()=>[]};c._openApp('panel:map');assert.match(dialogs[0].innerHTML,/&lt;img/);assert.doesNotMatch(dialogs[0].innerHTML,/<img/);c._closeApp();
  await c.onAct('app-manage',{});h.user.id='two';await c.onAct('app-save',{dataset:{}});assert.equal(writes.length,0);
+});
+
+test('mobile and Companion use authenticated native SPA navigation without an iframe or new window; access checks remain',()=>{
+ const {HGApps:a,HGAppsCard:C,h,navigator,dialogs,H}=setup(),paths=[];H.navigate=path=>paths.push(path);h.panels={hacs:{title:'HACS',require_admin:true}};
+ const c=new C();c._hass=h;navigator.userAgent='Mozilla Android';c._openApp('hacs');assert.deepEqual(paths,['/hacs']);assert.equal(dialogs.length,0);
+ h.user.is_admin=false;c._openApp('hacs');assert.equal(paths.length,1);
+ h.user.is_admin=true;navigator.userAgent='Desktop';h.auth={external:{}};assert.equal(a.native(h),true);c._openApp('hacs');assert.equal(paths.length,2);assert.equal(dialogs.length,0);
 });

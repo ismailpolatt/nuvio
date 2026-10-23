@@ -3612,7 +3612,7 @@
   },
   "suite": {
     "apps": "Uygulamalar",
-    "apps_help": "Uygulamalar panel içinde açılır. Üstteki sekmelerden geçiş yapabilir, Kapat ile panelinize dönebilirsiniz.",
+    "apps_help": "Uygulamalar mevcut oturumunuzla açılır. Masaüstünde Kapat, mobilde Geri ile panelinize dönün.",
     "app_hacs": "Özel kartlar, temalar ve entegrasyonlar.",
     "app_music": "Müzik arşivi, oynatıcılar ve kuyruklar.",
     "app_zigbee": "Zigbee cihazları ve ağ yönetimi.",
