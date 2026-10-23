@@ -28,6 +28,14 @@ const HGDataQuality = window.HGDataQuality = {
 };
 
 const HGApps = window.HGApps = {
+  clean(v) {
+    if(!Array.isArray(v))return null;
+    const seen=new Set();return v.filter(r=>r && typeof r.id==='string' && /^(hacs|music|zigbee|blueprint|panel:[a-zA-Z0-9_-]+)$/.test(r.id) && !seen.has(r.id) && seen.add(r.id)).slice(0,32).map(r=>({id:r.id,title:typeof r.title==='string'?r.title.trim().slice(0,60):''}));
+  },
+  available(h) {
+    return Object.entries(h.panels||{}).filter(([path,p])=>/^[a-zA-Z0-9_-]+$/.test(path) && (!p.require_admin || h.user?.is_admin) && path!==location.pathname.split('/').filter(Boolean)[0]).map(([path,p])=>({id:'panel:'+path,title:p.title||path,icon:/^mdi:[a-z0-9-]+$/.test(p.icon||'')?p.icon:'mdi:application-outline',admin:!!p.require_admin,path:'/'+path})).sort((a,b)=>a.title.localeCompare(b.title));
+  },
+  prefs(h){return HGPersonal.uid===h.user?.id?this.clean(HGPersonal.data.apps):null;},
   chrome(frame, every=setInterval, stop=clearInterval) {
     let closed=false;
     const apply=()=>{if(closed || frame.isConnected===false)return;try{
@@ -46,7 +54,7 @@ const HGApps = window.HGApps = {
     ['zigbee','Zigbee2MQTT','mdi:zigbee', /zigbee2mqtt/i, true],
     ['blueprint','Blueprint Studio','mdi:file-code-outline', /blueprint.?studio/i, true]
   ],
-  list(h) {
+  defaults(h) {
     const panels = Object.entries(h.panels || {});
     return this.groups.filter(([, , , , admin])=>!admin || h.user?.is_admin).map(([id,title,icon,re,admin])=>{
       const matches = panels.filter(([path,p])=>re.test(path+' '+(p.title||'')) && (!p.require_admin || h.user?.is_admin));
@@ -55,19 +63,30 @@ const HGApps = window.HGApps = {
       return { id,title,icon,admin,path: path && /^[a-zA-Z0-9_-]+$/.test(path) ? '/'+path : null };
     });
   },
+  list(h) {
+    const prefs=this.prefs(h),defaults=this.defaults(h);if(prefs===null)return defaults;
+    const all=[...defaults,...this.available(h)];return prefs.map(r=>{const p=all.find(p=>p.id===r.id);return p?{...p,title:r.title||p.title}:null;}).filter(Boolean);
+  },
   html(h) {
-    return `<style>${HG_SUITE_CSS}</style><div class="suite-app-grid">${this.list(h).map(p=>`<section class="suite-app"><div class="suite-app-icon">${H.icon(p.icon)}</div><h3>${p.title}</h3><p>${HG_SUITE_TEXT['app_'+p.id]}</p><small>${HG_SUITE_TEXT[p.path?'panel_available':'panel_missing']}${p.admin?' · '+hgT('suite.admin'):''}</small>${p.path?`<button type="button" data-act="app-open" data-app="${p.id}">${hgT('suite.open_app')}${H.icon('mdi:arrow-right')}</button>`:`<span>${hgT('suite.not_configured')}</span>`}</section>`).join('')}</div><p class="suite-hint">${hgT('suite.apps_help')}</p>`;
+    return `<style>${HG_SUITE_CSS}</style><div class="suite-app-toolbar"><p class="suite-hint">${hgT('suite.apps_personal')}</p><button data-act="app-manage">${H.icon('mdi:tune')}${hgT('suite.apps_manage')}</button></div><div class="suite-app-grid">${this.list(h).map(p=>`<section class="suite-app"><div class="suite-app-icon">${H.icon(p.icon)}</div><h3>${H.esc(p.title)}</h3><p>${H.esc(HG_SUITE_TEXT['app_'+p.id]||hgT('suite.apps_registered'))}</p><small>${HG_SUITE_TEXT[p.path?'panel_available':'panel_missing']}${p.admin?' · '+hgT('suite.admin'):''}</small>${p.path?`<button type="button" data-act="app-open" data-app="${H.esc(p.id)}">${hgT('suite.open_app')}${H.icon('mdi:arrow-right')}</button>`:`<span>${hgT('suite.not_configured')}</span>`}</section>`).join('')||`<p class="suite-hint">${hgT('suite.apps_empty')}</p>`}</div><p class="suite-hint">${hgT('suite.apps_help')}</p>`;
   }
 };
 class HGAppsCard extends HGBase {
   defaults(){return {};}
   ents(){return [];}
-  _extraSig(){return [this._hass.panels,this._hass.user?.id,this._hass.user?.is_admin];}
+  _extraSig(){return [this._hass.panels,this._hass.user?.id,this._hass.user?.is_admin,HGPersonal.uid,HGPersonal.data.apps,HGPersonal.failed];}
+  _changed(){return this._appsDraft && this._appsDraftUid===this._hass.user?.id?false:super._changed();}
   css(){return HG_SUITE_CSS+'ha-card.glass{padding:16px}';}
   render(){
     if(this._appDialog && (this._appUid!==this._hass.user?.id || this._appAdmin!==!!this._hass.user?.is_admin || !HGApps.list(this._hass).some(p=>p.id===this._appId && p.path===this._appPath)))this._closeApp();
-    return `<ha-card class="glass">${HGApps.html(this._hass)}</ha-card>`;
+    if(this._appsDraft && this._appsDraftUid!==this._hass.user?.id)this._appsDraft=null;
+    return `<ha-card class="glass">${this._appsDraft?this._editor():HGApps.html(this._hass)}${this._appsMessage?`<p role="status" class="suite-hint">${H.esc(this._appsMessage)}</p>`:''}</ha-card>`;
   }
+  _editor(){
+    const h=this._hass,available=HGApps.available(h),all=[...HGApps.defaults(h),...available];
+    return `<div class="suite-app-toolbar"><h3>${hgT('suite.apps_manage')}</h3><span>${hgT('suite.apps_personal')}</span></div><div class="suite-app-editor">${this._appsDraft.map((r,i)=>{const p=all.find(p=>p.id===r.id);return `<div class="suite-app-edit-row" data-app-row="${H.esc(r.id)}"><label>${hgT('suite.apps_name')}<input name="app-title" maxlength="60" value="${H.esc(r.title||p?.title||r.id)}"></label><button data-act="app-up" data-index="${i}" ${i===0?'disabled':''} aria-label="${hgT('lookr.move_up')}">${H.icon('mdi:arrow-up')}</button><button data-act="app-remove" data-index="${i}" aria-label="${hgT('suite.apps_remove')}">${H.icon('mdi:delete-outline')}</button></div>`;}).join('')}<label class="suite-app-field">${hgT('suite.apps_choose')}<select name="app-panel"><option value="">${hgT('suite.apps_choose')}</option>${available.filter(p=>!this._appsDraft.some(r=>r.id===p.id || all.find(x=>x.id===r.id)?.path===p.path)).map(p=>`<option value="${H.esc(p.id)}">${H.esc(p.title)}</option>`).join('')}</select></label><div class="suite-app-toolbar"><button data-act="app-add" ${this._appsDraft.length>=32?'disabled':''}>${hgT('suite.apps_add')}</button><button data-act="app-defaults">${hgT('suite.apps_defaults')}</button></div><p class="suite-hint">${hgT('suite.apps_access_help')}</p><div class="suite-app-toolbar"><button data-act="app-save" ${this._appsSaving?'disabled':''}>${hgT('common.save')}</button><button data-act="app-cancel" ${this._appsSaving?'disabled':''}>${hgT('common.cancel')}</button></div></div>`;
+  }
+  _collectApps(){for(const row of this.shadowRoot.querySelectorAll('[data-app-row]')){const r=this._appsDraft.find(x=>x.id===row.dataset.appRow);if(r)r.title=(row.querySelector('input')?.value||'').trim().slice(0,60);}}
   _closeApp(){this._appChromeCleanup?.();this._appChromeCleanup=null;const d=this._appDialog;this._appDialog=null;this._appId=this._appPath=this._appUid=null;if(d){d.close();d.remove();}if(this._appOpener?.isConnected)this._appOpener.focus();this._appOpener=null;}
   _openApp(id,opener){
     const apps=HGApps.list(this._hass).filter(p=>p.path),app=apps.find(p=>p.id===id),uid=this._hass.user?.id;
@@ -75,7 +94,7 @@ class HGAppsCard extends HGBase {
     if(this._appDialog && this._appUid!==uid)this._closeApp();
     if(!this._appDialog){
       const d=document.createElement('dialog');d.className='suite-app-viewer';d.setAttribute('aria-label',app.title);
-      d.innerHTML=`<header><b data-app-title></b><button type="button" data-act="app-close" autofocus aria-label="${H.esc(hgT('common.close'))}">${H.icon('mdi:close')}<span>${hgT('common.close')}</span></button></header><nav class="suite-app-tabs" aria-label="${H.esc(hgT('suite.apps'))}">${apps.map(p=>`<button type="button" data-act="app-open" data-app="${p.id}" aria-pressed="false">${p.title}</button>`).join('')}</nav><iframe class="suite-app-frame" allow="fullscreen" referrerpolicy="same-origin"></iframe>`;
+      d.innerHTML=`<header><b data-app-title></b><button type="button" data-act="app-close" autofocus aria-label="${H.esc(hgT('common.close'))}">${H.icon('mdi:close')}<span>${hgT('common.close')}</span></button></header><nav class="suite-app-tabs" aria-label="${H.esc(hgT('suite.apps'))}">${apps.map(p=>`<button type="button" data-act="app-open" data-app="${H.esc(p.id)}" aria-pressed="false">${H.esc(p.title)}</button>`).join('')}</nav><iframe class="suite-app-frame" allow="fullscreen" referrerpolicy="same-origin"></iframe>`;
       d.oncancel=e=>{e.preventDefault();this._closeApp();};
       // Outside the morph root: HA state updates must not reload the running application.
       this.shadowRoot.appendChild(d);this._appDialog=d;this._appOpener=opener;this._appUid=uid;this._appAdmin=!!this._hass.user?.is_admin;
@@ -87,7 +106,33 @@ class HGAppsCard extends HGBase {
     for(const b of d.querySelectorAll('[data-app]'))b.setAttribute('aria-pressed',String(b.dataset.app===id));
     if(!d.open)d.showModal();
   }
-  onAct(a,b){if(a==='app-close')return this._closeApp();if(a==='app-open')return this._openApp(b.dataset.app,b);}
+  async onAct(a,b){
+    if(a==='app-close')return this._closeApp();if(a==='app-open')return this._openApp(b.dataset.app,b);
+    if(this._appsSaving)return;
+    const h=this._hass,uid=h.user?.id;
+    if(a==='app-manage'){
+      await HGPersonal.load(h);if(this._hass.user?.id!==uid)return;
+      if(HGPersonal.failed){this._appsMessage=hgT('controlx.load_failed');return this.rerender();}
+      this._appsDraft=HGApps.prefs(h)??HGApps.defaults(h).map(p=>({id:p.id,title:''}));this._appsDraftUid=uid;this._appsMessage='';return this.rerender();
+    }
+    if(!this._appsDraft || this._appsDraftUid!==uid)return;
+    if(a==='app-cancel'){this._appsDraft=null;this._appsMessage='';return this.rerender();}
+    this._collectApps();const i=Number(b.dataset.index);
+    if(a==='app-up' && Number.isInteger(i) && i>0 && i<this._appsDraft.length)[this._appsDraft[i-1],this._appsDraft[i]]=[this._appsDraft[i],this._appsDraft[i-1]];
+    if(a==='app-remove' && Number.isInteger(i) && i>=0 && i<this._appsDraft.length)this._appsDraft.splice(i,1);
+    if(a==='app-defaults')this._appsDraft=HGApps.defaults(h).map(p=>({id:p.id,title:''}));
+    if(a==='app-add'){
+      const id=this.shadowRoot.querySelector('[name=app-panel]')?.value,p=HGApps.available(h).find(p=>p.id===id),all=[...HGApps.defaults(h),...HGApps.available(h)];
+      if(p && this._appsDraft.length<32 && !this._appsDraft.some(r=>r.id===id || all.find(x=>x.id===r.id)?.path===p.path))this._appsDraft.push({id,title:''});
+    }
+    if(a==='app-save'){
+      this._appsSaving=true;
+      try{await HGPersonal.save(h,{apps:HGApps.clean(this._appsDraft)});if(this._hass.user?.id===uid){this._appsDraft=null;this._appsMessage=hgT('controlx.saved');}}
+      catch(e){if(this._hass.user?.id===uid)this._appsMessage=hgT('controlx.failed');}
+      finally{this._appsSaving=false;}
+    }
+    this.rerender();
+  }
   disconnectedCallback(){this._closeApp();super.disconnectedCallback();}
 }
 hgReg('hg-apps-card',HGAppsCard,hgTLazy('suite.apps'),hgTLazy('suite.apps_help'));
@@ -181,6 +226,8 @@ const hgControlBindBeforeSuite=HGControlCard.prototype.afterRender;
 HGControlCard.prototype.afterRender=function(){hgControlBindBeforeSuite.call(this);HGSuite.bind(this);};
 
 const HG_SUITE_CSS=`
+.suite-app-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}.suite-app-toolbar button,.suite-app-edit-row button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;min-width:44px;padding:8px 14px;border:0;border-radius:12px;background:var(--hg-tile-bg,#ffffff18);color:inherit;font:inherit;cursor:pointer}.suite-app-toolbar ha-icon,.suite-app-edit-row ha-icon{width:20px;height:20px;--mdc-icon-size:20px}.suite-app-toolbar svg,.suite-app-edit-row svg{width:20px;height:20px}.suite-app-editor{max-width:900px}.suite-app-edit-row{display:grid;grid-template-columns:minmax(0,1fr) 44px 44px;gap:10px;align-items:end;margin:12px 0}.suite-app-edit-row label,.suite-app-field{display:grid;gap:6px;font-size:14px}.suite-app-editor input,.suite-app-editor select{width:100%;box-sizing:border-box;min-height:44px;padding:10px 12px;border:1px solid var(--hg-glass-bd,#ffffff30);border-radius:12px;color:inherit;background:var(--hg-tile-bg,#ffffff18);font:inherit}.suite-app-field{margin:20px 0 12px}.suite-app-editor option{color:var(--primary-text-color);background:var(--primary-background-color)}.suite-app-editor button:disabled{opacity:.4}.suite-app-toolbar h3,.suite-app-toolbar p{margin:0}
+
 .suite-app-viewer{position:fixed;inset:0;box-sizing:border-box;width:100%;height:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:var(--primary-background-color,#171b24);color:var(--primary-text-color,#fff)}.suite-app-viewer[open]{display:grid;grid-template-rows:auto auto minmax(0,1fr)}.suite-app-viewer::backdrop{background:#0009}.suite-app-viewer header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));font-size:17px}.suite-app-viewer button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px 16px;border:0;border-radius:12px;color:inherit;background:var(--hg-tile-bg,#ffffff18);font:inherit;cursor:pointer}.suite-app-viewer button:focus-visible{outline:2px solid var(--hg-accent,#49a3ff);outline-offset:-2px}.suite-app-viewer header svg,.suite-app-viewer header ha-icon{width:20px;height:20px;--mdc-icon-size:20px;flex:none}.suite-app-tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 12px;font-size:14px}.suite-app-tabs button{flex:none}.suite-app-tabs [aria-pressed=true]{background:var(--hg-accent,#49a3ff);color:var(--hg-on-accent,#fff)}.suite-app-frame{display:block;box-sizing:border-box;width:100%;height:100%;min-height:0;border:0;background:var(--primary-background-color,#171b24)}
 
 ha-card.glass{box-sizing:border-box}.suite-app-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.suite-app{display:flex;flex-direction:column;align-items:flex-start;gap:12px;min-width:0;padding:24px;border-radius:22px;background:var(--ui-sec,var(--hg-tile-bg));box-shadow:var(--ui-rim,none)}.suite-app h3,.suite-app p{margin:0}.suite-app p,.suite-app small,.suite-hint{opacity:.75;line-height:1.5}.suite-app-icon{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:var(--hg-accent-soft,#ffffff18)}.suite-app-icon ha-icon{--mdc-icon-size:30px}.suite-app button,.suite-file{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 16px;border-radius:12px;background:var(--hg-accent);color:var(--hg-on-accent);text-decoration:none;cursor:pointer}.suite-app button{margin-top:auto;font-size:14px;border:0}.suite-app button svg,.suite-app button ha-icon{width:18px;height:18px;--mdc-icon-size:18px;flex:none}.suite-app-icon svg{width:30px;height:30px}.suite-app button:focus-visible,.suite-file:focus-within{outline:2px solid currentColor;outline-offset:3px}.suite-file{position:relative}.suite-file input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}.suite-quality-row{width:100%;text-align:start;color:inherit;background:none;border:0;min-height:64px;cursor:pointer;gap:16px}.suite-quality-row>span:first-child{min-width:0;overflow-wrap:anywhere}.suite-quality-row small{display:block;opacity:.75;font-size:12px;line-height:1.5}.suite-value{text-align:end;max-width:45%;flex-shrink:0}.suite-value[data-quality=stale]{color:var(--warning-color,#ffce85)}@media(max-width:600px){.suite-app-grid{grid-template-columns:1fr}.suite-app{padding:18px}.suite-quality-row{align-items:flex-start}.suite-value{max-width:40%}}

@@ -125,3 +125,31 @@ test('embedded sidebar suppression tolerates cross-origin or removed frames with
  const {HGApps:a}=setup();let tick;const frame={isConnected:true,get contentDocument(){throw Error('Blocked origin');}};
  const stop=a.chrome(frame,fn=>{tick=fn;return 1;},()=>{});assert.doesNotThrow(()=>tick());frame.isConnected=false;assert.doesNotThrow(()=>tick());stop();
 });
+
+test('personal application lists validate IDs, preserve empty lists, and respect current account and panel permissions',()=>{
+ const {HGApps:a,HGPersonal:p,h}=setup();h.panels={terminal:{title:'Terminal',require_admin:true},map:{title:'Map'},'javascript:bad':{title:'Unsafe'},'dashboard-test':{title:'Self'}};
+ assert.deepEqual(a.available(h).map(x=>x.path),['/map','/terminal']);
+ p.data=p.clean({apps:[{id:'panel:terminal',title:'My terminal'},{id:'panel:terminal'},{id:'panel:javascript:bad'},{id:'panel:map',title:'Map'}]});
+ assert.equal(p.data.apps.length,2);assert.deepEqual(a.list(h).map(x=>x.title),['My terminal','Map']);
+ h.user.is_admin=false;assert.deepEqual(a.list(h).map(x=>x.path),['/map']);
+ h.user.id='two';assert.deepEqual(a.list(h).map(x=>x.id),['music']);
+ h.user.id='one';p.data.apps=[];assert.deepEqual(a.list(h),[]);assert.match(a.html(h),/suite.apps_empty/);
+});
+
+test('application editor cancels without writes, saves only account data, and complete backup retains preferences',async()=>{
+ const {HGAppsCard:C,HGPersonal:p,HGFullBackup:b,h,writes,card}=setup();h.panels={terminal:{title:'Terminal'}};
+ const c=new C();c._hass=h;c.rerender=()=>{};let selected='panel:terminal';c.shadowRoot={querySelectorAll:()=>[],querySelector:()=>({value:selected})};
+ await c.onAct('app-manage',{});await c.onAct('app-add',{dataset:{}});assert.equal(c._appsDraft.at(-1).id,'panel:terminal');
+ await c.onAct('app-cancel',{});assert.equal(writes.length,0);assert.equal(p.data.apps,null);
+ await c.onAct('app-manage',{});await c.onAct('app-add',{dataset:{}});await c.onAct('app-add',{dataset:{}});assert.equal(c._appsDraft.length,5);
+ await c.onAct('app-up',{dataset:{index:'4'}});await c.onAct('app-remove',{dataset:{index:'0'}});await c.onAct('app-save',{dataset:{}});
+ assert.equal(writes.length,1);assert.equal(writes[0].type,'frontend/set_user_data');assert.equal(writes[0].key,p.key);assert.equal(p.data.apps.length,4);
+ const raw=await b.snapshot(card);assert.deepEqual(b.parse(JSON.stringify(raw)).data.personal.apps,p.data.apps);
+});
+
+test('application drafts cannot write after account switch and titles are escaped in cards and dialog tabs',async()=>{
+ const {HGApps:a,HGAppsCard:C,HGPersonal:p,h,writes,dialogs}=setup();h.panels={map:{title:'Map'}};p.data.apps=[{id:'panel:map',title:'<img onerror=bad>'}];
+ assert.match(a.html(h),/&lt;img/);assert.doesNotMatch(a.html(h),/<img/);
+ const c=new C();c._hass=h;c.rerender=()=>{};c.shadowRoot={appendChild(){},querySelectorAll:()=>[]};c._openApp('panel:map');assert.match(dialogs[0].innerHTML,/&lt;img/);assert.doesNotMatch(dialogs[0].innerHTML,/<img/);c._closeApp();
+ await c.onAct('app-manage',{});h.user.id='two';await c.onAct('app-save',{dataset:{}});assert.equal(writes.length,0);
+});

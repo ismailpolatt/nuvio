@@ -3451,7 +3451,10 @@
     "disable": "Devre dışı bırak",
     "no_automations": "Bu filtrede otomasyon yok.",
     "auto_confirm": "Bu işlem otomasyonun etkinlik durumunu değiştirir. Devre dışı bırakılırken halen çalışan adımları durdurmaz.",
-    "journal": "İşlem günlüğü"
+    "journal": "İşlem günlüğü",
+    "command_sending": "{name} · {action} komutu gönderiliyor…",
+    "command_sent": "{name} · {action} komutu gönderildi",
+    "command_failed": "{name} · {action} komutu gönderilemedi"
   },
   "journal": {
     "title": "İşlem günlüğü",
@@ -3656,6 +3659,16 @@
     "exported": "Tam Nuvio yedeği hazırlandı.",
     "no_recovery": "Bu tarayıcıda bu hesap ve panel için kurtarma yedeği yok.",
     "restored": "Yedek geri yüklendi. Panel yenileniyor.",
-    "contacts_unknown": "{open} açık · {missing} durumu belirsiz"
+    "contacts_unknown": "{open} açık · {missing} durumu belirsiz",
+    "apps_manage": "Uygulamaları düzenle",
+    "apps_personal": "Bu liste yalnızca hesabınıza özeldir.",
+    "apps_registered": "Home Assistant paneli",
+    "apps_empty": "Henüz uygulama eklemediniz. Uygulamaları düzenle ile başlayın.",
+    "apps_name": "Uygulama adı",
+    "apps_remove": "Uygulamayı kaldır",
+    "apps_choose": "Eklenecek uygulamayı seçin",
+    "apps_add": "Uygulama ekle",
+    "apps_defaults": "Başlangıç listesini getir",
+    "apps_access_help": "Yalnız hesabınızın erişebildiği kayıtlı paneller eklenebilir. Kaldırmak uygulamayı silmez. Değişiklikler Kaydet ile uygulanır."
   }
 }

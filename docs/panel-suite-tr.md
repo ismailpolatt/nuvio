@@ -34,3 +34,10 @@ Dosya Home Assistant sistem yedeği değildir. Cihaz eşleştirmeleri, eklentile
 İlk değişiklikten önce bu hesap/panel için yerel kurtarma kopyası saklanır; **Geri yükleme öncesi yedeği indir** ile alınabilir. Yeterli tarayıcı alanı yoksa işlem başlamaz. Kayıt adımları atomik değildir; hata durumunda yapılan yazımlar ters sırayla geri alınır. Geri alma da başarısız olursa ayrı hata gösterilir ve kurtarma kopyası korunur. Başarıda panel yeniden yüklenir.
 
 Eski **Ayarlar → Yedekleme** düzen dosyası biçimi korunur; tam yedek bu yeni bölümden yönetilir. Eski dosyayı tam yedek alanına yüklemeyin.
+
+
+### Hesaba özel uygulamalar (2.23.3)
+Uygulamalar → Uygulamaları düzenle. Kayıtlı ve hesabın erişebildiği HA panelleri listeden eklenebilir; adlar değiştirilebilir, yukarı taşınabilir ve kaldırılabilir. Kaydet yalnız frontend kullanıcı verisini yazar; ortak paneli veya diğer hesapları değiştirmez. Vazgeç değişiklikleri bırakır. Başlangıç listesini getir dört öneriyi taslağa geri getirir; ayrıca Kaydet gerekir. Boş liste geçerlidir. Uygulamanın kendisi kaldırılmaz. Yönetici erişimi her açılışta yeniden kontrol edilir. Bu tercihler tam Nuvio yedeğinin kişisel bölümü içindedir.
+
+### Oda hızlı kontrolünde komut geri bildirimi (2.23.3)
+Yeni güç komutu eski mesajı temizler; cihaz adı ve aç/kapat hedefiyle gönderiliyor, gönderildi veya gönderilemedi gösterilir. Başarı mesajı 3,5 saniye, hata 6 saniye sonra kalkar. Yeni komut eski zamanlayıcıyı iptal eder; pencere kapandığında zamanlayıcı temizlenir. Gönderildi hizmet isteğinin kabulüdür; cihazın fiziksel durumunun doğrulanması değildir. Satırdaki durum HA verisini izler.

@@ -2,11 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadParts } from './harness.mjs';
 
-function setup() {
+function setup(timers={}) {
   const store = new Map(), navigator = { maxTouchPoints: 1 }, window = { innerWidth: 864, innerHeight: 700 };
   const H = { ok: (s) => !!s && !['unknown', 'unavailable'].includes(s.state), name: (h, e) => h.states[e]?.attributes.friendly_name || e, stateLabel: (s) => s };
   const p = { data: { readAlerts: [] }, save: async (h, patch) => { p.data = { ...p.data, ...patch }; } };
-  const x = loadParts(['hg-livingx.part.js'], { window, navigator, location: { pathname: '/dashboard-test/kontrol' },
+  const x = loadParts(['hg-livingx.part.js'], { setTimeout:timers.setTimeout||(()=>0),clearTimeout:timers.clearTimeout||(()=>{}),window, navigator, location: { pathname: '/dashboard-test/kontrol' },
     localStorage: { getItem: (k) => store.get(k), setItem: (k, v) => store.set(k, v) },
     H, HGL: { data: { wiz: {} } }, HGPersonal: p, HGBase: class { rerender() {} },
     HGAreas: { model: (h) => h.model || { list: [] }, val: (h, ref) => h.states[ref.e].state === 'unavailable' ? null : +h.states[ref.e].state },
@@ -23,6 +23,15 @@ test('suggestions require an open contact and actual heating/cooling in the same
   assert.equal(l.suggestions(h)[0].kind, 'window_climate');
   h.model.list = [{ name: 'First', ents: ['binary_sensor.window'] }, { name: 'Second', ents: ['climate.room'] }];
   assert.deepEqual(l.suggestions(h), []);
+});
+
+test('quick room feedback resets per command, blocks duplicate pending requests, and old expiry cannot clear a newer result',async()=>{
+ const tasks=[],cleared=[];const {HGQuickRoomCard:C}=setup({setTimeout:(fn,ms)=>{tasks.push({fn,ms});return tasks.length;},clearTimeout:id=>cleared.push(id)}),q=new C();let resolve,calls=0;
+ q._hass={user:{id:'one'},states:{'switch.washer':s('off')},callService:()=>{calls++;return new Promise(r=>resolve=r);}};q.room=()=>({ents:['switch.washer']});
+ const button={dataset:{e:'switch.washer'}},first=q.onAct('power',button);assert.equal(q._message,'living.command_sending');assert.equal(q._commandBusy,true);await q.onAct('power',button);assert.equal(calls,1);
+ resolve();await first;assert.equal(q._message,'living.command_sent');assert.equal(tasks[0].ms,3500);
+ const second=q.onAct('power',button);assert.ok(cleared.includes(1));assert.equal(q._message,'living.command_sending');tasks[0].fn();assert.equal(q._message,'living.command_sending');resolve();await second;tasks[1].fn();assert.equal(q._message,'');
+ q._hass.callService=async()=>{throw Error('offline');};await q.onAct('power',button);assert.equal(q._message,'living.command_failed');assert.equal(tasks[2].ms,6000);tasks[2].fn();assert.equal(q._message,'');
 });
 
 test('exit preview preserves unknown contacts and excludes hidden entities; no selection is inferred', () => {

@@ -8,6 +8,7 @@ const HGPersonal = window.HGPersonal = {
     return { favorites: ids(v.favorites).slice(0, 12), hiddenPersons: ids(v.hiddenPersons), active: v.active === true,
       cards: v.cards && typeof v.cards === 'object' && !Array.isArray(v.cards) ? v.cards : {}, order: ids(v.order),
       modes: v.modes && typeof v.modes === 'object' && !Array.isArray(v.modes) ? v.modes : {},
+      apps: window.HGApps ? HGApps.clean(v.apps) : null,
       experience: window.HGExperience ? HGExperience.clean(v.experience) : {},
       budget: window.HGBudget ? HGBudget.clean(v.budget) : { target: 0, unit: 'kWh', threshold: 80 },
       rate: Number.isFinite(+v.rate) && +v.rate >= 0 ? Math.min(+v.rate, 100000) : 0,

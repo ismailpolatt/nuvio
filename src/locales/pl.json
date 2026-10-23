@@ -3610,7 +3610,10 @@
     "disable": "Disable",
     "no_automations": "No automations in this filter.",
     "auto_confirm": "This changes the enabled state of the automation. Disabling does not stop actions already running.",
-    "journal": "Dziennik działań"
+    "journal": "Dziennik działań",
+    "command_sending": "{name} · Sending {action} command…",
+    "command_sent": "{name} · {action} command sent",
+    "command_failed": "{name} · Failed to send {action} command"
   },
   "journal": {
     "title": "Dziennik działań",
@@ -3766,6 +3769,16 @@
     "exported": "Complete Nuvio backup prepared.",
     "no_recovery": "No recovery copy exists for this account and dashboard on this browser.",
     "restored": "Backup restored. Reloading dashboard.",
-    "contacts_unknown": "{open} otwarte · {missing} niepewne"
+    "contacts_unknown": "{open} otwarte · {missing} niepewne",
+    "apps_manage": "Edit applications",
+    "apps_personal": "This list belongs only to your account.",
+    "apps_registered": "Home Assistant panel",
+    "apps_empty": "No applications yet. Choose Edit applications to begin.",
+    "apps_name": "Application name",
+    "apps_remove": "Remove application",
+    "apps_choose": "Choose an application to add",
+    "apps_add": "Add application",
+    "apps_defaults": "Use initial list",
+    "apps_access_help": "Only registered panels your account can access can be added. Removing a shortcut does not uninstall the application. Apply changes with Save."
   }
 }

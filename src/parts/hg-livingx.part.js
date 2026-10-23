@@ -191,13 +191,13 @@ class HGQuickRoomCard extends HGBase {
     };
     this.shadowRoot.addEventListener('keydown', this._key);
   }
-  disconnectedCallback() { super.disconnectedCallback(); clearInterval(this._timer); this.shadowRoot.removeEventListener('keydown', this._key); }
+  disconnectedCallback() { super.disconnectedCallback(); clearInterval(this._timer); clearTimeout(this._messageTimer); this._commandVersion=(this._commandVersion||0)+1; this.shadowRoot.removeEventListener('keydown', this._key); }
   css() { return U(`:host{position:fixed;inset:0;z-index:9999;display:block;height:100%;font-size:16px}.quick-shade{position:absolute;inset:0;background:rgba(0,0,0,.65)}.quick-dialog{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(700px,calc(100vw - 32px));max-height:85dvh;overflow:auto;box-sizing:border-box;padding:24px;border-radius:24px;background:var(--hg-card-bg,#252831);color:var(--hg-text,#fff)}.quick-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.quick-head h2{margin:0}.quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}.quick-section{background:var(--hg-tile-bg,rgba(255,255,255,.08));border-radius:16px;padding:12px}.quick-section h3{margin:0 0 8px;font-size:16px}.quick-row{display:flex;gap:8px;align-items:center;min-height:56px;border-bottom:1px solid rgba(255,255,255,.08)}.quick-row span{flex:1;min-width:0;overflow-wrap:anywhere}.quick-row small{display:block;opacity:.7}button{min-height:48px;min-width:48px;padding:8px 12px;font:inherit;border-radius:14px;background:var(--hg-tile-bg,rgba(255,255,255,.1))}button:disabled{opacity:.4}button:focus-visible{outline:2px solid var(--hg-accent,#8cc8ff)}ha-icon{width:22px;height:22px;--mdc-icon-size:22px}p{line-height:1.5}`); }
   render() {
     const a = this.room(), h = this._hass;
     if (!a) return `<div class="quick-dialog"><button data-act="close">${hgT('common.close')}</button><p>${hgT('common.unavailable')}</p></div>`;
     const groups = [['lights', (e) => e.startsWith('light.')], ['climate', (e) => e.startsWith('climate.')], ['switches', (e) => e.startsWith('switch.')], ['sensors', (e) => /^(sensor|binary_sensor)\./.test(e) && (HGLiving.contact(h.states[e]) || e === a.temp?.e || e === a.hum?.e)]];
-    return `<div class="quick-shade" data-act="close"></div><section class="quick-dialog" role="dialog" aria-modal="true" aria-label="${H.esc(a.name)}"><div class="quick-head"><h2>${H.esc(a.name)}</h2><button data-act="close" aria-label="${hgT('common.close')}">${H.icon('mdi:close')}</button></div><p role="status">${H.esc(this._message || HG_LIVING_TEXT.quick_help)}</p><div class="quick-grid">${groups.map(([key, filter]) => { const es = (a.ents || []).filter((e) => HGLiving.visible(h, e) && filter(e)); return es.length ? `<div class="quick-section"><h3>${HG_LIVING_TEXT[key]}</h3>${es.map((e) => `<div class="quick-row"><span>${H.esc(H.name(h, e))}<small>${H.esc(HGLiving.state(h, e))}${e.startsWith('climate.') && h.states[e].attributes.current_temperature != null ? ' · ' + H.esc(String(h.states[e].attributes.current_temperature)) + '°' : ''}</small></span><button data-act="details" data-e="${H.esc(e)}" aria-label="${HG_LIVING_TEXT.details}">${H.icon('mdi:tune')}</button>${/^(light|switch)\./.test(e) ? `<button data-act="power" data-e="${H.esc(e)}" ${!H.ok(h.states[e]) || this._busy ? 'disabled' : ''} aria-label="${(h.states[e].state === 'on' ? hgT('common.off_masc') : hgT('common.on_masc'))}" aria-pressed="${h.states[e].state === 'on'}">${H.icon('mdi:power')}</button>` : ''}</div>`).join('')}</div>` : ''; }).join('')}</div><p><button data-act="full">${HG_LIVING_TEXT.full_room}</button></p></section>`;
+    return `<div class="quick-shade" data-act="close"></div><section class="quick-dialog" role="dialog" aria-modal="true" aria-label="${H.esc(a.name)}"><div class="quick-head"><h2>${H.esc(a.name)}</h2><button data-act="close" aria-label="${hgT('common.close')}">${H.icon('mdi:close')}</button></div><p role="status">${H.esc(this._message || HG_LIVING_TEXT.quick_help)}</p><div class="quick-grid">${groups.map(([key, filter]) => { const es = (a.ents || []).filter((e) => HGLiving.visible(h, e) && filter(e)); return es.length ? `<div class="quick-section"><h3>${HG_LIVING_TEXT[key]}</h3>${es.map((e) => `<div class="quick-row"><span>${H.esc(H.name(h, e))}<small>${H.esc(HGLiving.state(h, e))}${e.startsWith('climate.') && h.states[e].attributes.current_temperature != null ? ' · ' + H.esc(String(h.states[e].attributes.current_temperature)) + '°' : ''}</small></span><button data-act="details" data-e="${H.esc(e)}" aria-label="${HG_LIVING_TEXT.details}">${H.icon('mdi:tune')}</button>${/^(light|switch)\./.test(e) ? `<button data-act="power" data-e="${H.esc(e)}" ${!H.ok(h.states[e]) || this._commandBusy ? 'disabled' : ''} aria-label="${(h.states[e].state === 'on' ? hgT('common.off_masc') : hgT('common.on_masc'))}" aria-pressed="${h.states[e].state === 'on'}">${H.icon('mdi:power')}</button>` : ''}</div>`).join('')}</div>` : ''; }).join('')}</div><p><button data-act="full">${HG_LIVING_TEXT.full_room}</button></p></section>`;
   }
   close() { const opener = this._opener; this.remove(); if (opener?.isConnected) opener.focus(); }
   async onAct(act, b) {
@@ -206,11 +206,21 @@ class HGQuickRoomCard extends HGBase {
     const e = b.dataset.e, a = this.room(), h = this._hass;
     if (!a || !(a.ents || []).includes(e) || !HGLiving.visible(h, e)) return;
     if (act === 'details') { const owner = this._owner; this.close(); return H.fire(owner, 'hass-more-info', { entityId: e }); }
-    if (act === 'power' && !this._busy && /^(light|switch)\./.test(e) && H.ok(h.states[e])) {
-      this._busy = true; const action = h.states[e].state === 'on' ? 'turn_off' : 'turn_on'; let failed = false;
-      try { await h.callService(e.split('.')[0], action, { entity_id: e }); this._message = HG_LIVING_TEXT.commands_sent; }
-      catch (err) { failed = true; this._message = hgT('controlx.failed'); }
-      finally { if (window.HGJournal) HGJournal.record(h, { source: 'room', targets: [{ e, action }], accepted: failed ? 0 : 1, failed }); this._busy = false; this.rerender(); }
+    if (act === 'power' && !this._commandBusy && /^(light|switch)\./.test(e) && H.ok(h.states[e])) {
+      clearTimeout(this._messageTimer);const version=this._commandVersion=(this._commandVersion||0)+1,uid=h.user?.id;
+      this._commandBusy = true; const action = h.states[e].state === 'on' ? 'turn_off' : 'turn_on'; let failed = false;
+      const params={name:H.name(h,e),action:action==='turn_on'?hgT('common.on_masc'):hgT('common.off_masc')};
+      this._message=hgT('living.command_sending',params);this.rerender();
+      try { await h.callService(e.split('.')[0], action, { entity_id: e }); }
+      catch (err) { failed = true; }
+      finally {
+        if (window.HGJournal) HGJournal.record(h, { source: 'room', targets: [{ e, action }], accepted: failed ? 0 : 1, failed });
+        if(this._commandVersion===version){this._commandBusy=false;
+          if(this._hass.user?.id===uid){this._message=failed?hgT('living.command_failed',params):hgT('living.command_sent',params);this.rerender();
+            this._messageTimer=setTimeout(()=>{if(this._commandVersion!==version)return;this._message='';this.rerender();},failed?6000:3500);
+          }else{this._message='';this.rerender();}
+        }
+      }
     }
   }
 }
