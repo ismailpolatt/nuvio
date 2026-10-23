@@ -118,8 +118,8 @@ const HGApp = window.__hgApp || (window.__hgApp = {
   /* dane wyglądu trafiają do CSS i atrybutów HTML: kolory tylko #RRGGBB, adres tła tylko /… lub https://… */
   get() { const a = HGL.data.app || {}, hx = (v) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v), o = Object.assign({}, a);
     if (o.accent != null && !hx(o.accent)) delete o.accent; if (o.dim != null && !isFinite(Number(o.dim))) delete o.dim;
-    /* migracja: tła zapisane przez wersje < 0.3.4 (stare podfoldery backgrounds i bg) -> płaskie nuvio-bg-x.webp obok paczki */
-    const mig = (u) => (typeof u === 'string' && typeof HG_ASSET === 'string' ? u.replace(/^.*\/assets\/(?:backgrounds|bg)\/([a-z0-9-]+\.webp)(?:\?.*)?$/, (m, f) => HG_ASSET + 'nuvio-bg-' + f) : u);
+    /* wbudowane tła: stare podfoldery (< 0.3.4) i adresy zapisane z adresem serwera innego urządzenia -> bieżąca baza paczki (hgBgFix) */
+    const mig = (u) => (typeof hgBgFix === 'function' ? hgBgFix(u) : u);
     if (o.bg && typeof o.bg === 'object' && o.bg.kind === 'image') { const v = mig(o.bg.v), v2 = mig(o.bg.v2p); if (v !== o.bg.v || v2 !== o.bg.v2p) { o.bg = Object.assign({}, o.bg, { v, v2p: v2 }); if (HGL.data.app) HGL.data.app.bg = o.bg; } }
     const b = o.bg; if (b && typeof b === 'object') { const okC = b.kind === 'color' || b.kind === 'gradient' ? hx(b.v) && (b.v2 == null || hx(b.v2)) : typeof b.v === 'string' && /^(\/|https?:\/\/)/.test(b.v) && !/[\s"'()<>\\]/.test(b.v); if (!okC) delete o.bg; }
     return o; },
@@ -128,8 +128,9 @@ const HGApp = window.__hgApp || (window.__hgApp = {
   bgImg(b) { if (!b) return null;
     if (b.kind === 'color') return `linear-gradient(${b.v}, ${b.v})`;
     if (b.kind === 'gradient') return `linear-gradient(160deg, ${b.v}, ${b.v2 || ('#' + '000000')})`;
-    if (b.kind === 'image' && b.v) return `url('${String(b.v).replace(/'/g, '%27')}')`;
-    if (b.v && /^(\/|https:\/\/)/.test(b.v)) return `url('${String(b.v).replace(/'/g, '%27')}')`; return null; },
+    const fx = (u) => String(typeof hgBgFix === 'function' ? hgBgFix(u) : u).replace(/'/g, '%27');
+    if (b.kind === 'image' && b.v) return `url('${fx(b.v)}')`;
+    if (b.v && /^(\/|https:\/\/)/.test(b.v)) return `url('${fx(b.v)}')`; return null; },
   apply() {
     const a = this.get(); let st = document.getElementById('hg-app-style');
     if (!st) { st = document.createElement('style'); st.id = 'hg-app-style'; document.head.appendChild(st); }
@@ -287,8 +288,10 @@ const HG_TILE_CSS = `
 .hgtl .cv button, .hgtl .mc button, .hgtl .rb{ width:40px; height:40px; border-radius:50%; border:0; display:flex; align-items:center; justify-content:center; background:var(--hg-tile-bg); color:inherit; cursor:pointer; }
 .hgtl .mc .pw.on{ background:var(--hg-accent); color:var(--hg-on-accent); } .hgtl .cv em{ font-style:normal; font-size:12px; opacity:.66; }
 .hgtl .ma{ width:44px; height:44px; border-radius:12px; object-fit:cover; flex:none; }
-/* wąski kafel (S): przyciski rolety i odtwarzacza pod nazwą zamiast ją zasłaniać */
-@container (max-width: 330px){ .hgtl.k-cover, .hgtl.k-media{ flex-wrap:wrap; row-gap:8px; } .hgtl.k-cover .hgtb, .hgtl.k-media .hgtb{ flex:1 0 100%; }
+/* wąski kafel: przyciski rolety i odtwarzacza schodzą pod nazwę. flex-wrap jest poza @container,
+   bo zapytanie nie styluje samego kontenera (.hgtl), a potomkowie z flex-basis 100% bez zawijania wychodzą poza kafel (#53). */
+.hgtl.k-cover, .hgtl.k-media{ flex-wrap:wrap; row-gap:8px; }
+@container (max-width: 330px){ .hgtl.k-cover .hgtb, .hgtl.k-media .hgtb{ flex:1 0 100%; }
   .hgtl.k-cover .cv{ flex:1 0 100%; justify-content:space-between; } .hgtl.k-media .mc{ flex:1 0 100%; justify-content:flex-end; } }
 /* wąski kafel z wartością: mniejsza liczba i bez ikony, żeby nazwa się mieściła */
 @container (max-width: 210px){ .hgtl:has(.tv) .ti{ display:none; } .hgtl .tv{ font-size:22px; } .hgtl .tv em{ font-size:11px; } }
@@ -342,7 +345,8 @@ const HG_COMP = [
     cfg: (v) => ({ entities: v.entities, max_power: 10000, hours: 6 }) }, { n: 'common.power_now', d: 'edit.value_with_a_bar' }),
   hgTO({ id: 'energy', i: 'mdi:lightning-bolt-outline', card: 'hg-energy-stats-card', slots: [hgTO({ k: 'consumption', dom: ['sensor'], dc: ['energy'], req: 1 }, { l: 'edit.consumption_kwh' }), hgTO({ k: 'production', dom: ['sensor'], dc: ['energy'] }, { l: 'edit.production_kwh_optional' })],
     cfg: (v) => ({ consumption: v.consumption, ...(v.production ? { production: v.production } : {}) }) }, { n: 'edit.energy_statistics', d: 'edit.consumption_and_production_today' }),
-  hgTO({ id: 'weather', i: 'mdi:weather-partly-cloudy', card: 'hg-weather-card', slots: [hgTO({ k: 'entity', dom: ['weather'], req: 1 }, { l: 'edit.forecast' })], cfg: (v, h) => ({ entity: v.entity, hours: 24, ...(h.states['sun.sun'] ? { sun: 'sun.sun' } : {}) }) }, { n: 'common.weather', d: 'edit.now_hourly_forecast_sun' }),
+  hgTO({ id: 'weather', i: 'mdi:weather-partly-cloudy', card: 'hg-weather-card', slots: [hgTO({ k: 'entity', dom: ['weather'], req: 1 }, { l: 'edit.forecast' })], cfg: (v, h) => ({ entity: v.entity, hours: 24, ...(h.states['sun.sun'] ? { sun: 'sun.sun' } : {}), ...((v.o || {}).hero ? { variant: 'hero' } : {}) }),
+    opts: [{ k: 'title', l: hgTLazy('edit.options.title') }, { k: 'hero', t: 'bool', l: hgTLazy('edit.options.weather_hero') }] }, { n: 'common.weather', d: 'edit.now_hourly_forecast_sun' }),
   hgTO({ id: 'people', i: 'mdi:account-group-outline', card: 'hg-people-card', slots: [hgTO({ k: 'persons', dom: ['person'], multi: 1, req: 1 }, { l: 'edit.people' })], cfg: (v) => ({ persons: v.persons }) }, { n: 'edit.household', d: 'edit.who_is_home_zones' }),
   hgTO({ id: 'alarm', i: 'mdi:shield-home-outline', card: 'hg-alarm-card', slots: [hgTO({ k: 'entity', dom: ['alarm_control_panel'], req: 1 }, { l: 'edit.alarm_panel' })], cfg: (v) => ({ entity: v.entity }) }, { n: 'edit.alarm', d: 'edit.arm_and_disarm_with' }),
   hgTO({ id: 'robots', i: 'mdi:robot-vacuum', card: 'hg-robots-card', slots: [hgTO({ k: 'entities', dom: ['vacuum', 'lawn_mower'], multi: 1, req: 1 }, { l: 'edit.robots' })], cfg: (v) => ({ entities: v.entities }) }, { n: 'edit.robots', d: 'edit.vacuums_and_mowers_status' }),
@@ -369,6 +373,10 @@ const HG_COMP = [
   hgTO({ id: 'week', i: 'mdi:chart-bar', card: 'hg-week-card', slots: [hgTO({ k: 'consumption', dom: ['sensor'], dc: ['energy'], multi: 1, req: 1 }, { l: 'edit.consumption_kwh' }), hgTO({ k: 'production', dom: ['sensor'], dc: ['energy'], multi: 1 }, { l: 'edit.production_kwh' })],
     opts: [{ k: 'title', l: hgTLazy('edit.options.title') }, { k: 'days', t: 'num', l: hgTLazy('edit.options.number_of_days'), ph: '7' }, { k: 'expand', t: 'nav', l: hgTLazy('edit.options.on_tap_open_path'), ph: '/nuvio/energia' }],
     cfg: (v) => ({ consumption: v.consumption || [], production: v.production || [] }) }, { n: 'edit.energy_week', d: 'edit.consumption_and_production_bars' }),
+  hgTO({ id: 'yield', i: 'mdi:calendar-weather', card: 'hg-yield-card', slots: [hgTO({ k: 'entities', dom: ['sensor'], dc: ['energy'], multi: 1, req: 1 }, { l: 'edit.daily_sensors' })],
+    opts: [{ k: 'title', l: hgTLazy('edit.options.title') }, { k: 'capacity', l: hgTLazy('edit.options.capacity_kw'), ph: '3.4' }, { k: 'good', t: 'num', l: hgTLazy('edit.options.good_day_from'), ph: '3.5' }, { k: 'poor', t: 'num', l: hgTLazy('edit.options.poor_day_below'), ph: '1.5' },
+      { k: 'unit', l: hgTLazy('edit.options.unit'), ph: 'kWh' }, { k: 'decimals', t: 'num', l: hgTLazy('edit.options.decimal_places'), ph: '1' }],
+    cfg: (v) => ({ entities: v.entities || [] }) }, { n: 'edit.production_forecast', d: 'edit.daily_bars_for_the' }),
   hgTO({ id: 'phases', i: 'mdi:sine-wave', card: 'hg-phases-card', slots: [hgTO({ k: 'power', dom: ['sensor'], dc: ['power'], multi: 1, req: 1 }, { l: 'edit.phase_power_l1_l2' }), hgTO({ k: 'voltage', dom: ['sensor'], dc: ['voltage'], multi: 1 }, { l: 'edit.phase_voltage' }), hgTO({ k: 'current', dom: ['sensor'], dc: ['current'], multi: 1 }, { l: 'edit.phase_current' })],
     opts: [{ k: 'title', l: hgTLazy('edit.options.title') }, { k: 'max_power', t: 'num', l: hgTLazy('edit.options.max_total_power_w'), ph: '17250' }, { k: 'phase_max', t: 'num', l: hgTLazy('edit.options.max_phase_power_w'), ph: '5750' }],
     cfg: (v) => ({ phases: (v.power || []).map((e, i) => ({ name: 'L' + (i + 1), power: e, ...((v.voltage || [])[i] ? { voltage: v.voltage[i] } : {}), ...((v.current || [])[i] ? { current: v.current[i] } : {}) })) }) }, { n: 'edit.phases', d: 'edit.power_voltage_and_current' }),
@@ -494,7 +502,7 @@ const HG_COMP = [
     { n: 'edit.card_from_ha_yaml', d: 'edit.paste_a_card_or' }),
 ];
 /* domyślny rozmiar nowego komponentu: duże karty od razu M / L, proste kafle S */
-const HG_COMP_Z = { airq: 'm', plant: 'm', eprice: 'm', child: 'm', flow: 'l', glance: 'l', stat: 'm', humid: 'm', timer: 'm', logbook: 'm', webpage: 'l', cond: 'm', grid: 'l', vstack: 'm', hstack: 'l', hacard: 'm', history: 'm', image: 'm', ac: 'm', acremote: 'm', week: 'm', phases: 'm', pv: 'm', net: 'm', sensors: 'm', rooms: 'l', room: 'l', appliance: 'm', cwu: 'm', stairs: 'm', fuel: 's', climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', slider: 'm', entities: 'm', select: 'm' };
+const HG_COMP_Z = { airq: 'm', plant: 'm', eprice: 'm', child: 'm', flow: 'l', glance: 'l', stat: 'm', humid: 'm', timer: 'm', logbook: 'm', webpage: 'l', cond: 'm', grid: 'l', vstack: 'm', hstack: 'l', hacard: 'm', history: 'm', image: 'm', ac: 'm', acremote: 'm', week: 'm', yield: 'm', phases: 'm', pv: 'm', net: 'm', sensors: 'm', rooms: 'l', room: 'l', appliance: 'm', cwu: 'm', stairs: 'm', fuel: 's', climate: 'm', media1: 'm', cam1: 'm', chart: 'm', scenes: 'm', cameras: 'l', players: 'm', power: 'm', energy: 'm', weather: 'm', people: 'm', alarm: 'm', robots: 'm', agenda: 'm', map: 'l', slider: 'm', entities: 'm', select: 'm' };
 /* kandydaci do slotu: domena, device_class, liczba; bez ukrytych / diagnostycznych */
 /* span karty panelu -> rozmiar S / M / L */
 const hgSpanZ = (sp) => (sp === 'full' ? 'l' : +sp >= 2 ? 'm' : 's');
@@ -518,7 +526,7 @@ const hgPwPick = (cur, hge, extra = '') => `<div class="hg-pw" role="radiogroup"
 const hgPwMark = (b) => { for (const x of b.parentElement.querySelectorAll('[role=radio]')) x.setAttribute('aria-checked', String(x === b)); };
 window.hgPwPick = hgPwPick; window.hgPwMark = hgPwMark; window.HG_PW_CSS = HG_PW_CSS;
 /* pełna konfiguracja komponentu: sloty → cfg(), pola opcji (v.o) i JSON zaawansowany (v.x, nadpisuje wszystko) */
-const hgOptVal = (o, val) => (val == null || val === '' ? undefined : o.t === 'num' ? (isFinite(+val) ? +val : undefined) : o.t === 'bool' ? !!val : o.t === 'nav' ? (/^https?:/.test(val) ? { url: val } : { navigate: val }) : o.t === 'list' ? String(val).split(',').map((x) => x.trim()).filter(Boolean) : val);
+const hgOptVal = (o, val) => (val == null || val === '' ? undefined : o.t === 'num' ? (isFinite(+String(val).trim().replace(',', '.')) && String(val).trim() !== '' ? +String(val).trim().replace(',', '.') : undefined) : o.t === 'bool' ? !!val : o.t === 'nav' ? (/^https?:/.test(val) ? { url: val } : { navigate: val }) : o.t === 'list' ? String(val).split(',').map((x) => x.trim()).filter(Boolean) : val);
 const hgCompCfg = (C, v, h) => { v = v || {}; const b = C.cfg ? C.cfg(v, h) : {}, O = v.o || {};
   for (const o of C.opts || []) { const x = hgOptVal(o, O[o.k]); if (x !== undefined) b[o.k] = x; }
   return Object.assign(b, v.x && typeof v.x === 'object' ? v.x : {}); };
@@ -673,6 +681,7 @@ const hgMockHtml = (id) => { const I = (i) => H.icon(i), tag = `<span class="mk-
     ac: `<div style="display:flex;align-items:center;justify-content:center;gap:12px"><span class="mk-cir">−</span><div style="text-align:center"><div class="mk-s">${hgT('common.cooling')}</div><span class="mk-v">22<small>°</small></span></div><span class="mk-cir on">+</span></div>`,
     acremote: `<svg viewBox="0 0 120 40" style="width:100%;height:30px;flex:none"><g fill="none" stroke="#3D8BF5" stroke-linecap="round">${[30, 46, 62, 78, 94].map((x) => `<path class="mk-fl" d="M${x} 21 Q${x - 3} 30 ${x + (x - 62) * .4} 39"/>`).join('')}</g><rect x="22" y="2" width="76" height="18" rx="6" fill="${'#' + 'FBFCFD'}"/><rect x="29" y="14" width="62" height="2.5" rx="1.2" fill="${'#' + 'D5DAE0'}"/><circle cx="91" cy="7" r="1.5" fill="#3D8BF5"/></svg><div class="mk-st" style="gap:6px"><span class="mk-cir">−</span><span class="mk-v" style="font-weight:200;font-size:22px">22<small>°</small></span><span class="mk-cir on">+</span></div><i style="display:block;height:5px;border-radius:3px;margin:0 6px;background:linear-gradient(90deg,#2F7CF6,#8DBBF5 42%,#F6BE8C 58%,#F2762A)"></i>`,
     week: `<div style="display:flex;align-items:flex-end;gap:5px;height:52px">${[50, 72, 40, 66, 58, 80, 45].map((v) => `<i style="flex:1;height:${v}%;border-radius:4px;background:var(--hg-accent,#63D71E);opacity:.8"></i>`).join('')}</div><span class="mk-s">${hgT('edit.last_7_days')}</span>`,
+    yield: `<div style="display:flex;align-items:flex-end;gap:5px;height:52px">${[[80, 1], [62, 0], [30, 2], [24, 2], [55, 0], [86, 1], [70, 1]].map(([v, k]) => `<i style="flex:1;height:${v}%;border-radius:999px;background:${['var(--hg-accent,#63D71E)', 'rgba(255,255,255,.45)', '#FF8A3D'][k]};opacity:.85"></i>`).join('')}</div><span class="mk-s">${hgT('edit.next_7_days')}</span>`,
     phases: ['L1', 'L2', 'L3'].map((l, k) => `<div class="mk-r"><span class="mk-s">${l}</span><div class="mk-tr" style="flex:1"><i style="--w:${[42, 68, 25][k]}%"></i></div><b>${[1.2, 2.1, 0.7][k]} kW</b></div>`).join(''),
     flow: `<svg viewBox="0 0 100 62" style="width:100%;height:100%;max-height:96px"><g fill="none" stroke-linecap="round"><path d="M22 31 L78 31" stroke="#5AA2FF" stroke-opacity=".35" stroke-width=".8"/><path d="M44 15 Q18 11 14 23" stroke="#F5B53D" stroke-opacity=".35" stroke-width=".8"/><path d="M56 15 Q82 11 86 23" stroke="#F5B53D" stroke-opacity=".35" stroke-width=".8"/><path d="M56 47 Q82 51 86 39" stroke="#A78BFA" stroke-opacity=".35" stroke-width=".8"/>
       <path class="mk-fl" d="M56 15 Q82 11 86 23" stroke="#F5B53D"/><path class="mk-fl" d="M44 15 Q18 11 14 23" stroke="#F5B53D"/><path class="mk-fl" d="M56 47 Q82 51 86 39" stroke="#A78BFA"/></g>
@@ -771,7 +780,8 @@ const HG_COMP_EDIT = {
       <div class="hd-vis">${[['hide', hgT('edit.show_header'), hgT('edit.title_subtitle_and_icon')], ['nos', hgT('edit.show_subtitle'), hgT('edit.second_line_under_the')]].map(([k, l, d]) => `<div class="hd-vr"><span class="lx-t"><b>${l}</b><small>${d}</small></span><button class="lx-sw" role="switch" data-hge="hdvis" data-k="${k}" aria-checked="${!H0[k]}" aria-label="${H.esc(l)}"><i></i></button></div>`).join('')}</div>
       ${fld('t', hgT('edit.title'), c.title, HG_HEAD_LIM.t)}${fld('s', hgT('edit.subtitle'), c.subtitle, HG_HEAD_LIM.s)}
       <label class="hs-fl"><span>${hgT('edit.icon_next_to_the')}</span><span class="hs-s">${H.icon(H0.i || c.icon || 'mdi:shape-outline')}<input class="hs-in" name="i" value="${H.esc(H0.i || '')}" placeholder="${H.esc(c.iconPh || hgT('edit.no_icon'))}" autocomplete="off"></span></label>
-      <p class="hd-hint">${hgT('edit.head_name_hint', { placeholder: '{name}', name: H.esc(ui.first || hgT('edit.head_name_none')) })}${c.room ? ' ' + hgT('edit.head_room_hint', { room: '{room}' }) : ''}</p>
+      <p class="hd-hint">${hgT('edit.head_name_hint', { placeholder: '{name}', name: H.esc(ui.first || hgT('edit.head_name_none')) })}${c.room ? ' ' + hgT('edit.head_room_hint', { room: '{room}' }) : ''} ${hgT('edit.head_clock_hint', { time: '{time}', date: '{date}' })}</p>
+      <button class="hs-r hs-add" data-hge="hdclock"><span class="hs-i">${H.icon('mdi:clock-outline')}</span><span class="hs-t"><b>${hgT('edit.head_clock_add')}</b><small>${hgT('edit.head_clock_add_desc')}</small></span></button>
       <button class="hs-r hs-add" data-hge="hdvar"><span class="hs-i">${H.icon('mdi:cellphone-link')}</span><span class="hs-t"><b>${hgT('edit.shorter_versions_for_phone')}</b><small>${hgT('edit.optional_empty_fields_use')}</small></span></button>
       <div class="hd-v${H0.tm || H0.sm || H0.tt || H0.st ? ' on' : ''}">${fld('tt', hgT('edit.title_tablet'), hgT('edit.same_as_main'), HG_HEAD_LIM.t)}${fld('st', hgT('edit.subtitle_tablet'), hgT('edit.same_as_main'), HG_HEAD_LIM.s)}${fld('tm', hgT('edit.title_phone'), hgT('edit.same_as_main'), 22)}${fld('sm', hgT('edit.subtitle_phone'), hgT('edit.same_as_main'), 36)}</div>
       ${this._panel ? `<div class="hs-fl"><span>${hgT('edit.panel_width')}</span>${hgPwPick(this._pwCur(), 'pw')}</div>` : ''}</div><style>${HG_PW_CSS}</style>
@@ -782,11 +792,14 @@ const HG_COMP_EDIT = {
     if (o.i && !/^mdi:[a-z0-9-]+$/.test(o.i)) delete o.i; for (const b of S.querySelectorAll('[data-hge=hdvis]')) if (b.getAttribute('aria-checked') === 'false') o[b.dataset.k] = 1; return o; },
   _eHeadPv() { const S = this._eSheetEl, c = this._eHeadDef(), V = this._eHeadVals(), nm = this._userInfo().first || '';
     for (const i of S.querySelectorAll('input.hs-in')) { const ce = S.querySelector(`.hd-c[data-c="${i.name}"]`); if (ce) { ce.textContent = i.value.length + '/' + i.maxLength; ce.classList.toggle('ov', i.value.length >= i.maxLength); } }
-    const ic = V.i || c.icon ? H.icon(V.i || c.icon) : '', off = hgT('edit.hidden'), r = (s) => H.esc(String(s || '').replace(/\{name\}/g, nm).replace(/\{room\}/g, c.room)), one = (cls, l, t, s) => `<div class="hd-d ${cls}${V.hide ? ' off' : ''}"><small data-off="${off}">${l}</small><b>${ic}${r(t)}</b>${V.nos ? '' : `<p>${r(s)}</p>`}</div>`;
+    const ic = V.i || c.icon ? H.icon(V.i || c.icon) : '', off = hgT('edit.hidden'), r = (s) => H.esc(hgClockFill(String(s || '').replace(/\{name\}/g, nm).replace(/\{room\}/g, c.room), this._hass)), one = (cls, l, t, s) => `<div class="hd-d ${cls}${V.hide ? ' off' : ''}"><small data-off="${off}">${l}</small><b>${ic}${r(t)}</b>${V.nos ? '' : `<p>${r(s)}</p>`}</div>`;
     const T = V.t || c.title, Su = V.s || c.sub0 || c.subtitle;
     S.querySelector('.hd-pv').innerHTML = one('d', hgT('edit.desktop'), T, Su) + one('t', hgT('edit.tablet'), V.tt || T, V.st || Su) + one('m', hgT('edit.phone'), V.tm || T, V.sm || Su); },
   _eHeadAct(a) { const sc = this._headScope();
     if (a === 'hdvar') { this._eSheetEl.querySelector('.hd-v').classList.toggle('on'); return; }
+    /* zegar: {time} na końcu podtytułu (albo tytułu, gdy podtytuł ukryty); drugi raz nic nie dopisuje */
+    if (a === 'hdclock') { const S = this._eSheetEl, nos = S.querySelector('[data-hge=hdvis][data-k=nos]'), f = S.querySelector(`input.hs-in[name="${nos && nos.getAttribute('aria-checked') === 'false' ? 't' : 's'}"]`); if (!f) return;
+      if (!/\{time\}/.test(f.value)) { const v = f.value.trim(); f.value = (v ? v + ' · ' : '') + '{time}'; f.dispatchEvent(new Event('input')); } f.focus(); return; }
     if (a === 'hdvis') { const b = arguments[1]; if (b) { b.setAttribute('aria-checked', String(b.getAttribute('aria-checked') === 'false')); this._eHeadPv(); } return; }
     const V = a === 'hdreset' ? {} : this._eHeadVals();
     this._eSet(sc, (L) => { if (Object.keys(V).length) L.conf._head = V; else delete L.conf._head; });
@@ -961,9 +974,11 @@ class HGTilesCard extends HGBase {
       return `<div class="hgg ${G.lay}">${G.n ? `<div class="hgg-h">${G.i ? H.icon(G.i) : ''}<b>${H.esc(G.n)}</b><small>${G.es.length}</small></div>` : ''}<div class="hgg-b">${G.es.map((e) => `<div class="tg2 one">${hgTileHtml(h, e, 's', tt && hgTypesFor(h, e).includes(tt) ? { t: tt } : {})}</div>`).join('')}</div></div>`; }
     if (this._config.single) return `<div class="tg2 one">${hgTileHtml(h, this._config.single.e, 's', this._config.single)}</div>`;
     const L = HGL.get(this._config.scope), hid = new Set(L.hidden);
-    if (this._config.one) { const x = L.added.find((y) => y.e === this._config.one); return x && x.c && customElements.get(x.c) ? `<div class="tg2 one">${hgCmHtml(x, 's')}</div>` : ''; }
+    if (this._config.one) { const x = L.added.find((y) => y.e === this._config.one); if (!x) return '';
+      if (!x.c) return h.states[x.e] ? `<div class="tg2 one">${hgTileHtml(h, x.e, 's', x)}</div>` : '';   /* zwykły kafel jako osobna karta panelu (#17) */
+      return customElements.get(x.c) ? `<div class="tg2 one">${hgCmHtml(x, 's')}</div>` : ''; }
     const it = HGL.sort(L.added.filter((x) => (x.c ? !this._config.nocomp && customElements.get(x.c) : h.states[x.e]) && !hid.has(x.e)), (x) => x.e, L.order);
-    return `<div class="tg2${L.order.length ? ' ord' : ''}" data-hgl="${H.esc(this._config.scope)}" data-hgsz="1">${it.map((x) => (x.c ? hgCmHtml(x, L.size[x.e]) : hgTileHtml(h, x.e, L.size[x.e], x))).join('')}</div>`;
+    return `<div class="tg2${L.order.length || it.some((x) => x.c) ? ' ord' : ''}" data-hgl="${H.esc(this._config.scope)}" data-hgsz="1">${it.map((x) => (x.c ? hgCmHtml(x, L.size[x.e]) : hgTileHtml(h, x.e, L.size[x.e], x))).join('')}</div>`;
   }
   afterRender() { hgSlots(this); hgCmSlots(this); }
   onAct(act, t) { hgTileAct(this, act, t); }
@@ -1008,7 +1023,54 @@ const HGE_CSS = `
 /* ===== silnik edycji (metody hg-page) ===== */
 
 /* Ustawienia jako osobny panel z kartami: komputer = karty z lewej, telefon = przewijany pasek kart u góry */
-const HG_LKT_CSS = (ks) => `${ks.map((k) => `.lkt[data-at=${k}] .lk-sc > [data-tab]:not([data-tab=${k}])`).join(', ')}{ display:none; }
+/* Ustawienia 2.0: strony w grupach (pasek boczny), sekcje przypisane atrybutem data-pg. Stare nazwy zakładek (data-tab, _lkTab) działają dalej. */
+/* Szkic ustawień w trybie edycji: zmiany tylko w HGL.data (pamięć), bez zapisu i bez przeładowania widoku.
+   Zapisz: jeden zapis (HGL.save + ewentualnie konfiguracja pulpitu) i co najwyżej jedno przeładowanie. Anuluj: szkic odrzucony. */
+const HGDraft = window.HGDraft = {
+  defer(page, o) { const d = page._eDraft = page._eDraft || { reload: false, dash: null }; if (o && o.reload) d.reload = true; if (o && o.dash) d.dash = o.dash; d.n = (d.n || 0) + 1; return d; },
+  pending(page) { return !!(page && page._eDraft && page._eDraft.n); },
+  discard(page) { page._eDraft = null; if (typeof HGLookX !== 'undefined') { HGLookX.pend = null; HGLookX.kpend = false; HGLookX.cv = null; HGLookX.dash = null; } },
+  /* zwraca 'reload' albo 'build'; błąd zapisu konfiguracji pulpitu przerywa (szkic zostaje) */
+  async commit(page, h) { const d = page._eDraft; page._eDraft = null; if (!d) return 'build';
+    if (d.dash && !window.__hgDryRun) await h.callWS({ type: 'lovelace/config/save', url_path: HG_DASH(), config: d.dash });
+    return d.reload ? 'reload' : 'build'; },
+};
+const HG_SET_PAGES = () => [
+  ['general', 'mdi:tune-variant', hgT('settings.pg.general'), 'general'],
+  ['theme', 'mdi:palette-outline', hgT('settings.pg.theme'), 'look'], ['bg', 'mdi:image-outline', hgT('settings.pg.bg'), 'look'], ['header', 'mdi:page-layout-header', hgT('settings.pg.header'), 'look'],
+  ['home', 'mdi:view-dashboard-outline', hgT('dashboardx.personalize'), 'dash'], ['views', 'mdi:view-carousel-outline', hgT('settings.pg.views'), 'dash'], ['rooms', 'mdi:sofa-outline', hgT('settings.pg.rooms'), 'dash'],
+  ['wall', 'mdi:tablet-dashboard', hgT('settings.pg.wall'), 'wall'], ['security', 'mdi:shield-lock-outline', hgT('settings.pg.security'), 'wall'],
+  ['assist', 'mdi:microphone-message', hgT('settings.pg.assist'), 'sys'], ['users', 'mdi:account-multiple-outline', hgT('settings.pg.users'), 'sys'], ['integrations', 'mdi:puzzle-outline', hgT('settings.pg.integrations'), 'sys'],
+  ['backup', 'mdi:backup-restore', hgT('settings.pg.backup'), 'sys'], ['about', 'mdi:information-outline', hgT('settings.pg.about'), 'sys']];
+const HG_SET_GROUPS = () => ({ general: hgT('settings.grp.general'), look: hgT('settings.grp.look'), dash: hgT('settings.grp.dash'), wall: hgT('settings.grp.wall'), sys: hgT('settings.grp.sys') });
+/* stare klucze zakładek (przed 2.22) -> strony */
+const HG_SET_LEGACY = { look: 'theme', head: 'header', bk: 'backup' };
+/* Wyszukiwarka ustawień: tylko widoczny, przetłumaczony tekst (bez <style>, <script>, <template>, <option>), bez znaków diakrytycznych, dopasowanie od początku słowa */
+const hgSetNorm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l').replace(/Ł/g, 'L').toLowerCase();
+const hgSetWords = window.hgSetWords = (q) => hgSetNorm(q).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+const hgSetMatch = window.hgSetMatch = (text, W) => { const T = hgSetNorm(text).split(/[^\p{L}\p{N}]+/u).filter(Boolean); return W.length > 0 && W.every((w) => T.some((t) => t.startsWith(w))); };
+const hgSetText = (root) => { const o = []; const w = (n) => { for (const c of n.childNodes) { if (c.nodeType === 3) o.push(c.nodeValue); else if (c.nodeType === 1 && !/^(STYLE|SCRIPT|TEMPLATE|OPTION|SVG)$/i.test(c.tagName) && !c.hidden && c.getAttribute('aria-hidden') !== 'true') { for (const at of ['aria-label', 'placeholder', 'title']) { const v = c.getAttribute(at); if (v) o.push(v); } w(c); } } }; w(root); return o.join(' '); };
+const hgSetPage = window.hgSetPage = (k, has) => { const p = HG_SET_LEGACY[k] || k; return has && !has.has(p) ? [...has][0] || 'general' : p || 'general'; };
+const HG_LKT_CSS = (ks) => `${ks.map((k) => `.lkt[data-at=${k}] .lk-sc > [data-pg]:not([data-pg=${k}])`).join(', ')}, .lkt[data-at=__s] .lk-sc > [data-pg]:not(.hit), .lkt:not([data-at=__s]) .lk-nores{ display:none; }
+.lk-side{ display:flex; flex-direction:column; gap:10px; min-height:0; overflow:auto; }
+.lk-q{ display:flex; align-items:center; gap:8px; min-height:42px; padding:0 12px; border-radius:14px; background:color-mix(in srgb, var(--hg-tile-bg) 80%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); }
+.lk-q:focus-within{ box-shadow:inset 0 0 0 2px var(--hg-accent, #63D71E); } .lk-q ha-icon{ width:18px; height:18px; opacity:.6; flex:none; } .lk-q input{ all:unset; flex:1; min-width:0; font-size:14px; }
+.lk-tabs .lk-gl{ font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.5; padding:10px 14px 2px; } .lk-tabs .lk-gl:first-child{ padding-top:2px; }
+.lk-tabs [role=tab] .lk-n{ margin-left:auto; font-size:11px; font-weight:700; min-width:20px; text-align:center; padding:1px 6px; border-radius:999px; background:color-mix(in srgb, var(--hg-accent, #63D71E) 30%, transparent); }
+.lk-tabs [role=tab] .lk-ch{ display:none; margin-left:auto; opacity:.5; }
+.lk-ph{ display:flex; align-items:center; gap:10px; min-height:40px; } .lk-ph b{ font-size:20px; font-weight:600; letter-spacing:-.01em; } .lk-ph small{ font-size:12px; opacity:.6; }
+.lk-ph .lk-bk{ all:unset; cursor:pointer; display:none; place-items:center; width:40px; height:40px; border-radius:50%; background:color-mix(in srgb, currentColor 8%, transparent); } .lk-ph .lk-bk:focus-visible{ outline:2px solid var(--hg-accent, #63D71E); }
+.lk-nores{ padding:24px; text-align:center; opacity:.65; }
+.lk-adv{ border-radius:14px; background:color-mix(in srgb, currentColor 4%, transparent); } .lk-adv > summary{ cursor:pointer; list-style:none; display:flex; align-items:center; gap:8px; min-height:40px; padding:0 12px; font-size:13px; font-weight:600; }
+.lk-adv > summary::-webkit-details-marker{ display:none; } .lk-adv > summary::after{ content:''; margin-left:auto; width:8px; height:8px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(45deg); opacity:.55; transition:transform .2s; }
+.lk-adv[open] > summary::after{ transform:rotate(225deg); } .lk-adv > summary:focus-visible{ outline:2px solid var(--hg-accent, #63D71E); border-radius:14px; } .lk-adv > summary small{ font-weight:400; opacity:.6; }
+.lk-adv > .rx-cl{ padding:0 12px 12px; }
+.lk-ab{ display:flex; flex-direction:column; gap:8px; } .lk-ab a{ color:var(--hg-accent-tx, #63D71E); font-weight:600; text-decoration:none; } .lk-ab a:hover{ text-decoration:underline; } .lk-ab code{ font-size:12px; opacity:.75; }
+@media (max-width:820px){ .lkt[data-dd=nav] .lk-sc, .lkt[data-dd=nav] .lk-ft{ display:none; } .lkt[data-dd=page] .lk-side{ display:none; } .lkt .lk-ph .lk-bk{ display:grid; }
+  .lkt[data-dd=nav] .lk-side{ overflow:auto; } .lkt .lk-tabs{ flex-direction:column; overflow:visible; margin:0; } .lkt .lk-tabs [role=tab]{ min-height:52px; border-radius:14px; font-size:15px; padding:0 14px; }
+  .lkt .lk-tabs [role=tab] .lk-ch{ display:inline-flex; } .lkt .lk-tabs [role=tab][aria-selected=true]{ background:transparent; box-shadow:none; font-weight:500; } }
+:host([mode=phone]) .lkt[data-dd=nav] .lk-sc, :host([mode=phone]) .lkt[data-dd=nav] .lk-ft{ display:none; } :host([mode=phone]) .lkt[data-dd=page] .lk-side{ display:none; } :host([mode=phone]) .lkt .lk-ph .lk-bk{ display:grid; }
+:host([mode=phone]) .lkt .lk-tabs{ flex-direction:column; overflow:visible; } :host([mode=phone]) .lkt .lk-tabs [role=tab]{ min-height:52px; border-radius:14px; font-size:15px; } :host([mode=phone]) .lkt .lk-tabs [role=tab] .lk-ch{ display:inline-flex; }
 .hge-sheet.lkt{ width:min(1120px, calc(100vw - 32px)); height:min(880px, calc(100vh - 40px)); max-height:none; display:grid; grid-template-columns:232px minmax(0, 1fr); grid-template-rows:auto minmax(0, 1fr) auto; column-gap:18px; }
 .lkt > .hs-h, .lkt > .lk-ft{ grid-column:1 / -1; } .lkt > .hs-h b{ display:inline-flex; align-items:center; gap:10px; font-size:18px; } .lkt > .hs-h b ha-icon{ width:22px; height:22px; color:var(--hg-accent-tx, #63D71E); }
 .lk-tabs{ display:flex; flex-direction:column; gap:4px; overflow:auto; padding:2px; }
@@ -1021,6 +1083,13 @@ const HG_LKT_CSS = (ks) => `${ks.map((k) => `.lkt[data-at=${k}] .lk-sc > [data-t
 @media (max-width:820px){ .hge-sheet.lkt{ grid-template-columns:minmax(0, 1fr); grid-template-rows:auto auto minmax(0, 1fr) auto; } .lk-tabs{ flex-direction:row; overflow-x:auto; scrollbar-width:none; margin:0 -4px; } .lk-tabs::-webkit-scrollbar{ display:none; } .lk-tabs [role=tab]{ flex:none; min-height:40px; padding:0 12px; font-size:13px; border-radius:999px; } }
 :host([mode=phone]) .hge-sheet.lkt{ width:100vw; height:92vh; grid-template-columns:minmax(0, 1fr); grid-template-rows:auto auto minmax(0, 1fr) auto; }
 :host([mode=phone]) .lk-tabs{ flex-direction:row; overflow-x:auto; scrollbar-width:none; } :host([mode=phone]) .lk-tabs [role=tab]{ flex:none; min-height:40px; padding:0 12px; font-size:13px; border-radius:999px; }
+/* #2.22.1 telefon i wąski tablet: jedna kolumna (lista albo strona) na pełną szerokość, bez przewijania w poziomie, pasek akcji nad dolną nawigacją */
+.lkt .lk-sc, .lkt .lk-side{ min-width:0; box-sizing:border-box; } .lkt .lk-sc{ overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; }
+.lkt .lk-sc > *, .lkt .lk-sc .lk-g, .lkt .lk-sc .lk-g > *{ min-width:0; max-width:100%; box-sizing:border-box; } .lkt .lk-sc .hgs-t{ min-width:0; max-width:100%; }
+@media (max-width:820px){ .hge-sheet.lkt{ grid-template-columns:minmax(0, 1fr); grid-template-rows:auto minmax(0, 1fr) auto; }
+  .hge-sheet.lkt > .lk-side, .hge-sheet.lkt > .lk-sc{ grid-row:2; grid-column:1; } .hge-sheet.lkt > .lk-ft{ grid-row:3; padding-bottom:max(10px, env(safe-area-inset-bottom)); } }
+:host([mode=phone]) .hge-sheet.lkt{ width:100%; max-width:100vw; height:92vh; height:calc(100dvh - max(56px, env(safe-area-inset-top) + 16px)); grid-template-columns:minmax(0, 1fr); grid-template-rows:auto minmax(0, 1fr) auto; }
+:host([mode=phone]) .hge-sheet.lkt > .lk-side, :host([mode=phone]) .hge-sheet.lkt > .lk-sc{ grid-row:2; grid-column:1; } :host([mode=phone]) .hge-sheet.lkt > .lk-ft{ grid-row:3; padding-bottom:max(10px, env(safe-area-inset-bottom)); }
 `;
 const HG_LOOK_CSS = `
 .lk{ display:flex; flex-direction:column; max-height:min(86vh, calc(100dvh - 24px)); }
@@ -1142,7 +1211,8 @@ const HG_EDIT = {
     const L = HGL.get(sc), keys = this._lkeys, areas = !!this._config.panel.areas;
     let out = cards.map((cc, i) => Object.assign({}, cc, { _k: keys[i] }));
     /* dodane komponenty (nie proste kafle) to osobne karty panelu z kluczem „+klucz”: przesuwa się je między kartami domyślnymi (siatka z obszarami: jak dawniej, w bloku kafli) */
-    const tl = HGL.get(sc + ':tiles'), solo = areas ? [] : tl.added.filter((x) => x.c && customElements.get(x.c) && !tl.hidden.includes(x.e));
+    /* bez obszarów siatki każda dodana pozycja (komponent i zwykły kafel, #17) jest osobną kartą panelu, w kolejności kafli (tl.order), więc da się je przeplatać; z obszarami zostaje blok kafli */
+    const tl = HGL.get(sc + ':tiles'), solo = areas ? [] : HGL.sort(tl.added.filter((x) => x.c && customElements.get(x.c) && !tl.hidden.includes(x.e)), (x) => x.e, tl.order);
     for (const x of solo) { const z = tl.size[x.e]; out.push({ type: 'custom:hg-tiles-card', scope: sc + ':tiles', one: x.e, _k: '+' + x.e, span: z === 'l' ? 'full' : z === 'm' ? 2 : 1, min_h: 0, _tiles: true }); }
     if (L.order.length) {
       if (areas) { const slot = out.map((c) => c.area), byK = new Map(out.map((c) => [c._k, c])); const used = new Set();
@@ -1189,20 +1259,24 @@ const HG_EDIT = {
     if (this._editing || !this._canEdit()) return;
     if (window.HGDashboard) { HGDashboard.draft = null; HGDashboard.energyDraft = null; }
     this._editing = true; HGL.editing = true; this._eSnap = JSON.stringify(HGL.data);
+    HGDraft.discard(this); this._eUnload = (e) => { if (this._eDirty()) { e.preventDefault(); e.returnValue = ''; } }; window.addEventListener('beforeunload', this._eUnload);
     this._menuOpen = false; this._paintTop(true);
     this.setAttribute('editing', '');
     for (const sc of Object.keys(HGL.data.s || {})) { const L = HGL.get(sc); if (hgCleanL(L)) HGL.set(sc, L); }
     this._eWire(); this._eDecorate(); this._eGhostSweep(); this._eHeadBtn(); this._eBar();
     clearInterval(this._eGh); this._eGh = setInterval(() => { if (!this._editing) return clearInterval(this._eGh); if (this._drag && this._drag.on) return; this._eGhostSweep(); this._eDecorate(); }, 700);
   },
-  _eDirty() { return this._editing && this._eSnap !== JSON.stringify(HGL.data); },
+  _eDirty() { return this._editing && (this._eSnap !== JSON.stringify(HGL.data) || HGDraft.pending(this)); },
   _editExit(save) {
     if (!this._editing) return;
     this._editing = false; HGL.editing = false; this.removeAttribute('editing'); clearInterval(this._eGh); for (const ct of this._eConts()) for (const g of ct.el.querySelectorAll(':scope > .hge-ghost')) g.classList.remove('hge-ghost');
-    if (!save) { HGL.data = JSON.parse(this._eSnap); HGL._ls(); }
+    if (!save) { HGL.data = JSON.parse(this._eSnap); HGL._ls(); HGDraft.discard(this); }
+    if (this._eUnload) { window.removeEventListener('beforeunload', this._eUnload); this._eUnload = null; }
     const fin = () => { HG_FREEZE.on = false; HG_FREEZE.release(); this._eUnwire(); if (this._eBarEl) { this._eBarEl.remove(); this._eBarEl = null; } this._eSheet(false);
       HGL.notify(); if (this.isConnected) this._build(); if (HGLang._pend) { HGLang._pend = 0; HGLang.refresh(this); } };
-    if (save) HGL.save(this._hass).then((w) => { try { this._eToast(w === 'ha' ? hgT('edit.layout_saved_synced_via') : hgT('edit.layout_saved_on_this')); } catch (e) { /* */ } fin(); }, fin); else fin();
+    if (save) HGL.save(this._hass).then(async (w) => { try { this._eToast(w === 'ha' ? hgT('edit.layout_saved_synced_via') : hgT('edit.layout_saved_on_this')); } catch (e) { /* */ }
+      let how = 'build'; try { how = await HGDraft.commit(this, this._hass); } catch (e) { this._eToast(hgT('oss.toast.save_failed', { error: String((e && e.message) || e) })); }
+      if (how === 'reload' && !window.__hgDryRun) { setTimeout(() => location.reload(), 400); return; } fin(); }, fin); else fin();
   },
   /* toaster w stylu Sonner: jeden kontener na dole (safe-area), najnowszy na wierzchu, starsze schowane za nim (max 3),
      rozwija się po najechaniu / dotknięciu, przesunięcie lub dotyk zamyka, auto-zamknięcie pauzowane, identyczne komunikaty łączone (×n) */
@@ -1300,11 +1374,11 @@ const HG_EDIT = {
     const a = b.dataset.hge;
     if (a.startsWith('home-') && window.HGDashboard) return HGDashboard.act(this, b, a);
     if (a === 'done') return this._editExit(true);
-    if (a === 'cancel') return this._editExit(false);
+    if (a === 'cancel') return !this._eDirty() || window.confirm(hgT('edit.discard_unsaved_layout_changes')) ? this._editExit(false) : undefined;
     if (a === 'reset') { const ps = this._pageScope(); const sc = new Set(this._eConts().map((c) => c.scope)); if (ps) { sc.add(ps); sc.add(ps + ':tiles'); }
       for (const s of sc) HGL.set(s, {}); this._eToast(hgT('edit.view_layout_reset_to')); return this._eRefresh(true); }
     if (a === 'hidden') return this._eSheet('hidden');
-    if (a === 'look') return this._eLook();
+    if (a === 'look') { this._lkDD = 'nav'; return this._eLook(); }
     /* zmiana języka w edycji: arkusz, pasek i karty od razu po nowemu; nawigację ze strategii HA generuje po wyjściu z edycji (niezapisany układ zostaje) */
     /* dopiero po wczytaniu katalogu (HGLang.set czeka na niego): bez mieszanego wyświetlania; po wyjściu z edycji w międzyczasie stronę przerysowuje hg-lang */
     if (a === 'lang') { const v = b.dataset.l || ''; if (v === HGLang.get()) return; HGLang._pend = 1;
@@ -1313,7 +1387,7 @@ const HG_EDIT = {
         return Promise.resolve(this._eRefresh(true)).then(() => { if (this._editing) { this._eBar(); this._eLook(); } }); }); }
     if (a === 'headedit') return this._eHead();
     if (a === 'pw') { const v = this._config.view; HGL.data.pw = Object.assign({}, HGL.data.pw, { [v]: b.dataset.w }); hgPwMark(b); this._panelGrid(this.getAttribute('mode')); HGL.save(this._hass); return; }
-    if (a === 'hdok' || a === 'hdreset' || a === 'hdvar' || a === 'hdvis') return this._eHeadAct(a, b);
+    if (a === 'hdok' || a === 'hdreset' || a === 'hdvar' || a === 'hdvis' || a === 'hdclock') return this._eHeadAct(a, b);
     if (a.startsWith('lx-') && window.HGLookX) return HGLookX.act(this, b, a);
     if (a.startsWith('rx-') && window.HGRoomsX) return HGRoomsX.act(this, b, a);
     if (a.startsWith('wl-') && window.HGWall) return HGWall.act(this, b, a);
@@ -1321,13 +1395,18 @@ const HG_EDIT = {
     if (a.startsWith('bk-') && window.HGBackup) return HGBackup.act(this, b, a);
     if (a.startsWith('us-') && window.HGUsers) return HGUsers.act(this, b, a);
     if (a.startsWith('as-') && window.HGAssistUI) return HGAssistUI.act(this, b, a);
+    if (a === 'pbg' || a === 'pbgv') { const vw = this._config && this._config.view, v = b.dataset.v || '';
+      this._eApp((A) => { if (a === 'pbg') { if (v === 'off') A.pbg = false; else delete A.pbg; return; }
+        const M = Object.assign({}, A.pbgv || {}); if (v && vw) M[vw] = v; else delete M[vw]; if (Object.keys(M).length) A.pbgv = M; else delete A.pbgv; });
+      this._pbgSync(); return this._eLook(); }
     if (a === 'perfblur' || a === 'perfeco') { HGPerf.set(a === 'perfblur' ? 'blur' : 'eco', b.dataset.v || ''); return this._eLook(); }
     if (a === 'acc') { this._eApp((A) => { A.accent = b.dataset.c; }); return this._eLook(); }
     if (a === 'bgp') { this._eApp((A) => { A.bg = b.dataset.v ? { kind: 'image', v: b.dataset.v, v2p: b.dataset.p || '' } : null; }); return this._eLook(); }
     if (a === 'bgurl') { const v = this._eSheetEl.querySelector('[name=bgurl]').value.trim(); if (!/^(\/|https:\/\/)/.test(v)) return this._eToast(hgT('edit.enter_an_https_or')); this._eApp((A) => { A.bg = { kind: 'url', v }; }); return this._eLook(); }
     if (a === 'bgcol') { const S = this._eSheetEl, c1 = S.querySelector('[name=bgc1]').value, c2 = S.querySelector('[name=bgc2]').value; this._eApp((A) => { A.bg = b.dataset.k === 'gradient' ? { kind: 'gradient', v: c1, v2: c2 } : { kind: 'color', v: c1 }; }); return this._eLook(); }
     if (a === 'bgup') return this._eSheetEl.querySelector('input[type=file]').click();
-    if (a === 'lktab') { this._lkTab = b.dataset.k; const sh = this._eSheetEl && this._eSheetEl.querySelector('.hge-sheet.lk'); if (!sh) return; sh.dataset.at = b.dataset.k; for (const x of sh.querySelectorAll('.lk-tabs [role=tab]')) x.setAttribute('aria-selected', String(x === b)); const sc = sh.querySelector('.hs-sc'); if (sc) { sc.scrollTop = 0; sc.classList.remove('sw'); void sc.offsetWidth; sc.classList.add('sw'); } return; }
+    if (a === 'lktab') return this._eSetGo(b.dataset.k);
+    if (a === 'lkback') { this._lkDD = 'nav'; const sh = this._eSheetEl && this._eSheetEl.querySelector('.hge-sheet.lk'); if (sh) { sh.dataset.dd = 'nav'; const t = sh.querySelector(`#lkt-${this._lkTab}`); if (t) t.focus(); } return; }
     if (a === 'lookreset') { HGL.data.app = {}; HGApp.apply(); this._eToast(hgT('edit.appearance_reset_to_default')); return this._eLook(); }
     if (a === 'add') { const ct0 = b._ct || (b.closest('.hge-addw') && b.closest('.hge-addw').firstChild._ct); return ct0 && ct0.scope === 'rooms' ? this._eSheet('add', ct0) : this._eGallery(ct0); }
     if (/^(c(go|gent|back|typ|mod|z|del|slot|ok)|k(add|edit|dup|del|span|move|out))$/.test(a)) return this._eCompAct(a, b);
@@ -1647,20 +1726,52 @@ const HG_EDIT = {
   _eLangHtml() {
     const sel = HGLang.get(), w = (HGL.data && HGL.data.wiz) || {}, src = window.__hgLangOpt ? hgT('edit.dashboard_setting') : hgWizLang(w) ? hgT('edit.setup_wizard') : hgT('edit.browser_language');
     const auto = hgLang(null, window.__hgLangOpt || hgWizLang(w) || ''), nm = (l) => (HGLang.LIST.find((x) => x[0] === l) || [l, l])[1];
-    return `<section class="lk-g" data-tab="look"><h4>${H.icon('mdi:translate')}${hgT('edit.language')}</h4><small class="lk-hn">${hgT('edit.language_auto_hint', { name: H.esc(nm(auto)), source: src })}</small>
+    return `<section class="lk-g" data-tab="look" data-pg="general"><h4>${H.icon('mdi:translate')}${hgT('edit.language')}</h4><small class="lk-hn">${hgT('edit.language_auto_hint', { name: H.esc(nm(auto)), source: src })}</small>
       <div class="lk-seg lk-lng" role="group" aria-label="${hgT('edit.language')}">${[['', hgT('common.automatic')], ...[...HGLang.LIST].sort((a, b) => (a[0] === 'en') - (b[0] === 'en'))].map(([v, n]) => `<button data-hge="lang" data-l="${v}" aria-pressed="${sel === v}"${v ? ` lang="${v}"` : ''}>${H.esc(n)}</button>`).join('')}</div></section>`;
   },
   /* Wydajność (osobno na tym urządzeniu, HGPerf): rozmycie szkła i oszczędzanie baterii; „Automatycznie” pokazuje, co wybrano */
+  /* tło panelu (#15): wspólne dla dashboardu + wyjątek dla bieżącego widoku */
+  _ePbgHtml() { const A = HGApp.get(), g = A.pbg === false ? 'off' : 'on', vw = this._config && this._config.view, pv = (vw && A.pbgv && A.pbgv[vw]) || '';
+    const seg = (act, sel, opts, lbl) => `<div class="lk-seg lk-lng lk-pf" style="--n:${opts.length}" role="group" aria-label="${H.esc(lbl)}">${opts.map(([v, n]) => `<button data-hge="${act}" data-v="${v}" aria-pressed="${sel === v}">${H.esc(n)}</button>`).join('')}</div>`;
+    return `<section class="lk-g" data-tab="look" data-pg="theme"><h4>${H.icon('mdi:card-outline')}${hgT('edit.panel_backdrop')}</h4><small class="lk-hn">${hgT('edit.panel_backdrop_hint')}</small>
+      ${seg('pbg', g, [['on', hgT('common.on_neut')], ['off', hgT('common.off_neut')]], hgT('edit.panel_backdrop'))}
+      ${vw ? `<small class="lk-hn">${hgT('edit.panel_backdrop_view')}</small>${seg('pbgv', pv, [['', hgT('edit.panel_backdrop_as_all')], ['on', hgT('common.on_neut')], ['off', hgT('common.off_neut')]], hgT('edit.panel_backdrop_view'))}` : ''}</section>`; },
   _ePerfHtml() {
     const bs = HGPerf.blurSel(), es = HGPerf.ecoSel(), b = HGPerf.blur(), e = HGPerf.eco();
     const BN = { full: hgT('edit.full'), light: hgT('edit.blur_light'), off: hgT('common.off_neut') };
     const seg = (act, sel, opts, lbl) => `<div class="lk-seg lk-lng lk-pf" style="--n:${opts.length}" role="group" aria-label="${H.esc(lbl)}">${opts.map(([v, n]) => `<button data-hge="${act}" data-v="${v}" aria-pressed="${sel === v}">${H.esc(n)}</button>`).join('')}</div>`;
-    return `<section class="lk-g" data-tab="look"><h4>${H.icon('mdi:speedometer')}${hgT('edit.performance')}</h4><small class="lk-hn">${hgT('edit.saved_on_this_device')}</small>
+    return `<section class="lk-g" data-tab="look" data-pg="general"><h4>${H.icon('mdi:speedometer')}${hgT('edit.performance')}</h4><small class="lk-hn">${hgT('edit.saved_on_this_device')}</small>
       <small class="lk-hn">${hgT('edit.glass_blur')} · ${H.lv(hgT('common.now'), H.esc(BN[b]))}</small>
       ${seg('perfblur', bs, [['', hgT('edit.auto')], ['full', BN.full], ['light', BN.light], ['off', BN.off]], hgT('edit.glass_blur'))}
       <small class="lk-hn">${hgT('edit.power_saving_stops_looping')} · ${H.lv(hgT('common.now'), e ? hgT('edit.state_on_lower') : hgT('edit.state_off_lower'))}</small>
       ${seg('perfeco', es, [['', hgT('edit.auto')], ['1', hgT('common.on_neut')], ['0', hgT('common.off_neut')]], hgT('edit.power_saving'))}</section>`;
   },
+  /* przejście na stronę ustawień (bez przebudowy arkusza): nagłówek strony, zakładki, telefon: z listy do strony */
+  _eSetGo(k, keepQ) { const sh = this._eSheetEl && this._eSheetEl.querySelector('.hge-sheet.lk'); if (!sh) return; const p = HG_SET_PAGES().find((x) => x[0] === k); if (!p) return;
+    this._lkTab = k; this._lkDD = 'page'; sh.dataset.at = k; sh.dataset.dd = 'page';
+    if (!keepQ) { const q = sh.querySelector('[name=lkq]'); if (q) q.value = ''; for (const x of sh.querySelectorAll('.lk-sc > .hit')) x.classList.remove('hit'); for (const n of sh.querySelectorAll('.lk-tabs .lk-n')) n.remove(); }
+    for (const x of sh.querySelectorAll('.lk-tabs [role=tab]')) { const on = x.dataset.k === k; x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1; }
+    const ph = sh.querySelector('.lk-ph'); if (ph) { ph.querySelector('b').textContent = p[2]; ph.querySelector('small').textContent = HG_SET_GROUPS()[p[3]]; }
+    const sc = sh.querySelector('.hs-sc'); if (sc) { sc.setAttribute('aria-labelledby', 'lkt-' + k); sc.scrollTop = 0; sc.classList.remove('sw'); void sc.offsetWidth; sc.classList.add('sw'); } },
+  /* wyszukiwarka: dopasowanie wszystkich słów do treści sekcji i nazwy strony; wyniki z wielu stron naraz, licznik przy stronie */
+  _eSetFind(sh, q) { const W = hgSetWords(q), names = Object.fromEntries(HG_SET_PAGES().map((p) => [p[0], p[2]]));
+    for (const n of sh.querySelectorAll('.lk-tabs .lk-n')) n.remove();
+    if (!W.length) { for (const x of sh.querySelectorAll('.lk-sc > .hit')) x.classList.remove('hit'); sh.dataset.at = this._lkTab; return 0; }
+    const cnt = {}; let all = 0;
+    for (const sec of sh.querySelectorAll('.lk-sc > [data-pg]')) { const t = (names[sec.dataset.pg] || '') + ' ' + hgSetText(sec);
+      const hit = hgSetMatch(t, W); sec.classList.toggle('hit', hit); if (hit) { cnt[sec.dataset.pg] = (cnt[sec.dataset.pg] || 0) + 1; all++; } }
+    for (const [k, n] of Object.entries(cnt)) { const b = sh.querySelector(`#lkt-${k}`); if (b) b.insertAdjacentHTML('beforeend', `<em class="lk-n" aria-label="${hgT('settings.results', { count: n })}">${n}</em>`); }
+    sh.dataset.at = '__s'; sh.dataset.dd = 'page'; const ph = sh.querySelector('.lk-ph'); if (ph) { ph.querySelector('b').textContent = hgT('settings.results', { count: all }); ph.querySelector('small').textContent = q; }
+    return all; },
+  _eSetWire(S) { const sh = S.querySelector('.hge-sheet.lk'); if (!sh) return; const q = sh.querySelector('[name=lkq]');
+    if (q) { q.addEventListener('input', () => this._eSetFind(sh, q.value)); q.addEventListener('keydown', (e) => { if (e.key === 'Escape' && q.value) { e.preventDefault(); e.stopPropagation(); q.value = ''; this._eSetGo(this._lkTab); } }); }
+    const tl = sh.querySelector('.lk-tabs'); if (tl) tl.addEventListener('keydown', (e) => { const T = [...tl.querySelectorAll('[role=tab]')], i = T.indexOf(e.target); if (i < 0) return;
+      const j = e.key === 'ArrowDown' ? i + 1 : e.key === 'ArrowUp' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? T.length - 1 : null; if (j == null) return; e.preventDefault(); const t = T[(j + T.length) % T.length]; t.focus(); this._eSetGo(t.dataset.k); }); },
+  /* O Nuvio: wersja, linki do projektu */
+  _eAboutHtml() { const v = typeof HG_BUILD === 'string' && !HG_BUILD.startsWith('__') ? HG_BUILD : '', R = 'https://github.com/kczepiec/nuvio';
+    return `<section class="lk-g lk-ab" data-tab="about" data-pg="about"><h4>${H.icon('mdi:information-outline')}${hgT('settings.about_title')}</h4><small class="lk-hn">${hgT('settings.about_hint')}</small>
+      <span>${hgT('settings.version')}: <code>${H.esc(v.split('+')[0] || '?')}</code>${v.includes('+') ? ` <code>${H.esc(v.split('+')[1])}</code>` : ''}</span>
+      <a href="${R}#readme" target="_blank" rel="noopener">${hgT('settings.docs')}</a><a href="${R}/releases" target="_blank" rel="noopener">${hgT('settings.changelog')}</a><a href="${R}/issues/new/choose" target="_blank" rel="noopener">${hgT('settings.report')}</a><a href="https://discord.gg/rFG9y2hFMJ" target="_blank" rel="noopener">${hgT('nav.discord')}</a></section>`; },
   _eLook() {
     /* zachowaj przewinięcie i fokus między przerysowaniami (bez skoku na górę) */
     { const S0 = this._eSheetEl, sc0 = S0 && S0.querySelector('.hge-sheet.lk .hs-sc'); if (sc0) { const fe = S0.querySelector(':focus') || (S0.getRootNode && S0.getRootNode().activeElement), key = fe && fe.dataset ? ['hge', 'v', 'k', 'c'].map((x) => fe.dataset[x] || '').join('|') : ''; const top = sc0.scrollTop;
@@ -1669,15 +1780,14 @@ const HG_EDIT = {
     const T = HGApp.tokens(acc);
     const isC = !HG_ACCENTS.some(([c]) => c.toUpperCase() === acc), c1 = bg && (bg.kind === 'color' || bg.kind === 'gradient') ? bg.v : ('#' + '16202B'), c2 = bg && bg.v2 ? bg.v2 : ('#' + '05070A'), dv = Math.round(dim * 100);
     const ck = H.icon('mdi:check');
-    const TB = [['home', 'mdi:view-dashboard-outline', hgT('dashboardx.personalize')], ['look', 'mdi:palette-outline', hgT('edit.appearance')], ['views', 'mdi:view-carousel-outline', hgT('edit.views')], ['rooms', 'mdi:sofa-outline', hgT('common.rooms')], ['head', 'mdi:page-layout-header', hgT('edit.header_and_navigation')], ['bg', 'mdi:image-multiple-outline', hgT('edit.backgrounds')], ['wall', 'mdi:tablet-dashboard', hgT('edit.screensaver')], ['users', 'mdi:account-multiple-outline', hgT('edit.users')], ['bk', 'mdi:backup-restore', hgT('edit.backup')]];
-    if (!TB.some((t) => t[0] === this._lkTab)) this._lkTab = 'look'; const at = this._lkTab;
+    const PG = HG_SET_PAGES(), GR = HG_SET_GROUPS();
     const html0 = `<div class="hs-sc lk-sc">
       ${window.HGLooks ? HGLooks.html(this) : ''}
-      <section class="lk-g" data-tab="look"><h4>${H.icon('mdi:palette-outline')}${hgT('edit.accent')}</h4>
+      <section class="lk-g" data-tab="look" data-pg="theme"><h4>${H.icon('mdi:palette-outline')}${hgT('edit.accent')}</h4>
         <div class="lk-sw">${HG_ACCENTS.map(([c, l0]) => { const l = H.esc(String(l0)); return `<button data-hge="acc" data-c="${c}" aria-pressed="${acc === c.toUpperCase()}" aria-label="${l}"><i style="--c:${c}">${ck}</i><small>${l}</small></button>`; }).join('')}
         <label class="lk-cc" aria-pressed="${isC}"><i style="--c:${isC ? acc : 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)'}">${isC ? ck : H.icon('mdi:eyedropper-variant')}</i><input type="color" name="acc" value="${acc}" aria-label="${hgT('edit.custom_accent_colour')}"><small>${hgT('edit.accent_custom')}</small></label></div>
         <div class="lk-pv" aria-label="${hgT('edit.preview')}"><div class="lk-pc"><span class="lk-pi" style="background:${acc};color:${T.light['--hg-on-accent']}">${H.icon('mdi:lightbulb-on')}</span><span class="lk-pt"><b>${hgT('edit.lamp')}</b><small style="color:var(--hg-accent-tx)">${hgT('common.on_neut')} · ${H.pct(80)}</small></span></div><span class="lk-pb" style="background:${acc};color:${T.light['--hg-on-accent']}">${ck} ${hgT('edit.active')}</span></div></section>
-      <section class="lk-g" data-tab="bg"><h4>${H.icon('mdi:image-outline')}${hgT('edit.background')}</h4>
+      <section class="lk-g" data-tab="bg" data-pg="bg"><h4>${H.icon('mdi:image-outline')}${hgT('edit.background')}</h4>
         <div class="lk-bgs">${hgBgList().map(([u, l, pu, th], i) => { const on = i ? !!bg && bg.kind !== 'color' && bg.kind !== 'gradient' && bg.v === u : !bg;
           const src = th || u || (HG_DEFAULT_BG.kind === 'image' ? HG_DEFAULT_BG.v : '');
           return `<button data-hge="bgp" data-v="${i ? H.esc(u) : ''}" data-p="${H.esc(pu || '')}" aria-pressed="${on}" title="${H.esc(l)}"><span data-et="${hgT('edit.image_not_loaded')}" style="background:linear-gradient(160deg, ${HG_DEFAULT_BG_FB.v}, ${HG_DEFAULT_BG_FB.v2})">${src ? `<img alt="" loading="lazy" decoding="async" src="${H.esc(src)}" onerror="var c=!this.dataset.cdn&&window.hgCdn&&window.hgCdn(this.src);if(c){console.warn('Nuvio: local background failed, using CDN', this.src);this.dataset.cdn='1';this.src=c;}else{this.parentElement.dataset.err='1';console.warn('Nuvio: background not loaded', this.src);this.remove();}">` : ''}${ck}</span><small>${H.esc(i ? l : (l || hgT('edit.default')))}</small></button>`; }).join('')}</div>
@@ -1687,8 +1797,9 @@ const HG_EDIT = {
           <label class="lk-st"><input type="color" name="bgc1" value="${c1}" aria-label="${hgT('edit.colour_1')}"><i style="background:${c1}"></i>${hgT('edit.colour_1')}</label>
           <label class="lk-st"><input type="color" name="bgc2" value="${c2}" aria-label="${hgT('edit.colour_2')}"><i style="background:${c2}"></i>${hgT('edit.colour_2')}</label>
           <div class="lk-seg"><button data-hge="bgcol" data-k="color" aria-pressed="${!!bg && bg.kind === 'color'}">${hgT('edit.solid')}</button><button data-hge="bgcol" data-k="gradient" aria-pressed="${!!bg && bg.kind === 'gradient'}">${hgT('edit.gradient')}</button></div></div></section>
-      <section class="lk-g" data-tab="look"><h4>${H.icon('mdi:brightness-6')}${hgT('edit.dimming')}<em class="dv">${H.pct(dv)}</em></h4><small class="lk-hn">${hgT('edit.applies_to_the_background')}</small>
+      <section class="lk-g" data-tab="look" data-pg="bg"><h4>${H.icon('mdi:brightness-6')}${hgT('edit.dimming')}<em class="dv">${H.pct(dv)}</em></h4><small class="lk-hn">${hgT('edit.applies_to_the_background')}</small>
         <input class="lk-rg" type="range" min="0" max="100" step="1" name="dim" value="${dv}" style="--v:${dv}%" aria-label="${hgT('edit.background_dimming')}"></section>
+      ${this._ePbgHtml()}
       ${this._eLangHtml()}
       ${this._ePerfHtml()}
       ${window.HGLookX ? HGLookX.html(this) : ''}
@@ -1698,10 +1809,17 @@ const HG_EDIT = {
       ${window.HGWall ? HGWall.html(this) : ''}
       ${window.HGUsers ? HGUsers.html(this) : ''}
       ${window.HGBackup ? HGBackup.html(this) : ''}
+      ${this._eAboutHtml()}
+      <p class="lk-nores" role="status">${hgT('settings.no_results')}</p>
       </div>`;
-    const has = new Set([...html0.matchAll(/data-tab="([a-z]+)"/g)].map((m) => m[1])), tabs = TB.filter((t) => has.has(t[0]));
-    const html = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide lk lkt" data-at="${at}" role="dialog" aria-modal="true" aria-label="${hgT('edit.settings')}"><style>${HG_LOOK_CSS}${HG_LKT_CSS(TB.map((t) => t[0]))}</style><div class="hs-h"><b>${H.icon('mdi:cog-outline')}${hgT('edit.settings')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgT('common.close')}">${H.icon('mdi:close')}</button></div>
-      <nav class="lk-tabs" role="tablist" aria-label="${hgT('edit.settings_sections')}">${tabs.map(([k, ic, l]) => `<button role="tab" data-hge="lktab" data-k="${k}" aria-selected="${k === at}">${H.icon(ic)}<span>${H.esc(l)}</span></button>`).join('')}</nav>${html0}<div class="lk-ft"><button class="lk-gh" data-hge="lookreset">${H.icon('mdi:restore')}${hgT('edit.reset_to_default')}</button><button class="lk-ok" data-hge="sheetclose">${hgT('common.done')}</button></div></div>`;
+    const has = new Set([...html0.matchAll(/data-pg="([a-z]+)"/g)].map((m) => m[1])), pages = PG.filter((p) => has.has(p[0]));
+    const at = this._lkTab = hgSetPage(this._lkTab, has), cur = pages.find((p) => p[0] === at) || pages[0], dd = this._lkDD || 'nav';
+    let lg = ''; const nav = pages.map(([k, ic, l, g]) => { const gh = g !== lg ? `<div class="lk-gl" role="presentation">${H.esc(GR[g])}</div>` : ''; lg = g;
+      return `${gh}<button role="tab" id="lkt-${k}" data-hge="lktab" data-k="${k}" aria-selected="${k === at}" aria-controls="lk-sc" tabindex="${k === at ? 0 : -1}">${H.icon(ic)}<span>${H.esc(l)}</span><i class="lk-ch" aria-hidden="true">${H.icon('mdi:chevron-right')}</i></button>`; }).join('');
+    const html1 = html0.replace('<div class="hs-sc lk-sc">', `<div class="hs-sc lk-sc" id="lk-sc" role="tabpanel" aria-labelledby="lkt-${at}"><div class="lk-ph"><button class="lk-bk" data-hge="lkback" aria-label="${hgT('common.back')}">${H.icon('mdi:arrow-left')}</button><b>${H.esc(cur ? cur[2] : '')}</b><small>${H.esc(cur ? GR[cur[3]] : '')}</small></div>`);
+    const html = `<div class="hge-scrim" data-hge="sheetclose"></div><div class="hge-sheet wide lk lkt" data-at="${at}" data-dd="${dd}" role="dialog" aria-modal="true" aria-label="${hgT('edit.settings')}"><style>${HG_LOOK_CSS}${HG_LKT_CSS(PG.map((t) => t[0]))}</style><div class="hs-h"><b>${H.icon('mdi:cog-outline')}${hgT('edit.settings')}</b><button class="hs-x" data-hge="sheetclose" aria-label="${hgT('common.close')}">${H.icon('mdi:close')}</button></div>
+      <div class="lk-side"><label class="lk-q">${H.icon('mdi:magnify')}<input type="search" name="lkq" placeholder="${hgT('settings.search')}" aria-label="${hgT('settings.search')}" autocomplete="off"></label>
+      <nav class="lk-tabs" role="tablist" aria-orientation="vertical" aria-label="${hgT('edit.settings_sections')}">${nav}</nav></div>${html1}<div class="lk-ft"><button class="lk-gh" data-hge="lookreset">${H.icon('mdi:restore')}${hgT('edit.reset_to_default')}</button><button class="lk-ok" data-hge="sheetclose">${hgT('common.done')}</button></div></div>`;
     /* otwarty arkusz: aktualizacja na miejscu (bez ponownej animacji otwarcia), przewijany kontener zostaje, więc pozycja przewinięcia też */
     { const old = S.querySelector('.hge-sheet.lk'); if (old) { const tp = document.createElement('template'); tp.innerHTML = html; const nw = tp.content.querySelector('.hge-sheet');
       const oc = [...old.children], nc = [...nw.children];
@@ -1715,6 +1833,7 @@ const HG_EDIT = {
     if (window.HGWall) HGWall.wire(this, S);
     if (window.HGRoomsX) HGRoomsX.wire(this, S);
     if (window.HGAssistUI) HGAssistUI.wire(this, S);
+    this._eSetWire(S);
   },
   /* przesłanie zdjęcia: integracja „image_upload” HA (/api/image/upload), serwowane z /api/image/serve/<id>/original */
   /* nawigacja w arkuszu jako stos: zagnieżdżony krok (wybór encji, formularz) wraca do poprzedniego; zamyka tylko X na poziomie głównym */

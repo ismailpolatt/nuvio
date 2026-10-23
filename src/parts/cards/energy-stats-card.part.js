@@ -44,7 +44,7 @@ class HGEnergyStatsCard extends HGBase {
     this._loading = false; this.rerender();
   }
   css() {
-    return U(`
+    return HG_TIP_CSS + U(`
 ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(--s2) var(--s3) var(--s2); }
 .tiles{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:var(--s1); }
 @container (max-width: 330px){ ha-card.glass{ padding:var(--s2); } .tiles{ grid-template-columns:minmax(0, 1fr); } .tl{ flex-direction:row; flex-wrap:wrap; align-items:center; column-gap:var(--s2); } .tl small{ flex:1 0 100%; } .tl .r span{ display:none; } }
@@ -71,9 +71,7 @@ ha-card.glass{ display:flex; flex-direction:column; gap:var(--s2); padding:var(-
 .fut .bw{ opacity:.0; } .today .bw i{ opacity:.55; }
 .d small{ font-size:max(7.5u, var(--hg-fs-min, 0px)); color:#5A5E64; line-height:10u; height:10u; white-space:nowrap; } .d.today small{ color:#16181B; font-weight:600; }
 .d.lbl-skip small{ visibility:hidden; }
-.tip{ position:absolute; bottom:calc(100% - 6u); left:50%; transform:translateX(-50%); background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:var(--r-sm); padding:var(--s1) var(--s2); font-size:var(--fs-xs); line-height:1.4; white-space:nowrap; color:#2B2E33; box-shadow:var(--hg-sh);
-  z-index:5; pointer-events:none; text-align:left; }
-.tip i{ display:inline-block; width:6u; height:6u; border-radius:50%; margin-right:4u; }
+.tip{ bottom:calc(100% - 6u); }
 .d.l .tip{ left:0; transform:none; } .d.r .tip{ left:auto; right:0; transform:none; }
 .ft{ display:flex; align-items:center; gap:var(--s1); font-size:var(--fs-xs); color:#6A6E74; flex-wrap:wrap; }
 .ft a{ margin-left:auto; color:var(--hg-accent-tx); font-weight:600; text-decoration:none; display:flex; align-items:center; gap:3u; min-height:var(--hg-tgt, 0px); } .ft a ha-icon{ width:12u; height:12u; }

@@ -4,6 +4,69 @@
 
 All notable changes to Nuvio are listed here, newest first. Versions follow [semantic versioning](https://semver.org). The Polish changelog is in [CHANGELOG.pl.md](CHANGELOG.pl.md).
 
+### 2.22.3
+- Fixed: the Glass Minimal screensaver still showed the avatar circle in the top-right corner when **Top bar → Avatar** was off, in the live screensaver and in the preview ([#52](https://github.com/kczepiec/nuvio/issues/52)).
+- Fixed: the **Discord** row in the user menu shows the Discord mark next to the label, the same way Profile and Settings show an icon. Home Assistant no longer includes that brand icon, so the menu draws it itself.
+- Fixed: **Settings → Users** shows a person's photo when that Home Assistant user is linked to a person who has one. Rows without a photo keep the letter.
+
+### 2.22.2
+- Fixed: a **Cover / gate** tile (open, stop, close) on a phone was cut off on the right when it sat on the panel by itself. On a narrow tile the buttons were stretched to a full row, but that row never wrapped, so they drew past the card. They now move under the name and stay inside the tile. The media tile uses the same layout. On a wider screen the buttons stay on the right ([#53](https://github.com/kczepiec/nuvio/issues/53)).
+- Added: Discord in the user menu, after Profile and Settings, and on the About Nuvio page. The English, Polish and French READMEs have a Community section and a Discord badge.
+
+### 2.22.1
+- Fixed: on phones and narrow tablets the **Views and navigation** settings were cut off on the left and squeezed into half the width, and the page could scroll sideways. A wide picker (phone tab bar) and the two-column views cards were wider than the screen, and the page was placed in the wrong grid row after the sidebar was hidden. Settings now use one full-width column, the views table is stacked cards with every field visible, nothing scrolls sideways, and the **Restore defaults** / **Done** bar sits above the bottom navigation and the home indicator. New `tools/mobile_check.py` checks every settings page on iPhone (WebKit), Android (360 px) and a 768 px tablet before each release.
+
+### 2.22.0
+- Changed: settings changes in edit mode are a draft. Views, kiosk mode, header, rooms, screensaver, PIN and Assist settings no longer save or reload the dashboard on every change; cheap previews (accent, header text) show at once. **Done** saves everything once and reloads at most once, **Cancel** discards the draft, and leaving the page with unsaved changes asks first.
+- Changed: **Settings** have a new layout. A sidebar groups 13 pages (General, Appearance, Dashboard, Wall tablet, System) with a search box that finds settings on every page, keyboard navigation and a drill-down list on phones. PIN settings have their own **PIN and locks** page, there is a new **About Nuvio** page, and per-climate activity detection is folded under an advanced block. Every option and stored setting is unchanged.
+
+### 2.21.6
+- Fixed: the screensaver keeps the screen on again after the screen was turned off and on, or after switching apps or tabs. Browsers release the screen wake lock when the page is hidden; Nuvio now asks for it again when the page is visible and the screensaver is on ([#38](https://github.com/kczepiec/nuvio/issues/38)).
+- Fixed: the **Cover / gate** card showed 0 % or 100 % and a position bar for covers without a position (a gate or garage door that only knows open, close and stop). It now shows the state in words (Open, Closed, Opening, Closing) with a gentle pulse while moving, and no bar. The icon follows the device class (gate, garage, door, window, blind, curtain, shade, awning) instead of always a shutter ([#36](https://github.com/kczepiec/nuvio/issues/36)).
+- Fixed: views unlocked with the PIN stayed open for 5 minutes even after the screensaver started or **Lock screen** was used, so the next person at a wall tablet could open them without the PIN. The screensaver and **Lock screen** now close every unlocked view, and the view on screen asks for the PIN again after waking. The screensaver preview in settings does not relock ([#35](https://github.com/kczepiec/nuvio/issues/35)).
+- Changed: the PIN pad of a locked view and the view lock settings no longer show the note that the lock is a convenience, not security; the limitation is described in the documentation.
+- Fixed: in the **Clock on photo** screensaver the time of the next event (and of the next LiveKid activity) is shown at full brightness again instead of dimmed like the other rows. A stray `};` in the screensaver styles made the browser drop that rule ([#34](https://github.com/kczepiec/nuvio/issues/34)).
+
+### 2.21.5
+- Fixed: **Hide the sidebar** (formerly **Hide the sidebar when it is empty**) did nothing while any view still had **Sidebar** on. It now hides the Nuvio sidebar and its Settings button on computers and tablets whatever the per-view switches say, and views that are not in the top tabs move to the profile menu.
+
+### 2.21.4
+- Added: **{time}** and **{date}** in the view title or subtitle show the current time and date in the interface language, with the 12 or 24 hour format from your Home Assistant profile, updated every minute. **Add a clock** in the view header editor adds **{time}** to the subtitle.
+- Added: a **Badge** column in **Settings > Views** counts lights, switches, fans, climate devices or people that are on (or media that is playing, or the entities you pick) and shows the number on the view tab when it is above 0.
+- Added: **Hide the sidebar when it is empty** in **Settings > Views**. When no view is shown in the sidebar, the sidebar and its Settings button disappear. Settings stay in the profile menu, behind the pencil and at any Nuvio address with **?nuvio_settings** (for people who may edit, and not on a view locked with a PIN).
+- Fixed: the **Production forecast** card used one colour for every day after its thresholds were changed. Thresholds above 12 kWh per kW, or thresholds set without a reference power, are now read as kWh per day; thresholds entered the wrong way round are swapped; a decimal comma (3,5) is accepted in number fields of the card editor.
+- Fixed: a built-in background chosen on one device showed as a plain colour on devices that open Home Assistant under another address (local IP, domain, Nabu Casa). The picture was saved with the full address of the first device; built-in backgrounds are now saved as a path next to the Nuvio files (for example `/hacsfiles/nuvio/nuvio-bg-nad-mgla-wide.webp`), and backgrounds saved earlier with an address are corrected when the layout loads, for the dashboard and the screensaver. Uploaded pictures and your own addresses are not changed.
+
+### 2.21.3
+- Changed: the climate dot on the **Rooms** tile has the colour of the mode (heating, cooling, drying, fan, auto), the same colours as in the **Mode** menu of the AC remote card, instead of grey: solid when the device is running, dimmed when it is not running or the state is an estimate, outlined when only the mode is known. The **~** before estimated states is gone from the Rooms tile and the thermostat card; screen readers still say **estimate**.
+
+### 2.21.2
+- Changed: the detailed weather window is compact and fits a phone screen without scrolling: the four details sit in one row, rows and paddings are tighter, the sun arc is smaller and on narrow screens the days use short names (Mon, Tue) instead of cut names.
+- Changed: Nuvio no longer guesses whether a thermostat or air conditioner is running. Each climate device in a room has **Activity detection** in **Appearance > Rooms**: **Automatic** (default), **From an entity**, **From room temperature** or **Show mode only**. Automatic uses, in this order: the **Actual state** entity (on/off, or a value such as power above the **Running threshold**, 5 W by default), what the device reports itself (`hvac_action`), and the room temperature against the setpoint when you pick a separate room sensor (an estimate with a 0.5° hysteresis by default, marked **~** with a dimmed dot). Otherwise the tile shows only the mode, for example **Heating** with an empty dot. In 2.21.1 the setpoint was compared with the device's own temperature, so IR remote air conditioners showed **Idle** while heating. With several devices in a room, the Rooms tile shows a device that is surely running first, then an estimate, then a mode. Existing **Actual state** choices keep working.
+
+### 2.21.1
+- Thanks to [@cbailly42](https://github.com/cbailly42) for the climate fix ([#22](https://github.com/kczepiec/nuvio/pull/22)).
+- After updating, turn on **Screensaver on this device** once on every device that should show the screensaver.
+- New: **Actual state** for each thermostat of a room, in **Appearance > Rooms** (edit mode): pick an entity that tells whether that device really runs (an on/off entity such as a stove's combustion sensor, or a numeric one such as its burner power). With several devices in a room (for example a heat pump and a stove), the Rooms tile looks at all of them and shows **Heating**, **Cooling** or **Idle** from the one actually working; the thermostat card uses the same setting.
+- Fixed: thermostats that do not report what they are doing (no `hvac_action`, for example some towel radiators) now count as idle once the room has reached the setpoint, on the Rooms tile and the thermostat card.
+- Fixed: the thermostat card shows **· idle** after the mode (for example **Heating to 7° · idle**) when the device is not actually heating.
+- Fixed: the **Rooms** tiles showed **Heating** whenever a thermostat was in heat mode, even when it was not heating (for example a frost-protection setpoint of 7 °C in a 21 °C room). The tile now follows what the device is actually doing and shows **Idle** with a grey dot in that case.
+- Fixed: the **PIN lock for views** switches in Wall tablet mode did nothing when clicked. Their action was not passed to the wall tablet settings, so nothing was toggled or saved. They now switch at once and are saved with the layout; without a PIN, a message and a PIN field appear right there. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
+- Fixed: normal tiles were always grouped in one block below stacks, grids, YAML cards and other components. Without grid areas every added tile is now its own card on the panel, so tiles and components can be mixed in any order by dragging; the existing tile order is kept. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
+- Fixed: opening a view by its number (for example `/dashboard-nuvio/0`) left the cards invisible, because the page thought it was not shown and paused the entrance animation.
+- Fixed: a toggle inside a stack or grid added in the editor did not change its look after you turned the light on or off ([#16](https://github.com/kczepiec/nuvio/issues/16)). The panel passed new Home Assistant data to a container only when one of its own entities changed, and the list of those entities did not include the cards inside the container. Containers and other added components now get every update.
+- New: **Screensaver on this device** in **Wall tablet mode** ([#16](https://github.com/kczepiec/nuvio/issues/16)). The screensaver settings stay shared, but each device decides whether it runs, saved in that browser. Enabling the screensaver enables it on the device you use; other devices stay off unless you turn it on there (a tablet locked with the PIN before the update keeps it). After updating, check the switch on your wall tablet.
+- New: **Panel background** in **Appearance** turns off the shared glass panel behind the cards, for all views or only the current one ([#15](https://github.com/kczepiec/nuvio/issues/15)). The styles for `panel_backdrop: false` are no longer a test.
+- New: the **Weather** component has a **Hero style** switch (`variant: hero`), and a standalone weather card with `variant: hero` now gets the hero styles ([#15](https://github.com/kczepiec/nuvio/issues/15)).
+- New: **PIN lock for views** (BETA) in **Wall tablet mode**: chosen views ask for the PIN before showing anything, with the same PIN pad as the screensaver ([#17](https://github.com/kczepiec/nuvio/issues/17)). It is a convenience lock, not security.
+- Fixed: stacks, grids and YAML cards added in the editor keep the order you set instead of jumping above earlier cards ([#17](https://github.com/kczepiec/nuvio/issues/17)).
+
+### 2.20.0
+- Thanks to [@cbailly42](https://github.com/cbailly42) for the new card and the shared bar chart ([#14](https://github.com/kczepiec/nuvio/pull/14)).
+- New: **Production forecast** card (`custom:nuvio-yield-card`). Pick one sensor per day (the first one is today) and the card shows the coming days as bars with the total, rating each day good, average or poor. Give your installed power in kW (a number or an entity) and the rating uses the energy per kW, with thresholds you can change; without it a day is compared with the best day of the period. Sensors in Wh or MWh are converted, a capacity written as `3,4` works, and day names follow the Home Assistant time zone. See [docs/components.md](docs/components.md#production-forecast).
+- Fixed: the bars of **Energy statistics** now grow in when the card appears, like those of **Energy · week**.
+- For contributors: the day bar chart and its tooltip, which were copied into **Energy · week**, **Energy statistics** and the new forecast card, now live in one place, `src/parts/shared/day-bars.part.js` (`HG_DAYBARS_CSS`, `HG_TIP_CSS`). See [DESIGN.md](DESIGN.md).
+
 ### Unreleased (fork)
 - Add a home-card settings section, home status summary, room group filters, scheduled idle night screen and hourly daily-energy comparison.
 - Stabilize page navigation: remove repeated card fades and glass refresh flashes; keep navigation labels and control sizes consistent.

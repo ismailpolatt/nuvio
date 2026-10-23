@@ -81,6 +81,7 @@ sens('sensor.pv_string1', 2510, 'Falownik String 1', 'Inverter String 1', 'power
 for (const [i, p, u, c] of [[1, 1210, 231, 5.2], [2, 2140, 229, 9.3], [3, 690, 233, 3.0]]) { sens(`sensor.faza_l${i}_moc`, p, `Faza L${i} Moc`, `Phase L${i} Power`, 'power', 'W'); sens(`sensor.faza_l${i}_napiecie`, u, `Faza L${i} Napięcie`, `Phase L${i} Voltage`, 'voltage', 'V'); sens(`sensor.faza_l${i}_prad`, c, `Faza L${i} Prąd`, `Phase L${i} Current`, 'current', 'A'); }
 st('sensor.energia_pobor', 4211.5, { ...N('Energia pobór', 'Energy import'), device_class: 'energy', unit_of_measurement: 'kWh', state_class: 'total_increasing' });
 st('sensor.energia_produkcja', 6120.2, { ...N('Energia produkcja', 'Energy production'), device_class: 'energy', unit_of_measurement: 'kWh', state_class: 'total_increasing' });
+[14.1, 9.6, 3.2, 5.4, 11.8, 'unavailable', 12.6].forEach((v, i) => st('sensor.prognoza_dzien_' + (i + 1), v, { ...N('Prognoza dzień ' + (i + 1), 'Forecast day ' + (i + 1)), device_class: 'energy', unit_of_measurement: 'kWh' }));
 st('sensor.pv_dzis', 21.4, { ...N('Falownik Dziś', 'Inverter Today'), device_class: 'energy', unit_of_measurement: 'kWh', state_class: 'total_increasing' });
 st('sensor.falownik_stan', 'Producing', N('Falownik Stan', 'Inverter State'));
 st('sensor.zuzycie_wody', 128, { ...N('Zużycie wody dziś', 'Water usage today'), unit_of_measurement: 'L', device_class: 'water' });
@@ -143,7 +144,7 @@ const pick = { power: { entities: ['sensor.dom_moc'] }, fuel: { prices: ['sensor
   flow: { grid: ['sensor.siec_moc'], solar: ['sensor.pv_moc'], battery: ['sensor.bateria_moc'], battery_soc: ['sensor.bateria_soc'], home: ['sensor.dom_moc'] },
   phases: { power: [1, 2, 3].map((i) => `sensor.faza_l${i}_moc`), voltage: [1, 2, 3].map((i) => `sensor.faza_l${i}_napiecie`), current: [1, 2, 3].map((i) => `sensor.faza_l${i}_prad`) },
   cwu: { heater: 'water_heater.bojler', heating: 'binary_sensor.bojler_grzanie', power: 'sensor.bojler_moc' }, appliance: { entity: 'sensor.pralka_stan' }, mediamini: { e: 'media_player.kuchnia_glosnik' }, media1: { e: 'media_player.salon_tv' },
-  energy: { consumption: 'sensor.energia_pobor', production: 'sensor.energia_produkcja' }, week: { consumption: ['sensor.energia_pobor'], production: ['sensor.energia_produkcja'] }, button: { e: 'script.wyjscie' },
+  energy: { consumption: 'sensor.energia_pobor', production: 'sensor.energia_produkcja' }, week: { consumption: ['sensor.energia_pobor'], production: ['sensor.energia_produkcja'] }, yield: { entities: [1, 2, 3, 4, 5, 6, 7].map((i) => 'sensor.prognoza_dzien_' + i) }, button: { e: 'script.wyjscie' },
   glance: { entities: ['light.salon_sufit', 'lock.drzwi', 'binary_sensor.taras_drzwi', 'fan.wentylator'] }, logbook: { entities: ['binary_sensor.taras_drzwi', 'light.kuchnia', 'lock.drzwi', 'binary_sensor.salon_ruch'] },
   openings: { entities: ['binary_sensor.taras_drzwi', 'binary_sensor.kuchnia_okno', 'binary_sensor.wejscie_drzwi'] }, toggle: { e: 'light.kuchnia' }, switch: { e: 'light.kuchnia' },
   entities: { entities: ['light.kuchnia', 'switch.salon_choinka', 'fan.wentylator', 'sensor.salon_temperatura'] }, actions: { entities: ['scene.poranek', 'scene.film', 'scene.dobranoc', 'script.wyjscie'] },
@@ -158,7 +159,7 @@ const shotPick = { cameras: { entities: ['camera.ogrod'] }, players: { entities:
 if (MODE !== 'sizes') for (const [id, o] of Object.entries(shotPick)) pick[id] = Object.assign({}, pick[id], o);
 const pk = (C, d) => { for (const [k, v] of Object.entries(pick[C.id] || {})) if (v != null) d[k] = conv(d, k, v); return d; };
 const extra = { webpage: { o: { url: 'about:blank' } }, image: { o: { image: '../dist/nuvio-bg-default-wide.webp' } }, note: { o: { text: T('**Na weekend**\n- podlać kwiaty\n- wynieść śmieci', '**For the weekend**\n- water the plants\n- take out the trash') } },
-  link: { o: { title: T('Ustawienia', 'Settings'), nav: '/config' } }, hero: { o: { title: T('Hej, Anna!', 'Hey, Anna!') } } };
+  link: { o: { title: T('Ustawienia', 'Settings'), nav: '/config' } }, hero: { o: { title: T('Hej, Anna!', 'Hey, Anna!') } }, yield: { o: { capacity: '3.4' } } };
 const only = (q.get('only') || '').split(',').filter(Boolean), skip = new Set(['cond', 'hacard', 'grid', 'vstack', 'hstack', 'child']);
 const list = CT.list.filter((C) => (only.length ? only.includes(C.id) : !skip.has(C.id)) && (!C.card || customElements.get(C.card.replace(/^hg-/, 'nuvio-')) || customElements.get(C.card)));
 const mk = (C) => { const R = { v: Object.assign(pk(C, def(C)), extra[C.id] || {}), t: C.tile || '' }; const cfg = CT.kid(C, R, hass); if (!cfg) return null; for (const k of Object.keys(cfg)) if (/^nv_/.test(k)) delete cfg[k]; if (MODE !== 'sizes' && C.id === 'players') cfg.discover = false;

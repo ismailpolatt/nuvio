@@ -8,7 +8,7 @@ function setup(wiz = {}) {
   const src = readFileSync(new URL('../../src/parts/hg-oss.part.js', import.meta.url), 'utf8');
   const helper = src.slice(src.indexOf('const hgVisiblePersons ='), src.indexOf('const HG_DASH ='));
   const visible = new Function('HGL', helper + ';return hgVisiblePersons;')(HGL);
-  const { HGRoomsX } = loadParts(['hg-lookr.part.js'], { window: { __hgDryRun: true }, HGL, hgT: (k) => k, H: {} }, ['HGRoomsX']);
+  const { HGRoomsX } = loadParts(['hg-lookr.part.js'], { window: { __hgDryRun: true }, HGL, HGDraft: { defer() {} }, hgT: (k) => k, H: {} }, ['HGRoomsX']);
   const { HGFamilyCard } = loadParts(['cards/family-card.part.js'], { HGBase: class {}, hgReg() {}, hgTLazy: (k) => k, hgVisiblePersons: visible }, ['HGFamilyCard']);
   return { HGL, HGRoomsX, HGFamilyCard, visible };
 }

@@ -1,0 +1,121 @@
+name: Upstream update candidate
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 4 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: upstream-update
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: github.repository == 'ismailpolatt/nuvio'
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.merge.outputs.changed }}
+      tag: ${{ steps.release.outputs.tag }}
+      base: ${{ steps.release.outputs.base }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Find latest stable upstream release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=$(gh api repos/kczepiec/nuvio/releases/latest --jq .tag_name)
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "base=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git fetch --no-tags https://github.com/kczepiec/nuvio.git "refs/tags/$TAG:refs/remotes/upstream/release-candidate"
+      - name: Merge sources without discarding custom changes
+        id: merge
+        run: |
+          if git merge-base --is-ancestor refs/remotes/upstream/release-candidate HEAD; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo 'Latest stable upstream release is already included.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git merge --no-commit --no-ff refs/remotes/upstream/release-candidate || true
+          # Generated bundle conflicts are rebuilt below. Never auto-select a side for sources.
+          git restore --source=refs/remotes/upstream/release-candidate --staged --worktree dist
+          if test -n "$(git diff --name-only --diff-filter=U)"; then
+            echo '## Manual source merge required — main is unchanged' >> "$GITHUB_STEP_SUMMARY"
+            git diff --name-only --diff-filter=U >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          test -f .git/MERGE_HEAD
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      - name: Install build dependency
+        if: steps.merge.outputs.changed == 'true'
+        run: npm ci --ignore-scripts
+      - name: Validate merged sources and rebuild
+        if: steps.merge.outputs.changed == 'true'
+        env:
+          PYTHONUTF8: '1'
+          PYTHON: python3
+        run: |
+          node --test 'tests/js/**/*.test.mjs'
+          python3 -m unittest discover -s tests/py
+          python3 tools/build.py
+          python3 tools/guard.py
+          python3 tools/i18n_check.py --lang tr
+          git diff --check
+          git add dist
+          git commit -m 'Merge tested upstream stable release'
+          git bundle create "$RUNNER_TEMP/candidate.bundle" HEAD
+      - uses: actions/upload-artifact@v4
+        if: steps.merge.outputs.changed == 'true'
+        with:
+          name: upstream-candidate
+          path: ${{ runner.temp }}/candidate.bundle
+          retention-days: 7
+  publish-pr:
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: upstream-candidate
+          path: ${{ runner.temp }}/candidate
+      - name: Publish candidate for review, never merge or deploy automatically
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          EXPECTED_BASE: ${{ needs.prepare.outputs.base }}
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          test "$(git rev-parse HEAD)" = "$EXPECTED_BASE"
+          BRANCH="automation/upstream-$TAG"
+          if test -n "$(git ls-remote --heads origin "$BRANCH")"; then
+            COUNT=$(gh pr list --base main --head "$BRANCH" --state all --json number --jq length)
+            if test "$COUNT" != 0; then
+              echo "Candidate already has a review: $BRANCH. No branch overwritten." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+          else
+            git fetch "$RUNNER_TEMP/candidate/candidate.bundle" HEAD:refs/heads/upstream-candidate
+            git push origin "refs/heads/upstream-candidate:refs/heads/$BRANCH"
+          fi
+          printf 'Upstream %s merged with the fork. Source merge, all tests, build and Turkish coverage passed.\n\nReview source changes, storage compatibility and the physical tablet before merging. No Home Assistant deployment is performed.\n' "$TAG" > "$RUNNER_TEMP/pr-body.md"
+          gh pr create --base main --head "$BRANCH" --title "Upstream $TAG — tested update candidate" --body-file "$RUNNER_TEMP/pr-body.md"

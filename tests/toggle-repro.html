@@ -1,0 +1,27 @@
+<!-- #16 harness: toggle inside a stack / grid on the view panel. Open over http from the repo root (python3 -m http.server), ?kind=panel|stack|grid|nested|tile|tilegrid|plain, tap a switch: it must turn on. -->
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="background:#111;color:#fff">
+<div id="out"></div>
+<script type="module">
+window.__hgLangOpt = window.__nuvioLangOpt = 'pl'; window.__hgNoVer = window.__nuvioNoVer = true; window.__hgLocal = window.__nuvioLocal = true;
+if (!customElements.get('ha-card')) customElements.define('ha-card', class extends HTMLElement {});
+customElements.define('ha-icon', class extends HTMLElement {});
+const v = await (await fetch('../dist/nuvio-version.json')).json(); await import('../dist/' + v.core);
+const mkS = (id, st) => ({ entity_id: id, state: st, attributes: { friendly_name: id.split('.')[1] }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString(), context: { id: 'x' } });
+let S = { 'light.salon': mkS('light.salon', 'off'), 'switch.biuro': mkS('switch.biuro', 'off') };
+const tops = [];
+const mkHass = () => ({ states: S, entities: {}, devices: {}, areas: {}, user: { id: 'u', is_admin: true, name: 'K' }, config: { time_zone: 'Europe/Warsaw', unit_system: {} }, language: 'pl', locale: { language: 'pl' }, themes: {}, connection: { subscribeMessage: async () => () => {}, sendMessagePromise: async () => ({}) },
+  callService: async (d, s, data) => { window.__calls = (window.__calls || 0) + 1; const id = data.entity_id; setTimeout(() => { S = Object.assign({}, S, { [id]: mkS(id, S[id].state === 'on' ? 'off' : 'on') }); const h = mkHass(); window.__hass = h; tops.forEach((t) => (t.hass = h)); }, +(new URLSearchParams(location.search).get('delay') || 150)); } });
+const h = mkHass(); window.__hass = h;
+const kind = new URLSearchParams(location.search).get('kind') || 'stack';
+const kid = { type: 'custom:nuvio-toggle-card', entity: 'light.salon' }, kid2 = { type: 'custom:nuvio-button-card', entity: 'switch.biuro', mode: 'tile' };
+const cfgs = { stack: { type: 'custom:nuvio-stack-card', cards: [kid, kid2] }, grid: { type: 'custom:nuvio-grid-card', columns: 2, cards: [kid, kid2] }, nested: { type: 'custom:nuvio-stack-card', cards: [{ type: 'grid', columns: 2, cards: [kid, kid2] }] }, plain: kid, tile: { type: 'custom:nuvio-stack-card', direction:'vertical', glass:false, divider:false, cards: [{ type: 'custom:nuvio-tiles-card', single: { e: 'light.salon', t: 'tog' }, nv_comp:'switch' }, { type: 'custom:nuvio-tiles-card', single: { e: 'switch.biuro', t: 'tog' } }] }, tilegrid: { type: 'custom:nuvio-grid-card', columns: 2, cards: [{ type: 'custom:nuvio-tiles-card', single: { e: 'light.salon', t: 'tog' } }, { type: 'custom:nuvio-tiles-card', single: { e: 'switch.biuro' } }] }, tileplain: { type: 'custom:nuvio-tiles-card', single: { e: 'light.salon', t: 'tog' } } };
+const tk = (e) => ({ type: 'custom:nuvio-tiles-card', single: { e, t: 'tog' }, nv_comp: 'switch', nv_v: { e } });
+window.__nuvioL.data.s['demo:tiles'] = { added: [
+  { e: 'c:vstack:x1', c: 'nuvio-stack-card', comp: 'vstack', cfg: { direction: 'vertical', cards: [tk('light.salon'), tk('switch.biuro')] }, v: { cards: [tk('light.salon'), tk('switch.biuro')] } },
+  { e: 'c:grid:x2', c: 'nuvio-grid-card', comp: 'grid', cfg: { columns: 2, cards: [tk('light.kuchnia')] }, v: { cards: [tk('light.kuchnia')] } } ] };
+S['light.kuchnia'] = mkS('light.kuchnia', 'off');
+cfgs.panel = { type: 'custom:nuvio-tiles-card', scope: 'demo:tiles' };
+const c = cfgs[kind], el = document.createElement(c.type.slice(7)); el.setConfig(c); el.hass = h; document.getElementById('out').appendChild(el); tops.push(el);
+window.__state = () => { const out = []; const w = (r) => { for (const x of r.querySelectorAll('*')) { if (x.matches && x.matches('button.tg, .gic, .tl, [data-e]')) out.push(x.className); if (x.shadowRoot) w(x.shadowRoot); } }; w(document); return out; };
+window.__ready = true;
+</script></body></html>

@@ -4,6 +4,70 @@
 
 Tutaj zapisane są wszystkie istotne zmiany w Nuvio, od najnowszych. Wersje zgodne z [semantycznym wersjonowaniem](https://semver.org). Angielska lista zmian jest w [CHANGELOG.md](CHANGELOG.md).
 
+### 2.22.3
+- Poprawione: wygaszacz Szkło Minimal nadal pokazywał kółko z inicjałem w prawym górnym rogu, gdy przełącznik **Górny pasek → Awatar** był wyłączony — na wygaszaczu i w podglądzie ([#52](https://github.com/kczepiec/nuvio/issues/52)).
+- Poprawione: wiersz **Discord** w menu użytkownika pokazuje znak Discord obok nazwy, tak jak Profil i Ustawienia pokazują ikonę. Home Assistant nie ma już tej ikony marki, więc menu rysuje ją samo.
+- Poprawione: **Ustawienia → Użytkownicy** pokazują zdjęcie osoby, gdy to konto Home Assistant jest powiązane z osobą, która ma zdjęcie. Bez zdjęcia zostaje litera.
+
+### 2.22.2
+- Poprawione: kafel **Roleta / brama** (otwórz, stop, zamknij) na telefonie był ucięty z prawej, gdy leżał na panelu osobno. Na wąskim kaflu przyciski rozciągały się na cały rząd, ale ten rząd się nie zawijał, więc wychodziły poza kartę. Teraz schodzą pod nazwę i mieszczą się w kaflu. Kafel mediów korzysta z tego samego układu. Na szerszym ekranie przyciski zostają po prawej ([#53](https://github.com/kczepiec/nuvio/issues/53)).
+- Dodane: Discord w menu użytkownika, po Profilu i Ustawieniach, oraz na stronie O Nuvio. Angielski, polski i francuski README mają sekcję społeczności i plakietkę Discord.
+
+### 2.22.1
+- Poprawione: na telefonach i wąskich tabletach ustawienia **Widoki i nawigacja** były ucięte z lewej i ściśnięte do połowy szerokości, a strona przewijała się w bok. Szeroka lista wyboru (pasek na telefonie) i dwukolumnowe karty widoków były szersze niż ekran, a po ukryciu paska bocznego strona trafiała do złego wiersza siatki. Ustawienia mają teraz jedną kolumnę na pełną szerokość, tabela widoków to karty jedna pod drugą ze wszystkimi polami, nic nie przewija się w bok, a pasek **Przywróć domyślne** / **Gotowe** jest nad dolną nawigacją i paskiem iPhone’a. Nowy `tools/mobile_check.py` sprawdza każdą stronę ustawień na iPhonie (WebKit), Androidzie (360 px) i tablecie 768 px przed każdym wydaniem.
+
+### 2.22.0
+- Zmienione: zmiany ustawień w trybie edycji są szkicem. Widoki, tryb kiosku, nagłówek, pokoje, wygaszacz, PIN i Assist nie zapisują się i nie przeładowują pulpitu przy każdej zmianie; tanie podglądy (akcent, tekst nagłówka) widać od razu. **Gotowe** zapisuje wszystko jeden raz i przeładowuje najwyżej raz, **Anuluj** odrzuca szkic, a opuszczenie strony z niezapisanymi zmianami wymaga potwierdzenia.
+- Zmienione: **Ustawienia** mają nowy układ. Pasek boczny grupuje 13 stron (Ogólne, Wygląd, Pulpit, Tablet ścienny, System), ma wyszukiwarkę ustawień ze wszystkich stron, obsługę klawiatury i listę z przechodzeniem do strony na telefonie. Ustawienia PIN-u mają własną stronę **PIN i blokady**, jest nowa strona **O Nuvio**, a wykrywanie pracy klimatu jest zwinięte w bloku zaawansowanym. Wszystkie opcje i zapisane ustawienia są bez zmian.
+
+### 2.21.6
+- Poprawione: wygaszacz znów trzyma ekran włączony po wyłączeniu i włączeniu ekranu albo po przełączeniu aplikacji lub karty. Przeglądarka zwalnia blokadę wygaszania ekranu, gdy strona jest niewidoczna; Nuvio prosi o nią ponownie, gdy strona jest znowu widoczna, a wygaszacz włączony ([#38](https://github.com/kczepiec/nuvio/issues/38)).
+- Poprawione: karta **Roleta / brama** pokazywała 0 % lub 100 % i pasek pozycji dla rolet bez pozycji (brama albo garaż, które znają tylko otwórz, zamknij i stop). Teraz pokazuje stan słowny (Otwarte, Zamknięte, Otwieranie, Zamykanie) z delikatnym pulsowaniem w ruchu i bez paska. Ikona zależy od klasy urządzenia (brama, garaż, drzwi, okno, żaluzja, zasłona, roleta, markiza) zamiast zawsze rolety ([#36](https://github.com/kczepiec/nuvio/issues/36)).
+- Poprawione: widoki odblokowane PIN-em zostawały otwarte przez 5 minut także po włączeniu wygaszacza albo użyciu **Zablokuj ekran**, więc kolejna osoba przy tablecie ściennym mogła wejść w nie bez PIN-u. Wygaszacz i **Zablokuj ekran** zamykają teraz wszystkie odblokowane widoki, a widok na ekranie po wybudzeniu znowu pyta o PIN. Podgląd wygaszacza w ustawieniach niczego nie blokuje ([#35](https://github.com/kczepiec/nuvio/issues/35)).
+- Zmienione: klawiatura PIN zablokowanego widoku i ustawienia blokady widoków nie pokazują już uwagi, że blokada jest dla wygody, a nie zabezpieczeniem; to ograniczenie jest opisane w dokumentacji.
+- Poprawione: w wygaszaczu **Zegar na zdjęciu** godzina najbliższego wydarzenia (i najbliższych zajęć LiveKid) znów ma pełną jasność zamiast przygaszenia jak pozostałe wiersze. Zbędne `};` w stylach wygaszacza sprawiało, że przeglądarka odrzucała tę regułę ([#34](https://github.com/kczepiec/nuvio/issues/34)).
+
+### 2.21.5
+- Poprawione: **Ukryj pasek boczny** (wcześniej **Ukryj pusty pasek boczny**) nic nie robił, dopóki choć jeden widok miał włączony **Pasek boczny**. Teraz ukrywa pasek boczny Nuvio razem z przyciskiem Ustawienia na komputerze i tablecie bez względu na przełączniki widoków, a widoki spoza zakładek u góry trafiają do menu profilu.
+
+### 2.21.4
+- Dodane: **{time}** i **{date}** w tytule lub podtytule widoku pokazują bieżącą godzinę i datę w języku interfejsu, w formacie 12 lub 24 h z profilu Home Assistant, odświeżane co minutę. **Dodaj zegar** w edytorze nagłówka dopisuje **{time}** do podtytułu.
+- Dodane: kolumna **Licznik** w **Ustawienia > Widoki** liczy włączone światła, przełączniki, wentylatory, klimatyzację lub osoby w domu (albo odtwarzane media, albo wybrane encje) i pokazuje liczbę na zakładce widoku, gdy jest większa od 0.
+- Dodane: **Ukryj pusty pasek boczny** w **Ustawienia > Widoki**. Gdy żaden widok nie jest w pasku bocznym, znika pasek razem z przyciskiem Ustawienia. Ustawienia zostają w menu profilu, pod ołówkiem i pod dowolnym adresem Nuvio z **?nuvio_settings** (dla osób z prawem edycji, nie na widoku zablokowanym PIN-em).
+- Poprawione: karta **Prognoza produkcji** po zmianie progów malowała wszystkie dni jednym kolorem. Progi powyżej 12 kWh na kW albo progi bez mocy odniesienia są teraz liczone jako kWh na dzień, progi wpisane odwrotnie są zamieniane, a pola liczbowe edytora kart przyjmują przecinek (3,5).
+### Niewydane
+- Poprawka: wbudowane tło wybrane na jednym urządzeniu było zwykłym kolorem na urządzeniach, które otwierają Home Assistant pod innym adresem (lokalny IP, domena, Nabu Casa). Zdjęcie zapisywało się z pełnym adresem pierwszego urządzenia; teraz wbudowane tła zapisują się jako ścieżka obok plików Nuvio (np. `/hacsfiles/nuvio/nuvio-bg-nad-mgla-wide.webp`), a tła zapisane wcześniej z adresem są poprawiane przy wczytaniu układu, na pulpicie i w wygaszaczu. Wgrane zdjęcia i własne adresy zostają bez zmian.
+
+### 2.21.3
+- Zmiana: kropka klimatu na kaflu **Pokoje** ma kolor trybu (grzanie, chłodzenie, osuszanie, wentylacja, auto), te same kolory co w menu **Tryb pracy** pilota klimatyzacji, zamiast szarego: pełna, gdy urządzenie pracuje, przygaszona, gdy nie pracuje albo stan jest szacunkiem, z samą obwódką, gdy znany jest tylko tryb. Znak **~** przed szacowanym stanem zniknął z kafla Pokoje i karty termostatu; czytnik ekranu nadal mówi **szacunek**.
+
+### 2.21.2
+- Zmiana: okno szczegółowej pogody jest zwarte i mieści się na ekranie telefonu bez przewijania: cztery szczegóły w jednym rzędzie, mniejsze odstępy i wiersze, mniejszy łuk słońca, a na wąskich ekranach krótkie nazwy dni (Pn, Wt) zamiast uciętych.
+- Zmiana: Nuvio nie zgaduje już, czy termostat albo klimatyzacja pracuje. Każde urządzenie klimatu w pokoju ma **Wykrywanie pracy** w **Wygląd > Pokoje**: **Automatycznie** (domyślnie), **Z encji**, **Z temperatury pokoju** albo **Pokazuj tylko tryb**. Automatycznie oznacza kolejno: encję **Stan rzeczywisty** (włącz/wyłącz albo wartość, np. moc powyżej **Progu pracy**, domyślnie 5 W), informację z samego urządzenia (`hvac_action`) i temperaturę pokoju względem nastawy, jeśli wybierzesz osobny czujnik pokoju (szacunek z histerezą domyślnie 0,5°, oznaczony **~** i przygaszoną kropką). W pozostałych przypadkach kafel pokazuje sam tryb, np. **Grzanie** z pustą kropką. W 2.21.1 nastawa była porównywana z temperaturą samego urządzenia, więc klimatyzacje sterowane pilotem IR pokazywały **Bezczynny**, choć grzały. Gdy w pokoju jest kilka urządzeń, kafel Pokoje pokazuje najpierw to, które na pewno pracuje, potem szacunek, a na końcu tryb. Stan pracy nazywa się teraz **Nie pracuje** zamiast **Bezczynny**. Dotychczasowe ustawienia **Stanu rzeczywistego** działają dalej.
+
+### 2.21.1
+- Podziękowania dla [@cbailly42](https://github.com/cbailly42) za poprawkę klimatu ([#22](https://github.com/kczepiec/nuvio/pull/22)).
+- Po aktualizacji włącz raz **Wygaszacz na tym urządzeniu** na każdym urządzeniu, które ma pokazywać wygaszacz.
+- Nowość: **Stan rzeczywisty** dla każdego termostatu w pokoju, w **Wygląd > Pokoje** (tryb edycji): wybierz encję, która mówi, czy to urządzenie naprawdę pracuje (encja włącz/wyłącz, np. czujnik spalania pieca, albo liczbowa, np. moc palnika). Gdy w pokoju jest kilka urządzeń (np. klimatyzacja i piec), kafel Pokoje sprawdza wszystkie i pokazuje **Grzeje**, **Chłodzi** albo **Bezczynny** według tego, które naprawdę pracuje; karta termostatu korzysta z tego samego ustawienia.
+- Poprawka: termostaty, które nie podają, co robią (brak `hvac_action`, np. niektóre grzejniki łazienkowe), są uznawane za bezczynne, gdy pokój osiągnął nastawę, na kaflu Pokoje i w karcie termostatu.
+- Poprawka: karta termostatu pokazuje **· bezczynny** po trybie (np. **Grzanie do 7° · bezczynny**), gdy urządzenie w rzeczywistości nie grzeje.
+- Poprawka: kafle **Pokoje** pokazywały **Grzeje**, gdy termostat był w trybie grzania, nawet jeśli nie grzał (np. ochrona przed zamarzaniem 7 °C w pokoju 21 °C). Kafel pokazuje teraz to, co urządzenie naprawdę robi, i w takim przypadku **Bezczynny** z szarą kropką.
+- Poprawka: przełączniki **Blokady widoków PIN-em** w Trybie tabletu ściennego nic nie robiły po kliknięciu. Ich akcja nie trafiała do ustawień tabletu, więc nic się nie przełączało ani nie zapisywało. Teraz przełączają się od razu i zapisują z układem; bez PIN-u pojawia się komunikat i pole do ustawienia PIN-u. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
+- Poprawka: zwykłe kafle były zawsze zebrane w jeden blok pod stosami, siatkami, kartami YAML i innymi komponentami. Bez obszarów siatki każdy dodany kafel jest teraz osobną kartą panelu, więc kafle i komponenty można dowolnie przeplatać przeciąganiem; dotychczasowa kolejność kafli zostaje. Refs [#17](https://github.com/kczepiec/nuvio/issues/17)
+- Poprawka: widok otwarty po numerze (np. `/dashboard-nuvio/0`) miał niewidoczne karty, bo strona uznawała, że nie jest pokazana, i wstrzymywała animację wejścia.
+- Poprawka: przełącznik w stosie albo siatce dodanych w edytorze nie zmieniał wyglądu po włączeniu lub wyłączeniu światła ([#16](https://github.com/kczepiec/nuvio/issues/16)). Panel przekazywał kontenerowi nowe dane z Home Assistant tylko wtedy, gdy zmieniła się jedna z jego własnych encji, a ta lista nie obejmowała kart w kontenerze. Kontenery i inne dodane komponenty dostają teraz każdą aktualizację.
+- Nowość: **Wygaszacz na tym urządzeniu** w **Trybie tabletu ściennego** ([#16](https://github.com/kczepiec/nuvio/issues/16)). Ustawienia wygaszacza są nadal wspólne, ale każde urządzenie decyduje, czy wygaszacz działa, i zapisuje to w swojej przeglądarce. Włączenie wygaszacza włącza go na urządzeniu, którego używasz; inne urządzenia zostają wyłączone, dopóki go na nich nie włączysz (tablet zablokowany PIN-em przed aktualizacją go zachowuje). Po aktualizacji sprawdź przełącznik na tablecie na ścianie.
+- Nowość: **Tło panelu** w **Wyglądzie** wyłącza wspólny szklany panel za kartami, dla wszystkich widoków albo tylko bieżącego ([#15](https://github.com/kczepiec/nuvio/issues/15)). Style dla `panel_backdrop: false` nie są już testowe.
+- Nowość: komponent **Pogoda** ma przełącznik **Styl hero** (`variant: hero`), a samodzielna karta pogody z `variant: hero` dostaje teraz style hero ([#15](https://github.com/kczepiec/nuvio/issues/15)).
+- Nowość: **Blokada widoków PIN-em** (BETA) w **Trybie tabletu ściennego**: wybrane widoki pytają o PIN, zanim cokolwiek pokażą, tym samym pinpadem co wygaszacz ([#17](https://github.com/kczepiec/nuvio/issues/17)). To blokada dla wygody, nie zabezpieczenie.
+- Poprawka: stosy, siatki i karty YAML dodane w edytorze trzymają ustawioną kolejność zamiast wskakiwać nad wcześniejsze karty ([#17](https://github.com/kczepiec/nuvio/issues/17)).
+
+### 2.20.0
+- Dziękuję [@cbailly42](https://github.com/cbailly42) za nową kartę i wspólny wykres słupkowy ([#14](https://github.com/kczepiec/nuvio/pull/14)).
+- Nowość: karta **Prognoza produkcji** (`custom:nuvio-yield-card`). Wybierz jeden czujnik na dzień (pierwszy to dziś), a karta pokaże kolejne dni jako słupki z sumą i oceni każdy dzień jako dobry, średni albo słaby. Podaj moc instalacji w kW (liczbę albo encję), a ocena użyje energii na kW, z progami do zmiany; bez niej dzień jest porównywany z najlepszym dniem okresu. Czujniki w Wh lub MWh są przeliczane, moc wpisana jako `3,4` działa, a nazwy dni są liczone w strefie czasowej Home Assistant. Zobacz [docs/pl/components.md](docs/pl/components.md#prognoza-produkcji).
+- Poprawka: słupki karty **Energia statystyki** wyrastają teraz przy pojawieniu się karty, tak jak w **Energia · tydzień**.
+- Dla współtwórców: wykres słupków dziennych i jego dymek, dotąd skopiowane w **Energia · tydzień**, **Energia statystyki** i nowej karcie prognozy, są teraz w jednym miejscu, `src/parts/shared/day-bars.part.js` (`HG_DAYBARS_CSS`, `HG_TIP_CSS`). Zobacz [DESIGN.md](DESIGN.md).
+
 ### Niewydane (fork)
 - Dodano ustawienia kart strony głównej, podsumowanie stanu domu, filtry pokoju, nocny wygaszacz i porównanie zużycia energii.
 - Ustabilizowano przejścia stron i rozmiary górnej nawigacji.

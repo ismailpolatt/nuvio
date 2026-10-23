@@ -51,7 +51,7 @@ const HGDashboard = window.HGDashboard = {
     if (!this.draft) this.draft = JSON.parse(JSON.stringify(HGL.get('dashboard')));
     const L = this.draft, keys = page._keys(this.cards), rows = HGL.sort(this.cards.map((c, i) => ({ c, k: keys[i] })), (x) => x.k, L.order);
     const energy = this.energyDraft ?? ((HGL.data.wiz || {}).homeEnergy) ?? '';
-    return `<section class="lk-g lx rx" data-tab="home"><h4>${H.icon('mdi:view-dashboard-outline')}${hgT('dashboardx.personalize')}</h4><small class="lk-hn">${hgT('dashboardx.personalize_help')}</small>
+    return `<section class="lk-g lx rx" data-tab="home" data-pg="home"><h4>${H.icon('mdi:view-dashboard-outline')}${hgT('dashboardx.personalize')}</h4><small class="lk-hn">${hgT('dashboardx.personalize_help')}</small>
       <div class="lx-l">${rows.map(({ c, k }, i) => `<div class="lx-r"><span class="lx-t"><b>${H.esc(c.title || c.entity || c.type)}</b></span>
         <button class="lx-a" data-hge="home-up" data-k="${H.esc(k)}" ${i ? '' : 'disabled'} aria-label="${hgT('lookr.move_up')}">${H.icon('mdi:chevron-up')}</button>
         <button class="lx-a" data-hge="home-down" data-k="${H.esc(k)}" ${i < rows.length - 1 ? '' : 'disabled'} aria-label="${hgT('lookr.move_down')}">${H.icon('mdi:chevron-down')}</button>
@@ -76,7 +76,7 @@ const HGDashboard = window.HGDashboard = {
     if (a === 'home-save') {
       const select = page._eSheetEl.querySelector('[name=home-energy]');
       HGL.data.wiz = Object.assign({}, HGL.data.wiz, { homeEnergy: select ? select.value : '' });
-      HGL.set('dashboard', L); const saved = await HGL.save(page._hass); page._eSnap = JSON.stringify(HGL.data); this.draft = null; this.energyDraft = null;
+      HGL.set('dashboard', L); if (window.HGDraft) { HGDraft.defer(page, { reload: true }); this.draft = null; this.energyDraft = null; page._eToast(hgT('settings.applies_on_save')); return page._eLook(); } const saved = await HGL.save(page._hass); page._eSnap = JSON.stringify(HGL.data); this.draft = null; this.energyDraft = null;
       page._eToast(saved === 'ha' ? hgT('edit.settings_saved') : hgT('lookr.saved_on_this_device')); page._eSheet(false); return page._eRefresh(true);
     }
     // Preserve the source selection while rerendering the card list.

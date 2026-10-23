@@ -258,7 +258,10 @@ class HGBase extends HTMLElement {
     }
     if (this._hass) this._update();
   }
-  set hass(h) { this._hass = h; if (window.HGLiving) this.toggleAttribute('large-targets', HGLiving.tabletHere() && !!HGLiving.tabletPrefs(h).large); window.__hgHass = h; if (typeof HGTheme !== 'undefined') HGTheme.pick(h); this._update(); }
+  /* karty komponentów w gniazdach .cmslot (stos, siatka, karta HA dodane w edytorze) dostają hass zawsze, nie tylko przy przerysowaniu
+     gospodarza: jego lista encji nie zawiera encji dzieci kontenera, więc bez tego przełącznik w stosie nie zmieniał wyglądu (#16) */
+  set hass(h) { this._hass = h; if (window.HGLiving) this.toggleAttribute('large-targets', HGLiving.tabletHere() && !!HGLiving.tabletPrefs(h).large); window.__hgHass = h; if (typeof HGTheme !== 'undefined') HGTheme.pick(h); this._update();
+    if (this._cmM) for (const el of this._cmM.values()) if (el && el.parentElement) hgPass(el, h); }
   get hass() { return this._hass; }
   ents() { return [this._config.entity].filter(Boolean); }
   /* szybka ścieżka: HA podmienia obiekt stanu tylko dla zmienionej encji -> porównanie referencji, bez JSON */

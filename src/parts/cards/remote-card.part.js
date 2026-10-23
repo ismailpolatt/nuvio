@@ -91,13 +91,7 @@ input.tsl:disabled{ opacity:.5; filter:grayscale(1); }
   _extraSig() { return this._opt ? JSON.stringify(this._opt) : ''; }
   _set(o) { this._opt = { ...(this._opt || {}), ...o, ts: Date.now() }; this.rerender(); }
   /* kolor nawiewu: chłodzenie niebieski, grzanie pomarańcz, auto przechodzi przez fiolet zależnie od nastawy */
-  _col(st, t, mn, mx) {
-    if (st === 'off') return '#8A9099';
-    if (st === 'cool') return 'hsl(214 88% 56%)'; if (st === 'heat') return 'hsl(24 92% 54%)';
-    if (st === 'dry') return 'hsl(178 52% 40%)'; if (st === 'fan_only') return 'hsl(205 18% 52%)';
-    const f = t == null ? .5 : (t - mn) / (mx - mn);
-    return f < .4 ? 'hsl(214 88% 56%)' : f > .6 ? 'hsl(24 92% 54%)' : 'hsl(262 62% 60%)';
-  }
+  _col(st, t, mn, mx) { return hgClimCol(st, t, mn, mx); }   // wspólna mapa HG_CLIM_COL (shared/climate-modes)
   _room() {
     const c = this._config, h = this._hass; if (c.room !== undefined) return c.room;
     const e = h.entities && h.entities[c.entity], dv = e && e.device_id && h.devices ? h.devices[e.device_id] : null, ar = (e && e.area_id) || (dv && dv.area_id);

@@ -55,6 +55,8 @@ class HGAreasCard extends HGBase {
 .mt .lt{ color:var(--hg-accent-tx); } .mt .xp{ margin-left:auto; flex:none; width:16px; height:16px; opacity:.8; transition:transform .25s cubic-bezier(.2,0,0,1), opacity .25s; } @media (hover:hover) and (pointer:fine){ .tile:hover .xp{ opacity:1; transform:translate(2px,-2px); } }
 .dot{ width:7px; height:7px; border-radius:50%; flex:none; background:var(--c); }
 .cl{ display:inline-flex; align-items:center; gap:4u; flex:none; color:#3A3D42; }
+/* kropka w kolorze trybu (tokeny --hg-ac-*): pracuje = pełna, szacunek = przygaszona, nie pracuje = blada, sam tryb = obwódka */
+.cl.ce .dot{ opacity:.55; } .cl.ci .dot{ opacity:.32; } .cl.cm .dot{ background:transparent; box-shadow:inset 0 0 0 1.5px var(--c); }
 .oth{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s1); margin-top:var(--s2); font-size:var(--fs-sm); color:#4A4E54; }
 .oth b{ font-weight:600; color:#2A2D31; margin-right:2u; display:inline-flex; align-items:center; height:32px; padding:0 var(--s2); border-radius:var(--r-md); background:var(--hg-glass-lite, var(--hg-glass-bg)); }
 .oth button{ display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 var(--s2) 0 10px; border-radius:var(--r-md); background:var(--hg-glass-lite, var(--hg-glass-bg)); border:1px solid var(--hg-glass-bd); color:#2A2D31; font-size:var(--fs-sm); font-weight:600; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; transition: background .2s, color .2s; }
@@ -74,8 +76,14 @@ class HGAreasCard extends HGBase {
       const summary = typeof HGPersonal !== 'undefined' ? HGPersonal.room(h, a) : null;
       const okL = a.lights.filter((e) => H.ok(h.states[e]));
       const on = a.lights.filter((e) => h.states[e].state === 'on').length;
-      const cl = a.sec.clim.map((e) => h.states[e]).find((s) => s.entity_id.startsWith('climate.') && H.ok(s) && s.state !== 'off');
-      const clm = cl && (HG_AC_MODE[cl.state] || HG_AC_MODE.cool);
+      // wszystkie włączone urządzenia klimatu pokoju (np. klimatyzacja + piec): potwierdzona praca > szacowana > sam tryb > bezczynność (hgClimRank)
+      const CL = a.sec.clim.map((e) => h.states[e]).filter((s) => s.entity_id.startsWith('climate.') && H.ok(s) && s.state !== 'off').map((s) => ({ s, i: hgClimInfo(h, s, s.state, c.areas, a.id) })).filter((x) => x.i);
+      const top = CL.sort((x, y) => hgClimRank(y.i) - hgClimRank(x.i))[0], cl = top && top.s, ci = top && top.i;
+      // kolor trybu z tej samej mapy co menu „Tryb pracy” pilota (hgClimCol); w auto kierunek pracy, gdy wiadomo, że grzeje / chłodzi
+      const ca = cl && cl.attributes, dc = ci && hgClimCol(['heat', 'cool', 'dry', 'fan_only'].includes(ci.act) ? ci.act : ci.mode, parseFloat(ca.temperature ?? ((+ca.target_temp_low + +ca.target_temp_high) / 2)), ca.min_temp ?? 16, ca.max_temp ?? 30);
+      // etykieta: potwierdzone bez znaku, szacunek tylko w aria-label, sam tryb jako nazwa trybu (np. „Grzanie”) z pustą kropką (nie twierdzi, że pracuje)
+      const cll = ci && (ci.conf === 'mode' ? (HG_AC_MODE[ci.mode] || {}).l || H.stateLabel(ci.mode) : (lbl(ci.act) || H.stateLabel(ci.act)));
+      const cla = ci && (ci.conf === 'estimated' ? cll + ' (' + hgT('cards.areas.estimated') + ')' : cll);
       // pokój bez niczego, co da się pokazać lub obsłużyć -> zwinięty do wiersza "Pozostałe"
       // obecność / ruch: tylko prawdziwe, dostępne czujniki pokoju (occupancy/presence ma pierwszeństwo przed motion)
       const prs = a.sec.mot.filter((e) => H.ok(h.states[e]));
@@ -84,9 +92,9 @@ class HGAreasCard extends HGBase {
       const pr = prs.length ? `<span class="pr ${prOn ? 'on' : ''}" role="img" aria-label="${H.esc(prOn ? (occ ? hgT('cards.areas.someone_is_in_the') : hgT('cards.areas.motion_detected')) : (occ ? hgT('cards.areas.no_presence') : hgT('cards.areas.no_motion')))}" title="${prOn ? (occ ? hgT('cards.areas.presence') : hgT('common.motion')) : (occ ? hgT('cards.areas.no_presence') : hgT('cards.areas.no_motion'))}">${H.icon(occ ? (prOn ? 'mdi:account' : 'mdi:account-outline') : 'mdi:motion-sensor')}</span>` : '';
       const envH = env.t != null || env.u != null ? `<div class="env">${env.t != null ? `<span class="t">${H.icon('mdi:thermometer')}${H.fmt(env.t, 1)}°</span>` : ''}${env.u != null ? `<span class="u">${H.icon('mdi:water-percent')}${H.pct(H.fmt(env.u, 0))}</span>` : ''}</div>` : '';
       const mt = [summary ? `<span class="lt" ${a.lights.length ? '' : 'hidden'}>${on}/${a.lights.length} ${hgT('controlx.lights_on')}</span>${summary.contacts ? `<span>${H.icon(summary.open ? 'mdi:window-open' : 'mdi:window-closed')} ${summary.open} ${hgT('controlx.open_contacts')}</span>` : ''}${summary.missing + summary.lightMissing ? `<span>${summary.missing + summary.lightMissing} ${hgT('controlx.missing_entities')}</span>` : ''}` : on ? `<span class="lt">${hgT('cards.areas.lights_count', { count: on })}</span>` : '',
-        cl ? `<span class="cl"><i class="dot" style="--c:${clm.c}"></i>${H.esc(lbl(cl.state) || H.stateLabel(cl.state))}</span>` : ''].filter(Boolean).join('<span aria-hidden="true">·</span>');
+        ci ? `<span class="cl ${ci.conf === 'mode' ? 'cm' : ci.act === 'idle' ? 'ci' : ci.conf === 'estimated' ? 'ce' : ''}"><i class="dot" style="--c:${dc}"></i>${H.esc(cll)}</span>` : ''].filter(Boolean).join('<span aria-hidden="true">·</span>');
       const lb = okL.length ? `<button class="lb ${on ? 'on' : ''}" data-act="lights" data-a="${H.esc(a.id)}" aria-pressed="${!!on}" aria-label="${H.esc(on ? hgT('cards.areas.lights_turn_off_aria', { name: a.name }) : hgT('cards.areas.lights_turn_on_aria', { name: a.name }))}" title="${on ? hgT('cards.areas.turn_off_lights') : hgT('cards.areas.turn_on_lights')}">${H.icon(on ? 'mdi:lightbulb-on' : 'mdi:lightbulb-outline')}</button>` : '';
-      const al = [a.name, ...env.txt, on ? hgT('cards.areas.lights_on_count', { count: on }) : '', prs.length ? (prOn ? (occ ? hgT('cards.areas.state_presence') : hgT('common.state_motion')) : '') : '', cl ? (lbl(cl.state) || cl.state) : ''].filter(Boolean).join(', ');
+      const al = [a.name, ...env.txt, on ? hgT('cards.areas.lights_on_count', { count: on }) : '', prs.length ? (prOn ? (occ ? hgT('cards.areas.state_presence') : hgT('common.state_motion')) : '') : '', ci ? cla : ''].filter(Boolean).join(', ');
       tiles.push(`<div class="tile lift ${on ? 'lit' : ''} ${HGL.szc(LZ[a.id])} ${a.mode ? 'hgm-' + a.mode : ''}" data-hgk="${H.esc(a.id)}" role="button" tabindex="0" data-act="open" data-a="${H.esc(a.id)}" aria-label="${H.esc(al)}">
         <span class="ic">${H.icon(a.icon)}</span><span class="tr">${pr}${lb}</span><b class="nm">${H.esc(a.name)}</b>${envH}<div class="mt">${mt}<span class="xp">${H.icon('mdi:arrow-top-right')}</span></div></div>`);
     }

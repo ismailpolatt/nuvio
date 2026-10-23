@@ -95,7 +95,11 @@ ha-card.glass > *{ flex-shrink:0; }
     return ar && h.areas && h.areas[ar] ? h.areas[ar].name : '';
   }
   _lim(s) { const a = s.attributes, cf = this._hass && this._hass.config, f = !!(cf && cf.unit_system && cf.unit_system.temperature === '°F'); return { step: a.target_temp_step || (f ? 1 : 0.5), mn: a.min_temp ?? 16, mx: a.max_temp ?? 30 }; }
-  _stat(st, t) { const m = HG_AC_MODE[st] || HG_AC_MODE.cool; if (st === 'off') return hgT('common.off_fem'); return (st === 'fan_only' || st === 'dry' || t == null) ? m.l : hgT('cards.ac.mode_to_temp', { mode: m.l, temp: H.fmt(t) }); }
+  /* co urządzenie naprawdę robi (hgClimInfo): bezczynność tylko potwierdzona albo szacowana, sam tryb nic nie dopisuje */
+  _ci(s, st) { return hgClimInfo(this._hass, s, st); }
+  _idle(s, st) { const i = this._ci(s, st); return !!i && i.act === 'idle'; }
+  _stat(st, t, s) { const m = HG_AC_MODE[st] || HG_AC_MODE.cool; if (st === 'off') return hgT('common.off_fem'); const l = (st === 'fan_only' || st === 'dry' || t == null) ? m.l : hgT('cards.ac.mode_to_temp', { mode: m.l, temp: H.fmt(t) }), i = this._ci(s, st);
+    return i && i.act === 'idle' ? l + ' · ' + hgT('cards.ac.idle') : l; }
   render() {
     const c = this._config, h = this._hass, s = H.st(h, c.entity);
     const kb = `<button class="ib kebab kb" data-act="more" aria-label="${hgT('common.more')}" title="${hgT('common.more')}">${H.icon('mdi:dots-vertical')}</button>`;
@@ -107,7 +111,7 @@ ha-card.glass > *{ flex-shrink:0; }
     const fr = (v) => Math.max(0, Math.min(1, (v - mn) / (mx - mn)));
     const hv = a.hvac_modes || [], seen = new Set();
     const modes = c.modes.filter((x) => hv.includes(x.mode) && !seen.has(x.label) && seen.add(x.label));
-    const sty = `--mc:${m.c};--mo:${m.on};--mt:var(--hg-ac-${m.t}-tx);--pp:${t != null ? (fr(t) * 100).toFixed(2) : 0}%;--pc:${cur != null ? (fr(cur) * 100).toFixed(2) : 0}%`;
+    const sty = `--mc:${m.c};--mo:${m.on};--mt:var(--hg-ac-${this._idle(s, st) ? 'neu' : m.t}-tx);--pp:${t != null ? (fr(t) * 100).toFixed(2) : 0}%;--pc:${cur != null ? (fr(cur) * 100).toFixed(2) : 0}%`;
     const rng = t == null && a.target_temp_low != null && a.target_temp_high != null;   // heat_cool z zakresem: tylko podgląd (bez przeciągania i chevronów)
     const num = `<div class="num${rng ? ' rng' : ''}" data-act="ctr" aria-live="polite" title="${on ? hgT('cards.ac.hold_details') : hgT('cards.ac.tap_to_turn_on')}">${t != null ? H.fmt(t) : rng ? `${H.fmt(a.target_temp_low)}–${H.fmt(a.target_temp_high)}` : '–'}<sup>°</sup></div>`;
     const cv = (d, ic, lab) => `<button class="cv" data-act="step" data-d="${d}" ${!on || t == null || (d < 0 ? t <= mn : t >= mx) ? 'disabled' : ''} aria-label="${lab}" title="${lab}">${H.icon(ic)}</button>`;
@@ -127,13 +131,13 @@ ha-card.glass > *{ flex-shrink:0; }
     const xb = `<button class="mb xb" data-act="xp" aria-expanded="${open}" aria-label="${open ? hgT('cards.ac.collapse_modes') : hgT('cards.ac.all_modes')}" title="${open ? hgT('cards.ac.collapse_modes') : hgT('cards.ac.all_modes')}"><i>${H.icon('mdi:chevron-down')}</i><span class="fl">${hgT('cards.ac.modes')}</span><span class="sh">${hgT('cards.ac.modes')}</span></button>`;
     const xp = (inner) => `<div class="xp ${open ? 'open' : ''}"><div class="xi" ${open ? '' : 'inert'}>${inner}</div></div>`;
     if (c.compact) {
-      const sub = [this._stat(st, t), cur != null ? hgT('cards.ac.indoor_temp', { temp: H.fmt(cur) }) : ''].filter(Boolean).join(' · ');
+      const sub = [this._stat(st, t, s), cur != null ? hgT('cards.ac.indoor_temp', { temp: H.fmt(cur) }) : ''].filter(Boolean).join(' · ');
       return `<ha-card class="${cls}" style="${sty}"><div class="c1"><div class="nm"><b>${H.esc(c.title)}</b><span>${H.esc(sub)}</span></div>${tr}</div>
         ${bar}<div class="mw"><div class="c2"><div class="mm">${pw}${actB}${xb}</div>${kb}</div>${xp(`<div class="mm mx">${modes.map(mb).join('')}${fan}${swb}</div>`)}</div></ha-card>`;
     }
     const room = this._room();
     return `<ha-card class="${cls}" style="${sty}"><div class="hd"><span class="tt">${H.esc(c.title)}${room ? ` <span>· ${H.esc(room)}</span>` : ''}</span><span class="sp"></span>${kb}</div>
-      <div class="temp">${cur != null ? `<div class="lab">${H.esc(c.room_label)} ${H.fmt(cur)}°</div>` : ''}${tr}<div class="st" role="status">${H.esc(this._stat(st, t))}</div></div>
+      <div class="temp">${cur != null ? `<div class="lab">${H.esc(c.room_label)} ${H.fmt(cur)}°</div>` : ''}${tr}<div class="st" role="status">${H.esc(this._stat(st, t, s))}</div></div>
       <div class="bw"><small>${H.fmt(mn)}°</small>${bar}<small>${H.fmt(mx)}°</small></div>
       <div class="mw"><div class="mr top">${pw}${actB}${fan ? fan.replace('class="mb"', 'class="mb fanc"') : ''}${xb}</div>${xp(`<div class="mr">${modes.map(mb).join('')}${fan}${swb}</div>`)}</div></ha-card>`;
   }
@@ -146,7 +150,7 @@ ha-card.glass > *{ flex-shrink:0; }
     this._opt = { ...(this._opt || {}), t: v, ts: Date.now() };
     const R = this.$, card = R.querySelector('ha-card'), fr = (v - mn) / (mx - mn);
     if (card) { card.style.setProperty('--pp', (fr * 100).toFixed(2) + '%'); const n = R.querySelector('.num'); if (n) n.firstChild.nodeValue = H.fmt(v);
-      const st = R.querySelector('.st, .c1 .nm span'); if (st) { const cur = s.attributes.current_temperature; st.textContent = this._config.compact ? [this._stat(this._eff(s).st, v), cur != null ? hgT('cards.ac.indoor_temp', { temp: H.fmt(cur) }) : ''].filter(Boolean).join(' · ') : this._stat(this._eff(s).st, v); }
+      const st = R.querySelector('.st, .c1 .nm span'); if (st) { const cur = s.attributes.current_temperature; st.textContent = this._config.compact ? [this._stat(this._eff(s).st, v, s), cur != null ? hgT('cards.ac.indoor_temp', { temp: H.fmt(cur) }) : ''].filter(Boolean).join(' · ') : this._stat(this._eff(s).st, v, s); }
       const b = R.querySelector('.bar'); if (b) { b.setAttribute('aria-valuenow', v); b.setAttribute('aria-valuetext', H.fmt(v) + '°'); }
       R.querySelectorAll('.cv').forEach((x) => { const d = +x.dataset.d; x.toggleAttribute('disabled', d < 0 ? v <= mn : v >= mx); }); }
     clearTimeout(this._ct); this._ct = setTimeout(() => this._commit(), commitMs);

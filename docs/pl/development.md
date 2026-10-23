@@ -13,6 +13,15 @@ python3 tools/build.py   # -> dist/nuvio.js
 python3 tools/guard.py   # błąd, jeśli do dist trafił identyfikator konkretnego domu; uruchamia kontrolę i18n
 ```
 
+## Test na telefonach
+
+Przed każdym wydaniem uruchom test na żywo z Home Assistantem z Nuvio. Otwiera każdą stronę ustawień na iPhonie (WebKit, iPhone 13), Androidzie (Chromium, 360 x 780) i tablecie 768 px, rozwija zwinięte bloki, przewija każdą stronę do końca i zgłasza błąd, gdy cokolwiek wychodzi poza ekran, strona przewija się w bok albo pasek akcji jest zasłonięty. Nic nie zapisuje w Home Assistancie.
+
+```bash
+pip install playwright && playwright install webkit chromium
+NUVIO_URL=https://twoj-ha NUVIO_TOKEN_FILE=~/.ha_token python3 tools/mobile_check.py --dist dist/ --shots /tmp/mobile
+```
+
 ## Układ źródeł
 
 Źródła to zwykłe pliki JavaScript, które `tools/build.py` skleja w stałej kolejności w jeden bundle (jeden wspólny zakres, bez importów):

@@ -14,6 +14,7 @@ SHARED = [
     'shared/card-utils.part.js',
     'shared/climate-modes.part.js',
     'shared/stats.part.js',
+    'shared/day-bars.part.js',
     'shared/avatar.part.js',
     'shared/calendar.part.js',
     'shared/relative-time.part.js',
@@ -51,6 +52,7 @@ CARDS = [
     'cards/power-card.part.js',
     'cards/script-card.part.js',
     'cards/week-card.part.js',
+    'cards/yield-card.part.js',
     'cards/players-card.part.js',
     'cards/phases-card.part.js',
     'cards/energy-stats-card.part.js',
@@ -114,7 +116,7 @@ CARDS = [
     'cards/webpage-card.part.js',
     'cards/kid-card.part.js',
 ]
-PAGE = ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-looks.part.js', 'hg-lookr.part.js', 'hg-backup.part.js', 'hg-wall.part.js', 'hg-wallboard.part.js', 'hg-wallglass.part.js', 'hg-wallx.part.js', 'hg-wallnotify.part.js', 'hg-users.part.js', 'hg-assist.part.js']
+PAGE = ['hg-roomx.part.js', 'hg-page.part.js', 'hg-edit.part.js', 'hg-looks.part.js', 'hg-lookr.part.js', 'hg-backup.part.js', 'hg-wall.part.js', 'hg-vlock.part.js', 'hg-wallboard.part.js', 'hg-wallglass.part.js', 'hg-wallx.part.js', 'hg-wallnotify.part.js', 'hg-users.part.js', 'hg-assist.part.js']
 PAGE.append('hg-dashboardx.part.js')
 PAGE.append('hg-controlx.part.js')
 PAGE.append('hg-livingx.part.js')

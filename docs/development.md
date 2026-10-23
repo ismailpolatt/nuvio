@@ -13,6 +13,15 @@ python3 tools/build.py   # -> dist/nuvio.js
 python3 tools/guard.py   # fails if any house-specific id slipped into dist, runs the i18n check
 ```
 
+## Mobile check
+
+Before every release run the live mobile check against a Home Assistant with Nuvio. It opens every Settings page on iPhone (WebKit, iPhone 13), Android (Chromium, 360 x 780) and a 768 px tablet, opens collapsible blocks, scrolls each page to the bottom and fails on any element outside the screen, sideways scrolling or a covered action bar. It writes nothing to Home Assistant.
+
+```bash
+pip install playwright && playwright install webkit chromium
+NUVIO_URL=https://your-ha NUVIO_TOKEN_FILE=~/.ha_token python3 tools/mobile_check.py --dist dist/ --shots /tmp/mobile
+```
+
 ## Source layout
 
 The source is plain JavaScript files that `tools/build.py` joins, in a fixed order, into one bundle (one shared scope, no imports):

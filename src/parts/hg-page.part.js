@@ -1,6 +1,21 @@
 /* ===================== PAGE (tło, pasek górny, nagłówek, szyna, panel, hub) ===================== */
+/* {time} i {date} w tytule / podtytule widoku: język interfejsu, format 12/24 h z profilu HA (time_format), odświeżane co minutę */
+const hgClockFill = window.hgClockFill = (s, h, now = new Date()) => {
+  s = String(s == null ? '' : s); if (!/\{(time|date)\}/.test(s)) return s;
+  const loc = typeof HG_LOC === 'function' ? HG_LOC() : undefined, tf = h && h.locale ? h.locale.time_format : null;
+  const t = new Intl.DateTimeFormat(loc, Object.assign({ hour: '2-digit', minute: '2-digit' }, tf === '12' ? { hour12: true } : tf === '24' ? { hour12: false } : {})).format(now);
+  const d = new Intl.DateTimeFormat(loc, { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
+  return s.replace(/\{time\}/g, t).replace(/\{date\}/g, d);
+};
 const HG_SVG = {
   figma: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 2.8h3.5v6.1H8.5a3.05 3.05 0 0 1 0-6.1Z"/><path d="M12 2.8h3.5a3.05 3.05 0 0 1 0 6.1H12Z"/><path d="M8.5 8.9H12V15H8.5a3.05 3.05 0 0 1 0-6.1Z"/><circle cx="15.5" cy="11.95" r="3.05"/><path d="M8.5 15H12v3.05a3.05 3.05 0 1 1-3.5-3.05Z"/></svg>`,
+  /* MDI v7 usunęło znaki marek: ha-icon z mdi:discord jest pusty. Ścieżka: Simple Icons (CC0). */
+  discord: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>`,
+};
+/* menu użytkownika: svg (Discord) albo ha-icon. mdi:discord zawsze rysuje znak, także w zapisanej konfiguracji bez pola svg. */
+const hgMenuIcon = (m) => {
+  const svg = m && ((m.svg && HG_SVG[m.svg]) || (m.icon === 'mdi:discord' && HG_SVG.discord));
+  return svg || H.icon((m && m.icon) || 'mdi:circle-small');
 };
 /* browser_mod (zarejestrowana przeglądarka) kładzie na cały ekran niewidoczną warstwę .browser-mod-require-interaction (z-index 99999),
    która połyka dotknięcia, dopóki nie odblokuje odtwarzania wideo. Na tym dashboardzie przepuszczamy dotyk do przycisków,
@@ -165,9 +180,12 @@ class HGPage extends HTMLElement {
     if (this._config._hgLang) { window.__hgLang = this._config._hgLang; window.__hgLangOpt = this._config._hgLangOpt || ''; }   /* język wybrany w strategii; opcja language ma pierwszeństwo przed kreatorem */
     if (this._config.phone_nav) this._config.phone_nav = Object.assign({ main: [], more: [] }, this._config.phone_nav);
     this._built = false; this._w = null;
-    this.toggleAttribute('no-pbg', this._config.panel_backdrop === false);
+    this._pbgSync();
     if (this._hass) this._build();
   }
+  /* tło panelu (#15): Wygląd > Tło panelu (app.pbg: false = bez tła wszędzie), wyjątek dla widoku (app.pbgv[widok] = 'on' | 'off'), panel_backdrop: false w YAML */
+  _pbgSync() { const c = this._config; if (!c) return; const A = (window.__hgL && window.__hgL.data && window.__hgL.data.app) || {}, v = c.view && A.pbgv && A.pbgv[c.view];
+    this.toggleAttribute('no-pbg', v === 'off' ? true : v === 'on' ? false : c.panel_backdrop === false || A.pbg === false); }
   set hass(h) {
     window.__hgHass = h;   /* język kart (hgCurLang) znany zanim karty dostaną hass */
     if (window.HGWall) { try { HGWall.tick(h, this); } catch (e) { /* */ } }
@@ -182,6 +200,7 @@ class HGPage extends HTMLElement {
     if (!this._config) return;
     if (this._config.redirect) { this._redirect(); return; }
     if (!this._built) this._build();
+    if (this._built) this._pbgSync();   /* zmiana w Wyglądzie na innym widoku */
     for (const el of this._cards) hgPass(el, h);
     if (this._wxEl) hgPass(this._wxEl, h);
     if (first) { this._subscribe(); HGVer.check(h, true); HGLang.sync(h, this); }
@@ -215,10 +234,11 @@ class HGPage extends HTMLElement {
     this._hgHidden = false; this.style.display = '';
     const h = this._hgPend; this._hgPend = null;
     if (h) this.hass = h;
-    this._syncPlay(); this._layout(); this._enter();
+    this._syncPlay(); this._layout(); this._enter(); if (window.HGVLock) HGVLock.guard(this);
     requestAnimationFrame(() => requestAnimationFrame(hgOffFlush));   // karty z ukrytego widoku: nadrób zaległe zmiany stanu
   }
-  _ownPath() { const seg = location.pathname.split('/'); return seg[2] === this._config.view || (!seg[2] && this._config.view === 'dashboard'); }
+  /* adres widoku: ścieżka albo numer widoku (/dashboard-nuvio/0); przy numerze HA pokazuje tylko podłączony widok, więc podłączona strona jest swoja */
+  _ownPath() { const seg = location.pathname.split('/'); return seg[2] === this._config.view || (!seg[2] && this._config.view === 'dashboard') || (/^\d+$/.test(seg[2] || '') && this.isConnected); }
   _saveNav() {
     if (!this.isConnected || !this._panelEl) return;
     const R = (el) => { if (!el) return null; const b = el.getBoundingClientRect(); return b.width ? { x: b.left, y: b.top, w: b.width, h: b.height } : null; };
@@ -245,6 +265,7 @@ class HGPage extends HTMLElement {
     this._syncPlay();
     this._hglSub = this._hglSub || (() => { if (!this._editing && this._built && this._hass) this._paintTop(); if (this._built && !this._building && !this._editing && this._layoutSig() !== this._lsig) this._build(); });
     HGL.subs.add(this._hglSub);
+    if (this._built && window.HGVLock) HGVLock.guard(this);
     this._onLang = this._onLang || (() => this._langChanged());
     window.addEventListener('hg-lang', this._onLang);
     hgBmPassThrough(true);
@@ -262,6 +283,8 @@ class HGPage extends HTMLElement {
   _langChanged() { if (this._editing || !this._hass || !this._config || this._config.redirect) return; this._menuOpen = false; HGLang.stale(this); this._build(); }
   disconnectedCallback() {
     if (window.HGConnection) HGConnection.unbind(this);
+    clearTimeout(this._headT); this._headT = null;
+    if (window.HGVLock && HGVLock.page === this && HGVLock.el) HGVLock.close();
     HGL.subs.delete(this._hglSub); window.removeEventListener('hg-lang', this._onLang); window.removeEventListener('hg-perf', this._onPerf);
     if (this._editing) this._editExit(this._eDirty());   /* przejście do innego widoku / wstecz w trakcie edycji: zmiany zapisane, nie odrzucone */
     document.removeEventListener('keydown', this._sheetKey, true); document.removeEventListener('keydown', this._menuKey, true); this._menuOpen = false;
@@ -399,7 +422,7 @@ class HGPage extends HTMLElement {
     const pw = this._pwSet(), wd = pw ? pw === 'wide' : !!p.wide;
     if (pw === 'narrow' && mode === 'wide' && !p.areas) { const cs = el.style.gridTemplateColumns || '', m = /repeat\((\d+)/.exec(cs), n = m ? +m[1] : cs.split(/\s+/).filter(Boolean).length; if (n > 2) el.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))'; }
     { const cs = el.style.gridTemplateColumns || '', m = /^repeat\((\d+), minmax\(0(px)?, 1fr\)\)$/.exec(cs); if (m && mode !== 'phone' && !p.areas) el.style.setProperty('--hg-vcols-tpl', 'repeat(' + m[1] + ', minmax(0, 1fr))'); else el.style.removeProperty('--hg-vcols-tpl'); } /* „dense” dosuwa wąskie karty w dziury, ale tylko w układzie domyślnym: po zmianie kolejności karty stoją dokładnie w kolejności użytkownika (inaczej przeniesiona karta wracała na stare miejsce) */
-    const ord = (() => { try { const sc = this._pageScope(); return !!sc && (HGL.get(sc).order.length > 0 || sc === 'dashboard' && !this._editing && window.HGPersonal && HGPersonal.data.active && HGPersonal.data.order.length > 0 || sc === 'dashboard' && !this._editing && window.HGTablet && HGTablet.hasOrder(this._hass)); } catch (e) { return false; } })();
+    const ord = (() => { try { const sc = this._pageScope(); return !!sc && (HGL.get(sc).order.length > 0 || (HGL.get(sc + ':tiles').added || []).length > 0 || sc === 'dashboard' && !this._editing && window.HGPersonal && HGPersonal.data.active && HGPersonal.data.order.length > 0 || sc === 'dashboard' && !this._editing && window.HGTablet && HGTablet.hasOrder(this._hass)); } catch (e) { return false; } })();
     el.style.gridAutoFlow = (mode !== 'phone' && !p.areas) ? (ord ? 'row' : 'row dense') : '';
     /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
     el.style.maxWidth = p.max_w ? p.max_w + 'px' : ''; el.style.marginInline = p.max_w ? 'auto' : ''; el.style.width = p.max_w ? '100%' : '';
@@ -460,6 +483,7 @@ class HGPage extends HTMLElement {
     this._cards = []; this._cardWraps = [];
     if (!HGL.loaded && this._hass) await Promise.race([HGL.load(this._hass), new Promise((r) => setTimeout(r, 900))]);
     if (this._config._hgAuto && HGL.loaded && !HGL.failed && !HGL.data.wiz && this._hass && this._hass.user && this._hass.user.is_admin && typeof HGWizard !== 'undefined') setTimeout(() => HGWizard.open(this), 400);
+    this._pbgSync();   /* układ z HA mógł dojść dopiero teraz (Wygląd: tło panelu) */
     const LC = this._lc = this._applyLayout(c.cards); this._hasTiles = LC.some((x) => x._tiles); this._autoScroll = false;
     if (this._pageScope()) this._panelEl.dataset.hgl = this._pageScope();
     for (const cc of LC) {
@@ -476,7 +500,9 @@ class HGPage extends HTMLElement {
       w.appendChild(el); this._panelEl.appendChild(w);
       this._cards.push(el); this._cardWraps.push(w);
     }
+    this.toggleAttribute('norail', !(c.rail || []).length); this._navParam();
     this._built = true; this._building = false; this._lsig = this._layoutSig();
+    if (window.HGVLock) HGVLock.guard(this);   /* blokada widoku PIN-em (#17) */
     if (this._rebuild || this._config !== c) { this._rebuild = false; return this._build(); }   /* setConfig w trakcie pierwszej (asynchronicznej) budowy */
     this._sigTop = this._sigRail = this._sigHub = null;
     this._paintHead(); this._paintTools();
@@ -600,7 +626,7 @@ class HGPage extends HTMLElement {
       { label: hgT('page.do_not_show'), icon: 'mdi:eye-off-outline', value: '-', checked: cur === '-' },
       { label: hgT('page.all_room_settings'), icon: 'mdi:cog-outline', value: '@set' }];
     const v = await hgOverlay.menu(t, items); if (v == null || v === cur) return;
-    if (v === '@set') { if (window.HGRoomsX) { HGRoomsX.open = a.id; } this._lkTab = 'rooms'; return this._eLook && this._eLook(); }
+    if (v === '@set') { if (window.HGRoomsX) { HGRoomsX.open = a.id; } this._lkTab = 'rooms'; this._lkDD = 'page'; return this._eLook && this._eLook(); }
     const W = HGL.data.wiz = Object.assign({}, HGL.data.wiz || {}), A = W.areas = JSON.parse(JSON.stringify(W.areas || {})), S = A.sensors = A.sensors || {}, o = Object.assign({}, S[a.id]);
     if (v) o[k] = v; else delete o[k]; if (Object.keys(o).length) S[a.id] = o; else delete S[a.id]; W.ts = Date.now();
     if (window.HGRoomsX && !HGRoomsX.dirty) HGRoomsX.draft = null;
@@ -612,10 +638,20 @@ class HGPage extends HTMLElement {
   /* przed 2.10.0 nagłówek widoku Pokoje trafiał pod klucz 'null' (widok bez układu kart): odczyt stamtąd, dopóki nie zapisze się nowy */
   _headConf() { try { const S = HGL.data.s, sc = this._headScope(), h = ((S[sc] || {}).conf || {})._head; if (h) return h; return (sc === 'rooms:head' && ((S.null || {}).conf || {})._head) || {}; } catch (e) { return {}; } }
   _headPick(hd, k, def, room) { const md = this.getAttribute('mode'), ui = this._userInfo();
-    return String((md === 'phone' && hd[k + 'm']) || (md === 'tablet' && hd[k + 't']) || hd[k] || def || '').replace(/\{name\}/g, ui.first || '').replace(/\{room\}/g, room || ''); }
+    const raw = String((md === 'phone' && hd[k + 'm']) || (md === 'tablet' && hd[k + 't']) || hd[k] || def || '');
+    if (/\{(time|date)\}/.test(raw)) this._headClk = true;
+    return hgClockFill(raw.replace(/\{name\}/g, ui.first || '').replace(/\{room\}/g, room || ''), this._hass); }
+  /* zegar w nagłówku: przerysowanie na początku każdej minuty, tylko gdy tytuł albo podtytuł ma {time} / {date} */
+  /* ?nuvio_settings w adresie: otwiera Wygląd (tylko dla osób z prawem edycji, nie na widoku zablokowanym PIN-em); parametr usuwany z adresu */
+  _navParam() { let q; try { q = new URLSearchParams(location.search); } catch (e) { return; } if (!q.has('nuvio_settings')) return;
+    try { const u = new URL(location.href); u.searchParams.delete('nuvio_settings'); history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch (e) {}
+    setTimeout(() => { if (!this.isConnected || !this._canEdit || !this._canEdit()) return; if (window.HGVLock && HGVLock.page === this && HGVLock.el) return;
+      if (!this._editing && this._editEnter) this._editEnter(); if (this._editing && this._eLook) this._eLook(); }, 400); }
+  _headTick() { clearTimeout(this._headT); this._headT = null; if (!this._headClk || !this.isConnected) return;
+    this._headT = setTimeout(() => { this._headT = null; if (this.isConnected && !document.hidden) this._paintHead(); else this._headTick(); }, 60500 - (Date.now() % 60000)); }
   _headVis(hd) { this._headEl.classList.toggle('hd-off', !!hd.hide); if (hd.hide) this._headEl.dataset.off = hgT('page.header_hidden'); else delete this._headEl.dataset.off; }
   _paintHead() {
-    const c = this._config; if (!this._hass) return;
+    const c = this._config; if (!this._hass) return; this._headClk = false; queueMicrotask(() => this._headTick());
     if (c.room_head) { const hd = this._headConf(); this._headVis(hd); this._setHTML(this._headEl, this._roomHead(hd)); if (this._editing && this._eHeadBtn) this._eHeadBtn(); this._railClear(); return; }
     const hd = this._headConf();
     const pick = (k, def) => this._headPick(hd, k, def);
@@ -747,7 +783,7 @@ class HGPage extends HTMLElement {
     if (!this._menuOpen || !this._menuEl) { L.innerHTML = ''; L.removeAttribute('open'); document.removeEventListener('keydown', this._menuKey, true); return; }
     const c = this._config, b = this._menuEl.getBoundingClientRect();
     L.setAttribute('open', '');
-    L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${H.icon(m.icon || 'mdi:circle-small')}<span>${H.esc(m.label)}</span></button>`).join('')}${this._langItem()}${this._lockItem()}${this._kmItem()}${this._updFoot()}</div>`;
+    L.innerHTML = `<div class="menu" role="menu" style="top:${Math.round(b.bottom + 6)}px;right:${Math.max(8, Math.round(innerWidth - b.right))}px">${c.menu.map((m, i) => `<button role="menuitem" data-act="menuitem" data-i="${i}">${hgMenuIcon(m)}<span>${H.esc(m.label)}</span></button>`).join('')}${this._langItem()}${this._lockItem()}${this._kmItem()}${this._updFoot()}</div>`;
     this._menuKey = this._menuKey || ((e) => { if (e.key === 'Escape' && this._menuOpen && !hgsOpen.size) { e.preventDefault(); this._menuOpen = false; this._paintTop(true); } });
     document.addEventListener('keydown', this._menuKey, true);
   }
@@ -1029,7 +1065,7 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .menu-l .menu{ position:fixed; z-index:1000; }
 .menu{ position:absolute; right:0; top:calc(100% + 6px); min-width:200px; padding:6px; border-radius:16px; z-index:20; color:#1F2125; }
 .menu button{ display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:0 12px; border-radius:10px; font-size:14px; text-align:left; }
-.menu button:hover{ background:rgba(0,0,0,.06); } .menu ha-icon{ width:18px; height:18px; }
+.menu button:hover{ background:rgba(0,0,0,.06); } .menu ha-icon, .menu button > svg{ width:18px; height:18px; flex:none; }
 .mfoot{ display:flex; flex-direction:column; align-items:flex-start; gap:6px; margin:6px -6px -6px; padding:9px 14px 11px; border-top:1px solid rgba(127,127,127,.18); font-size:11.5px; }
 .mver{ opacity:.55; font-variant-numeric:tabular-nums; letter-spacing:.01em; }
 .menu button.mupd{ width:auto; min-height:28px; height:28px; padding:0 11px 0 8px; gap:6px; border-radius:14px; background:var(--hg-accent); color:var(--hg-on-accent, #111); font-size:12px; font-weight:600; }
@@ -1112,6 +1148,7 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 .ri ha-icon, .ri svg{ width:15u; height:15u; }
 .ri:hover{ background:rgba(255,255,255,.14); }
 .rail{ position:relative; }
+:host(:not([mode=phone])[norail]) .rail{ visibility:hidden; pointer-events:none; }
 .ri{ position:relative; z-index:1; }
 .ri.act{ color:#1F2125; }
 .ri.act:hover{ background:none; }
@@ -1135,10 +1172,11 @@ button:focus-visible{ outline:2px solid var(--hg-accent); outline-offset:2px; }
 @media (prefers-reduced-motion: reduce){ .cw{ animation:none; } }
 .cw > *{ height:100%; }
 /* ukryty panel: visibility nie wystarcza (ha-card w kartach ma własne visibility:visible i przebijał się po animacji) -> także opacity 0 i bez rozmycia */
+:host([vlocked]) .panel, :host([vlocked]) .hub{ visibility:hidden !important; }   /* widok zablokowany PIN-em: treść ukryta pod pinpadem */
 :host([panel-hidden]) .panel{ visibility:hidden; opacity:0 !important; pointer-events:none; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
 /* w trakcie animacji: jedno rozmycie (sam panel), potomkowie bez backdrop-filter / animacji / przejść -> panel znika jako jedna warstwa */
 :host([panel-anim]) .panel{ transform-origin: 100% 50%; pointer-events:none; --hg-inner-bf: none; }
-/* TEST panel_backdrop: false – panel bez tła/ramki/cienia/rozmycia (ten sam padding i ramka przezroczysta = karty się nie przesuwają); karty mają własne szkło z rozmyciem */
+/* panel bez tła (panel_backdrop: false albo Wygląd > Tło panelu): panel bez tła/ramki/cienia/rozmycia (ten sam padding i ramka przezroczysta = karty się nie przesuwają); karty mają własne szkło z rozmyciem */
 :host([no-pbg]) .panel{ background:none !important; border-color:transparent !important; box-shadow:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important;
   --hg-card-bf: blur(calc(var(--hg-glass-blur, 14px) * var(--hg-bf, 1))) saturate(var(--hg-glass-sat, 180%)) brightness(var(--hg-glass-bri, 1)); }
 :host([no-pbg]) .panel{ padding:0 !important; border-width:0 !important; }

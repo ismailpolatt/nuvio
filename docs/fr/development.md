@@ -13,6 +13,15 @@ python3 tools/build.py   # -> dist/nuvio.js
 python3 tools/guard.py   # échoue si un identifiant propre à une maison s’est glissé dans dist ; lance le contrôle i18n
 ```
 
+## Vérification mobile
+
+Avant chaque version, lancez la vérification mobile en direct sur un Home Assistant avec Nuvio. Elle ouvre chaque page des paramètres sur iPhone (WebKit, iPhone 13), Android (Chromium, 360 x 780) et une tablette de 768 px, déplie les blocs repliés, fait défiler chaque page jusqu’en bas et échoue si un élément sort de l’écran, si la page défile sur le côté ou si la barre d’actions est masquée. Elle n’écrit rien dans Home Assistant.
+
+```bash
+pip install playwright && playwright install webkit chromium
+NUVIO_URL=https://votre-ha NUVIO_TOKEN_FILE=~/.ha_token python3 tools/mobile_check.py --dist dist/ --shots /tmp/mobile
+```
+
 ## Organisation des sources
 
 Les sources sont des fichiers JavaScript ordinaires que `tools/build.py` assemble, dans un ordre fixe, en un seul bundle (une seule portée partagée, sans imports) :

@@ -166,7 +166,8 @@
       "target_temperature": "Hedef sıcaklık",
       "turn_off_air_conditioning": "Klimayı kapatın",
       "turn_on_air_conditioning": "Klimayı açın",
-      "unavailable": "Kullanılamıyor"
+      "unavailable": "Kullanılamıyor",
+      "idle": "Beklemede"
     },
     "actions": {
       "add_actions_in_the": "Kart ayarlarına eylemler ekleyin",
@@ -262,7 +263,8 @@
         "dry": "Kurutma",
         "fan_only": "Fan",
         "heat": "Isıtma",
-        "heat_cool": "Otomatik"
+        "heat_cool": "Otomatik",
+        "idle": "Beklemede"
       },
       "lights_count_one": "{count} ışık",
       "lights_count_other": "{count} ışıkları",
@@ -282,7 +284,8 @@
       "turn_off": "kapat",
       "turn_off_lights": "Işıkları kapat",
       "turn_on": "aç",
-      "turn_on_lights": "Işıkları aç"
+      "turn_on_lights": "Işıkları aç",
+      "estimated": "tahmin"
     },
     "assist": {
       "ask_or_give_a": "Sor veya komut ver",
@@ -1552,6 +1555,24 @@
       "show_hide_on_chart": "grafikte göster/gizle",
       "so_far": "(şimdiye kadar)",
       "the_inverter_sent_no": "İnvertör bu günlerde HA'ya veri göndermedi"
+    },
+    "yield": {
+      "best_day": "En iyi gün",
+      "choose_sensors": "Her gün için bir sensör seç",
+      "choose_sensors_hint": "İlk sensör bugün, sonrakiler takip eden günler içindir",
+      "days_count_one": "{count} gün",
+      "days_count_other": "{count} gün",
+      "default_title": "Üretim tahmini",
+      "levels": {
+        "good": "İyi",
+        "average": "Orta",
+        "poor": "Düşük"
+      },
+      "per_kw": "kW başına {value} kWh",
+      "picker_description": "Her güne bir sensörle gelecek günlerin üretim tahmini ve iyi/düşük üretimli günler",
+      "picker_name": "Home Glass – Üretim tahmini",
+      "reference_unavailable": "Referans güç yok; günler en iyi günle karşılaştırılıyor",
+      "reference_unavailable_hint": "Referans gücü kontrol et: kW cinsinden sayı veya değeri 0’dan büyük W/kW sensörü"
     }
   },
   "common": {
@@ -1721,8 +1742,6 @@
     "back_to_previous_step": "Önceki adıma dön",
     "background": "Arka plan",
     "background_dimming": "Arka plan karartması",
-    "backgrounds": "Arka planlar",
-    "backup": "Yedekleme",
     "basic": "Temel",
     "bath": "Banyo",
     "batteries": "Piller",
@@ -1870,7 +1889,6 @@
     "head_name_hint": "Oturum açan kişinin adını göstermek için {placeholder} ekleyin (şimdi: {name}).",
     "head_name_none": "hiçbiri",
     "head_room_hint": "{room} açık odanın adıdır; boş bir alt başlık sıcaklığı ve oda durumunu gösterir.",
-    "header_and_navigation": "Başlık ve gezinme",
     "header_saved": "Başlık kaydedildi",
     "heating_1_9_kw": "Isıtma · 1,9 kW",
     "heating_state": "Isıtma (durum)",
@@ -2074,7 +2092,12 @@
       "title": "Başlık",
       "title_with_name": "Unvan ({name} = ad)",
       "warning_threshold": "Uyarı eşiği",
-      "width_ratio": "Genişlik oranı (örn. 2, 1)"
+      "width_ratio": "Genişlik oranı (örn. 2, 1)",
+      "capacity_kw": "kW cinsinden referans güç (sayı veya varlık)",
+      "good_day_from": "İyi gün eşiği (kW başına kWh; referans yoksa kWh)",
+      "poor_day_below": "Düşük üretim eşiği (kW başına kWh; referans yoksa kWh)",
+      "weather_hero": "Büyük görünüm: duvar kâğıdı üzerinde büyük beyaz metin, kart yok",
+      "unit": "Birim"
     },
     "order_changed": "Sıra değiştirildi",
     "panel_width": "Panel genişliği",
@@ -2157,7 +2180,6 @@
     "scenes_and_scripts": "Sahneler ve senaryolar",
     "scenes_scripts": "Sahneler / senaryolar",
     "scenes_scripts_devices": "Sahneler, senaryolar, cihazlar",
-    "screensaver": "Ekran koruyucu",
     "script_scene_button_press": "Senaryo, sahne, butona basma veya eylem",
     "search_areas": "Arama alanları",
     "search_by_name_room": "Ada, odaya veya alana göre arayın",
@@ -2267,7 +2289,6 @@
     "upload_failed": "Yükleme başarısız oldu ({error})",
     "uploaded_image_set": "Yüklenen resim seti",
     "uploading": "Yükleniyor…",
-    "users": "Kullanıcılar",
     "vacuum": "Vakum",
     "vacuums_and_mowers_status": "Elektrikli süpürgeler ve çim biçme makineleri: durum ve kontrol",
     "value_and_chart_for": "Son 24 saatin değeri ve grafiği",
@@ -2278,7 +2299,6 @@
     "view_card": "Kartı görüntüle",
     "view_header": "Başlığı görüntüle",
     "view_layout_reset_to": "Görünüm düzeni varsayılana sıfırlandı (“Bitti” ile kaydedin)",
-    "views": "Görünümler",
     "voc": "VOC",
     "washer": "Yıkayıcı",
     "washer_dryer_dishwasher_state": "Yıkayıcı, kurutucu, bulaşık makinesi: durum, program, kalan süre, ilerleme",
@@ -2297,7 +2317,18 @@
     "with_chart": "Grafikli",
     "workout": "egzersiz",
     "your_whole_home_in": "Tüm evin tek bir yerde",
-    "zoe": "Zoe"
+    "zoe": "Zoe",
+    "daily_bars_for_the": "Gelecek günler için günlük çubuklar ve iyi/düşük üretimli günler",
+    "daily_sensors": "Sensörler, her gün için bir tane (ilk = bugün)",
+    "next_7_days": "Gelecek 7 gün",
+    "production_forecast": "Üretim tahmini",
+    "panel_backdrop": "Panel arka planı",
+    "panel_backdrop_hint": "Kapalıyken ortak çerçeve olmadan her kart kendi cam görünümüyle duvar kâğıdında durur.",
+    "panel_backdrop_view": "Bu görünüm",
+    "panel_backdrop_as_all": "Genel ayarı kullan",
+    "head_clock_hint": "{time} güncel saati, {date} bugünün tarihini gösterir; ikisi de dakikada bir yenilenir.",
+    "head_clock_add": "Saat ekle",
+    "head_clock_add_desc": "Alt başlığa {time} ekler"
   },
   "lookr": {
     "add_fuel": "Yakıt ekle",
@@ -2322,8 +2353,6 @@
     "fuel_prices_in_the": "Başlıkta akaryakıt fiyatları",
     "ha_area": "HA alanı",
     "header_and_navigation": "Başlık ve gezinme",
-    "header_saved": "Başlık kaydedildi",
-    "header_saved_reloading": "Başlık kaydedildi – yeniden yükleniyor…",
     "hidden_in_the_header": "Başlıkta gizli",
     "hourly_forecast_from_the": "Saatlik tahmin: hava durumu kuruluşundan",
     "household_in_the_header": "Başlıktaki ev",
@@ -2354,7 +2383,6 @@
     "phone_label_default": "varsayılan",
     "price": "Fiyat",
     "remove": "Kaldır",
-    "rooms_saved": "Odalar kaydedildi",
     "save_header": "Başlığı kaydet",
     "save_rooms": "Odaları kaydet",
     "save_views": "Görünümleri kaydet",
@@ -2373,7 +2401,32 @@
     "your_own_images_saved": "Düzene kaydedilen kendi resimleriniz: Arka Plan altında ve ekran koruyucuda görünürler",
     "visible_people": "Görünür kişiler",
     "visible_people_help": "Ev halkı şeridinde, aile kartlarında ve otomatik haritada gösterilecek kişileri seç. Home Assistant hesapları ve izinleri değişmez.",
-    "show_person": "{name} gösterilsin"
+    "show_person": "{name} gösterilsin",
+    "heating_auto": "Yok",
+    "heating_state_sensor": "Gerçek durum · {name}",
+    "clim_source": "Çalışma tespiti · {name}",
+    "clim_src_auto": "Otomatik",
+    "clim_src_entity": "Bir varlıktan",
+    "clim_src_room": "Oda sıcaklığından",
+    "clim_src_mode": "Yalnız modu göster",
+    "clim_threshold": "Çalışma eşiği",
+    "clim_room_temp": "Tahmin sensörü · {name}",
+    "clim_room_temp_default": "Oda sensörü",
+    "clim_hysteresis": "Histerezis (°)",
+    "clim_hint": "Otomatik: önce gerçek durum sensörü, ardından cihazın bildirdiği çalışma (hvac_action), sonra oda sıcaklığı ile hedefin karşılaştırılması (tahmin) kullanılır. Bunlar yoksa yalnız mod gösterilir. Varsayılan eşik güç için 5 W, diğer değerler için 0’dır.",
+    "badge": "Sayaç rozeti",
+    "badge_none": "Rozet yok",
+    "badge_lights": "Açık ışıklar",
+    "badge_switches": "Açık anahtarlar",
+    "badge_fans": "Çalışan fanlar",
+    "badge_media": "Oynatılan medya",
+    "badge_climate": "Çalışan iklimlendirme",
+    "badge_persons": "Evdeki kişiler",
+    "badge_custom": "Seçilen varlıklar…",
+    "badge_entities": "Sayılacak varlıklar",
+    "rail_hide": "Yan menüyü gizle",
+    "rail_hide_desc": "Bilgisayar ve tablette yan menüyü Ayarlar düğmesiyle birlikte gizler; görünüm bazlı yan menü anahtarları etkisiz olur. Üst sekmeler dışındaki görünümler profil menüsüne taşınır. Ayarlar profil menüsünde, kalem düğmesinde ve {param} adresinde kalır.",
+    "badge_entities_ph": "light.kitchen, switch.fan"
   },
   "looks": {
     "a_ready_made_set": "Hazır bir set: vurgu, arka plan ve cam. Daha sonra aksanı ve arka planı aşağıdan değiştirebilirsiniz.",
@@ -2449,7 +2502,8 @@
     "rooms": "Odalar",
     "rooms_sub": "Her oda parmaklarınızın ucunda",
     "scenes": "Sahneler",
-    "settings": "Ayarlar"
+    "settings": "Ayarlar",
+    "discord": "Discord"
   },
   "oss": {
     "cv": {
@@ -2546,15 +2600,8 @@
     "toast": {
       "copied": "Kopyalandı – /config/www/custom-sidebar-config.yaml dosyasına yapıştırın",
       "copy_manually": "Manuel olarak kopyala: {text}",
-      "kiosk_saved": "Kiosk ayarları kaydedildi - yeniden yükleniyor…",
       "no_strategy": "Bu kontrol paneli Nuvio stratejisini kullanmaz; YAML'ye kiosk_mode ekleyin",
-      "save_failed": "Kaydedilemedi ({error})",
-      "saved_local": "Yalnızca yerel olarak kaydedildi",
-      "saved_shared": "Kaydedildi. Değişiklik bu kişiye hemen ulaşır.",
-      "view_created": "Oluşturulan görünüm: {name} (yeniden yükleniyor…)",
-      "view_deleted": "Silinen görünüm: {name}",
-      "view_saved": "Kaydedilen görünüm: {name} (yeniden yükleniyor…)",
-      "views_saved": "Görüntülemeler kaydedildi – yeniden yükleniyor…"
+      "save_failed": "Kaydedilemedi ({error})"
     },
     "views": {
       "always_visible": "Her zaman görünür",
@@ -3044,7 +3091,10 @@
     "try_again_in": "{seconds}'de tekrar deneyin",
     "unlock_the_dashboard": "Kontrol panelinin kilidini açın",
     "wall_tablet_mode": "Duvar tableti modu",
-    "wrong_pin": "Yanlış PIN"
+    "wrong_pin": "Yanlış PIN",
+    "on_this_device": "Bu cihazda ekran koruyucu",
+    "on_this_device_off": "Bu cihazda kapalı. Diğer cihazların seçimi korunur.",
+    "on_this_device_on": "Hareketsizlikten sonra bu cihazda başlar. Yalnız bu tarayıcıda saklanır."
   },
   "wallboard": {
     "add_calendar": "Takvim ekle",
@@ -3504,5 +3554,54 @@
     "retry": "Bağlantıyı kontrol et",
     "data_time": "Seçili cihazların veri zamanı",
     "local_only": "Bu profil yalnız bu tarayıcıda saklanır. Varsayılanları getirmek kaydetmeden uygulanmaz; telefon görünümünü değiştirmez."
+  },
+  "vlock": {
+    "title": "Kilitli görünüm",
+    "enter_pin": "Bu görünümü açmak için PIN gir",
+    "back": "Geri",
+    "settings_title": "Görünümler için PIN kilidi",
+    "settings_hint": "Seçilen görünümler içerik gösterilmeden PIN ister. Bu tarayıcı sekmesinde 5 dakika açık kalır.",
+    "needs_pin": "Önce aşağıya bir PIN girip kaydet, ardından görünümleri seç.",
+    "locked": "PIN ister",
+    "open": "Açık"
+  },
+  "settings": {
+    "pg": {
+      "general": "Genel",
+      "theme": "Tema",
+      "bg": "Arka plan",
+      "header": "Başlık",
+      "views": "Görünümler ve gezinme",
+      "rooms": "Odalar ve iklimlendirme",
+      "wall": "Ekran koruyucu",
+      "security": "PIN ve kilitler",
+      "assist": "Asistan",
+      "users": "Kullanıcılar",
+      "integrations": "Entegrasyonlar",
+      "backup": "Yedekleme ve içe aktarma",
+      "about": "Nuvio hakkında"
+    },
+    "grp": {
+      "general": "Genel",
+      "look": "Görünüm",
+      "dash": "Panel",
+      "wall": "Duvar tableti",
+      "sys": "Sistem"
+    },
+    "search": "Ayarlarda ara",
+    "no_results": "Aramana uygun ayar bulunamadı.",
+    "pin_and_locks": "PIN ve kilitler",
+    "pin_and_locks_hint": "Tek PIN, ekran koruyucuyu ve seçtiğin görünümleri kilitler.",
+    "pin_needs_screensaver": "PIN ve ekran kilidi için ekran koruyucuyu aç.",
+    "clim_adv": "Çalışma tespiti: {name}",
+    "about_title": "Nuvio hakkında",
+    "about_hint": "Sürüm, belgeler, Discord ve hata bildirimleri.",
+    "version": "Sürüm",
+    "docs": "Belgeler",
+    "changelog": "Yenilikler",
+    "report": "Sorun bildir",
+    "results_one": "{count} sonuç",
+    "results_other": "{count} sonuç",
+    "applies_on_save": "Taslağa kaydedildi. Değişiklikler Bitti düğmesine dokunduğunda uygulanır."
   }
 }

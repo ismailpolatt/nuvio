@@ -111,6 +111,10 @@ Każdej karty można użyć samodzielnie jako `custom:nuvio-<nazwa>-card` (np. w
 <td width="50%" valign="top"><img src="../components/eprice.webp" alt="Cena prądu" width="100%"><br><b>Cena prądu</b> <code>custom:nuvio-eprice-card</code><br>Ceny godzinowe na dziś i jutro, najtańsze okno.</td>
 <td width="50%" valign="top"><img src="../components/fuel.webp" alt="Ceny paliw" width="100%"><br><b>Ceny paliw</b> <code>custom:nuvio-fuel-card</code><br>Ceny z czujników z trendem na jutro.</td>
 </tr>
+<tr>
+<td width="50%" valign="top"><img src="../components/yield.webp" alt="Prognoza produkcji" width="100%"><br><b>Prognoza produkcji</b> <code>custom:nuvio-yield-card</code><br>Oczekiwana energia na kolejne dni, dobre i słabe dni.</td>
+<td width="50%" valign="top"></td>
+</tr>
 </table>
 </details>
 
@@ -266,6 +270,10 @@ Siatka, stos pionowy i stos poziomy działają jak w Home Assistant, ale w szkle
 | `custom:nuvio-grid-card` | Karty w kolumnach; na wąskim ekranie mniej kolumn | `cards`, `columns` (1 do 6, 0 = automatycznie), `min_width`, `square`, `gap`, `glass`, `title`; dla karty `span` |
 | `custom:nuvio-stack-card` | Karty jedna pod drugą albo obok siebie w jednym szkle; obok siebie przechodzą w pion poniżej `wrap_below` px | `cards`, `direction`, `gap`, `ratio` (np. `[2, 1]`), `wrap_below`, `divider`, `glass`, `title` |
 
+Kolejność (2.21.1): kontenery i karty YAML dodane w edytorze stoją tam, gdzie je ustawisz. Wcześniej panel wypełniał luki mniejszymi kartami, więc szeroki stos albo siatka potrafiły wskoczyć nad karty dodane wcześniej. Kolejność zmieniasz jak zwykle przeciąganiem. Od 2.21.1 zwykłe kafle też są osobnymi kartami (bez obszarów siatki), więc kafle i kontenery można dowolnie przeplatać.
+
+**Pogoda** jako komponent ma przełącznik **Styl hero** (YAML `variant: hero`): duży biały tekst bezpośrednio na tapecie, bez karty, jak pogoda w nagłówku. Najlepiej wygląda przy wyłączonym **Tle panelu**.
+
 ## Karty ogólne i kontenery (0.16.0)
 
 Dwanaście kart zbudowanych wyłącznie ze wspólnych szklanych klocków, więc wyglądają jak projekt wzorcowy i działają z dowolną encją pasującej domeny. Każda dopasowuje się do szerokości: mała (do 220 px) chowa teksty pomocnicze, duża (od 420 px) pokazuje więcej szczegółów. Działają też w zwykłym widoku Home Assistant, gdzie same rozmywają tło. Gotowy pulpit złożony tylko z nich jest w [../examples/inspiration-dashboard.yaml](../examples/inspiration-dashboard.yaml) (działa z integracją demo HA).
@@ -282,7 +290,7 @@ Dwanaście kart zbudowanych wyłącznie ze wspólnych szklanych klocków, więc 
 | `custom:nuvio-room-compact-card` | Temperatura, wilgotność, przełącznik i linijka jasności | `name`, `temperature`, `humidity`, `entity` |
 | `custom:nuvio-actions-card` | Szklana pigułka z okrągłymi przyciskami: sceny, skrypty, usługi, przejścia | `actions: [{ entity }, { icon, name, service, data }, { navigate }]` |
 | `custom:nuvio-family-card` | Awatary, kto jest w domu, przycisk dodania osoby | `persons` (puste = wszyscy) |
-| `custom:nuvio-cover-card` | Pozycja rolety lub bramy na przeciąganym pasku, otwórz, zatrzymaj, zamknij | `entity` |
+| `custom:nuvio-cover-card` | Pozycja rolety lub bramy na przeciąganym pasku, otwórz, zatrzymaj, zamknij; bez pozycji (brama, garaż) stan słowny; ikona według klasy urządzenia | `entity` |
 | `custom:nuvio-lock-card` | Stan zamka; odblokowanie pyta o potwierdzenie albo o kod, gdy zamek go wymaga | `entity`, `confirm` |
 | `custom:nuvio-fan-card` | Prędkość wentylatora na łuku i tryby jako pigułki | `entity` |
 | `custom:nuvio-todo-card` | Lista zadań: dodawanie i odhaczanie | `entity`, `show_done` |
@@ -315,7 +323,7 @@ Wszystkie są w **+ Dodaj** w trybie edycji, z podglądem, pełnym formularzem u
 | Osoba | `custom:nuvio-person-card` | osoba, etykiety w domu i poza domem |
 | Dziecko (LiveKid) | `custom:nuvio-kid-card` | tytuł, dziecko (imię) albo encja przy kilkorgu dzieci; encje integracji LiveKid są wykrywane same |
 
-**Wygląd, Pokoje**: zmiana nazw, ikon i kolejności, ukrywanie pokoi, wybór czujnika temperatury i wilgotności na kaflu każdego pokoju (automatycznie, dowolny czujnik albo brak) oraz pokoje własne z dowolnymi encjami, niezależne od obszarów Home Assistant. Encje można też ręcznie przypisać do istniejących pokoi.
+**Wygląd, Pokoje**: zmiana nazw, ikon i kolejności, ukrywanie pokoi, wybór czujnika temperatury i wilgotności na kaflu każdego pokoju (automatycznie, dowolny czujnik albo brak) oraz pokoje własne z dowolnymi encjami, niezależne od obszarów Home Assistant. Encje można też ręcznie przypisać do istniejących pokoi. Każde urządzenie klimatu w pokoju ma też **Wykrywanie pracy**. **Automatycznie** (domyślnie) bierze encję **Stan rzeczywisty** (włącz/wyłącz albo wartość, np. moc powyżej **Progu pracy**, domyślnie 5 W), potem informację z samego urządzenia (`hvac_action`), potem temperaturę pokoju względem nastawy, jeśli wybierzesz osobny czujnik pokoju (szacunek z histerezą domyślnie 0,5°). W pozostałych przypadkach widać sam tryb (np. **Grzanie**), więc urządzenie, które nic nie zgłasza, nigdy nie jest pokazywane jako niepracujące. **Z encji**, **Z temperatury pokoju** i **Pokazuj tylko tryb** używają tylko tego źródła. Temperatura samego urządzenia nie jest do tego używana. Kropka na kaflu Pokoje ma kolor trybu (grzanie, chłodzenie, osuszanie, wentylacja, auto): pełna, gdy urządzenie pracuje, przygaszona, gdy nie pracuje albo stan jest szacunkiem, i tylko z obwódką, gdy znany jest sam tryb. Ustawienia są zapisane obok czujników pokoju (`state:`, `src:`, `thr:`, `temp:` i `hys:` z identyfikatorem encji klimatu), więc eksport i import je przenoszą, a starsze wersje je pomijają.
 
 **Wygląd, Nagłówek i nawigacja**: tytuł i podtytuł domowników (albo bez paska domowników), ceny paliw w nagłówku pulpitu i cztery widoki na pasku telefonu.
 
@@ -364,6 +372,34 @@ forecast_entities:
   - sensor.solcast_pv_forecast_forecast_day_7
 # forecast_attribute: detailedHourly   # co godzinę zamiast co 30 minut
 # forecast_value: pv_estimate90        # wariant optymistyczny (pv_estimate10 = pesymistyczny)
+```
+
+## Prognoza produkcji
+
+**Prognoza produkcji** (`custom:nuvio-yield-card`) pokazuje oczekiwaną energię na kolejne dni jako słupki, jeden czujnik na dzień: pierwszy czujnik to dziś, drugi jutro i tak dalej. Każdy dzień dostaje ocenę **dobry**, **średni** albo **słaby**. Dotknij dnia, aby zobaczyć datę, wartość i ocenę. Nazwy dni są liczone w strefie czasowej Home Assistant.
+
+| Opcja | Domyślnie | Co robi |
+|---|---|---|
+| `entities` | | czujniki w kolejności dni, stan to energia danego dnia. Wartości w Wh, MWh lub GWh są przeliczane na kWh do oceny. Niedostępny czujnik jest pokazany jako niedostępny |
+| `capacity` | brak | moc odniesienia w kW, liczba (`3.4` lub `"3,4"`) albo encja w W lub kW (także Wp, kWp). Z nią dzień jest oceniany według energii w kWh na kW. Gdy encja jest niedostępna albo ma 0, karta pokazuje to pod wykresem i porównuje dni z najlepszym dniem |
+| `good` / `poor` | `3.5` / `1.5` | z `capacity`: kWh na kW, od których dzień jest dobry, i poniżej których jest słaby. Bez `capacity` dzień jest porównywany z najlepszym dniem okresu (75% i więcej to dobry, poniżej 40% słaby) |
+| `title`, `icon` | | nagłówek |
+| `unit` | jednostka pierwszego czujnika z wartością | etykieta po wartościach (wartości są w jednostce tego czujnika) |
+| `decimals` | `1` | miejsca po przecinku |
+
+```yaml
+type: custom:nuvio-yield-card
+entities:            # jeden czujnik na dzień, pierwszy to dziś
+  - sensor.production_forecast_today
+  - sensor.production_forecast_day_2
+  - sensor.production_forecast_day_3
+  - sensor.production_forecast_day_4
+  - sensor.production_forecast_day_5
+  - sensor.production_forecast_day_6
+  - sensor.production_forecast_day_7
+capacity: 3.4        # kW albo encja, na przykład sensor.installed_power
+# good: 3.5          # kWh na kW, od których dzień jest dobry
+# poor: 1.5          # kWh na kW, poniżej których dzień jest słaby
 ```
 
 ## Karty forka

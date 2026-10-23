@@ -111,6 +111,10 @@ Every card can be used on its own as `custom:nuvio-<name>-card` (for example in 
 <td width="50%" valign="top"><img src="components/eprice.webp" alt="Electricity price" width="100%"><br><b>Electricity price</b> <code>custom:nuvio-eprice-card</code><br>Hourly prices today and tomorrow, cheapest window.</td>
 <td width="50%" valign="top"><img src="components/fuel.webp" alt="Fuel prices" width="100%"><br><b>Fuel prices</b> <code>custom:nuvio-fuel-card</code><br>Prices from sensors with a trend for tomorrow.</td>
 </tr>
+<tr>
+<td width="50%" valign="top"><img src="components/yield.webp" alt="Production forecast" width="100%"><br><b>Production forecast</b> <code>custom:nuvio-yield-card</code><br>Expected energy for the coming days, good and poor days.</td>
+<td width="50%" valign="top"></td>
+</tr>
 </table>
 </details>
 
@@ -266,6 +270,10 @@ Grid, vertical stack and horizontal stack work like in Home Assistant, but in Nu
 | `custom:nuvio-grid-card` | Cards in columns; fewer columns on narrow screens | `cards`, `columns` (1 to 6, 0 = automatic), `min_width`, `square`, `gap`, `glass`, `title`; per card `span` |
 | `custom:nuvio-stack-card` | Cards one below another or side by side in one glass; side by side turns vertical below `wrap_below` px | `cards`, `direction`, `gap`, `ratio` (e.g. `[2, 1]`), `wrap_below`, `divider`, `glass`, `title` |
 
+Order (2.21.1): containers and YAML cards added in the editor stay where you put them. Before, the panel filled gaps with smaller cards, so a wide stack or grid could end up above cards added before it. Drag to reorder as usual. Since 2.21.1 normal tiles are separate cards too (without grid areas), so tiles and containers can be mixed in any order.
+
+**Weather** as a component has a **Hero style** switch (YAML `variant: hero`): large white text right on the wallpaper, without a card, like the header weather. Best with **Panel background** off.
+
 ## Generic cards and containers (0.16.0)
 
 Twelve cards built only from the shared glass blocks, so they look like the reference design and work with any entity of the right domain. Each one adapts to its width: small (up to 220 px) hides secondary text, large (from 420 px) shows extra detail. They also work in a regular Home Assistant view, where they blur the background themselves. A ready dashboard built only from them is in [examples/inspiration-dashboard.yaml](examples/inspiration-dashboard.yaml) (works with the HA demo integration).
@@ -282,7 +290,7 @@ Twelve cards built only from the shared glass blocks, so they look like the refe
 | `custom:nuvio-room-compact-card` | Temperature, humidity, a switch and a brightness ruler | `name`, `temperature`, `humidity`, `entity` |
 | `custom:nuvio-actions-card` | A glass pill of round buttons for scenes, scripts, services or links | `actions: [{ entity }, { icon, name, service, data }, { navigate }]` |
 | `custom:nuvio-family-card` | Avatars, who is home, a button to add a person | `persons` (empty = everyone) |
-| `custom:nuvio-cover-card` | Cover or gate position on a draggable bar, open, stop, close | `entity` |
+| `custom:nuvio-cover-card` | Cover or gate position on a draggable bar, open, stop, close; without a position (gate, garage) the state in words; icon by device class | `entity` |
 | `custom:nuvio-lock-card` | Lock state; unlocking asks for confirmation, or for the code when the lock needs one | `entity`, `confirm` |
 | `custom:nuvio-fan-card` | Fan speed on the arc and preset modes as pills | `entity` |
 | `custom:nuvio-todo-card` | A to-do list: add a task, tick it off | `entity`, `show_done` |
@@ -315,7 +323,7 @@ All of these are in **+ Add** in edit mode, with a preview, a full settings form
 | Person | `custom:nuvio-person-card` | person, home and away labels |
 | Child (LiveKid) | `custom:nuvio-kid-card` | title, child (name) or entity when there are several children; entities of the LiveKid integration are found automatically |
 
-**Appearance, Rooms**: rename rooms, set icons and order, hide rooms, choose the temperature and humidity sensor for each room tile (automatic, any sensor, or none), and create custom rooms with any entities, independent of Home Assistant areas. Entities can also be assigned by hand to existing rooms.
+**Appearance, Rooms**: rename rooms, set icons and order, hide rooms, choose the temperature and humidity sensor for each room tile (automatic, any sensor, or none), and create custom rooms with any entities, independent of Home Assistant areas. Entities can also be assigned by hand to existing rooms. Each climate device in the room also has **Activity detection**. **Automatic** (default) uses the **Actual state** entity (on/off, or a value such as power above the **Running threshold**, 5 W by default), then what the device reports itself (`hvac_action`), then the room temperature against the setpoint if you pick a separate room sensor (an estimate with a 0.5° hysteresis by default). Otherwise only the mode is shown (for example **Heating**), so a device that reports nothing is never shown as idle. **From an entity**, **From room temperature** and **Show mode only** use just that source. The device's own temperature is never used for this. The dot on the Rooms tile has the colour of the mode (heating, cooling, drying, fan, auto): solid when the device is running, dimmed when it is not running or the state is an estimate, and only outlined when only the mode is known. The settings are stored next to the room sensors (`state:`, `src:`, `thr:`, `temp:` and `hys:` followed by the climate entity id), so export and import carry them and older versions ignore them.
 
 **Appearance, Header and navigation**: household title and subtitle (or no household strip), fuel prices in the dashboard header, and the four views on the phone bar.
 
@@ -364,6 +372,34 @@ forecast_entities:
   - sensor.solcast_pv_forecast_forecast_day_7
 # forecast_attribute: detailedHourly   # hourly instead of every 30 minutes
 # forecast_value: pv_estimate90        # optimistic variant (pv_estimate10 = pessimistic)
+```
+
+## Production forecast
+
+**Production forecast** (`custom:nuvio-yield-card`) shows the expected energy for the coming days as bars, one sensor per day: the first sensor is today, the second tomorrow, and so on. Each day is rated **good**, **average** or **poor**. Tap a day for its date, value and rating. Day names follow the Home Assistant time zone.
+
+| Option | Default | What it does |
+|---|---|---|
+| `entities` | | sensors in day order, the state is the energy of that day. Values in Wh, MWh or GWh are converted to kWh for the rating. An unavailable sensor shows as unavailable |
+| `capacity` | none | reference power in kW, a number (`3.4` or `"3,4"`) or an entity in W or kW (also Wp, kWp). With it a day is rated by its energy in kWh per kW. When the entity is unavailable or 0, the card says so under the chart and compares days with the best day |
+| `good` / `poor` | `3.5` / `1.5` | with `capacity`: kWh per kW from which a day is good, and below which it is poor. Without `capacity` a day is compared with the best day of the period (75% and more is good, under 40% is poor) |
+| `title`, `icon` | | header |
+| `unit` | unit of the first sensor with a value | label after the values (values are shown in the unit of that sensor) |
+| `decimals` | `1` | decimal places |
+
+```yaml
+type: custom:nuvio-yield-card
+entities:            # one sensor per day, the first one is today
+  - sensor.production_forecast_today
+  - sensor.production_forecast_day_2
+  - sensor.production_forecast_day_3
+  - sensor.production_forecast_day_4
+  - sensor.production_forecast_day_5
+  - sensor.production_forecast_day_6
+  - sensor.production_forecast_day_7
+capacity: 3.4        # kW, or an entity such as sensor.installed_power
+# good: 3.5          # kWh per kW from which a day is good
+# poor: 1.5          # kWh per kW below which a day is poor
 ```
 
 ## Fork additions

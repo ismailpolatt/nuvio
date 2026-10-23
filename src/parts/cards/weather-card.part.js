@@ -162,7 +162,9 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
   }
   render() {
     const h = this._hass, c = this._config, w = h.states[c.entity];
-    if (c.variant === 'hero') return this._hero(w);
+    /* samodzielna karta z variant: hero (#15): atrybut hosta włącza styl hero tak jak w nagłówku strony */
+    if (c.variant === 'hero') { if (this.getAttribute('variant') !== 'hero') { this.setAttribute('variant', 'hero'); this._vOwn = true; } return this._hero(w); }
+    if (this._vOwn) { this._vOwn = false; this.removeAttribute('variant'); }
     const hd = (inner) => `<div class="hd"><button class="hdb" data-act="more" aria-label="${H.esc(hgT('cards.weather.title_details_aria', { title: c.title }))}">${H.icon('mdi:weather-partly-cloudy', 'ic')}<span class="tt">${H.esc(c.title)}</span></button>${inner || ''}</div>`;
     if (!H.ok(w)) return `<ha-card class="glass">${hd()}<div class="ph">${hgT('cards.weather.weather_unavailable')}</div></ha-card>`;
     const tn = this._tNow(), cond = [HGWx.cn(w.state)], mm = this._minmax(), night = this._night(new Date());
@@ -203,44 +205,49 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
 :host{ display:block; min-width:0; }
 .root{ width:100%; min-width:0; height:auto !important; }
 /* szkło, rozmycie, cień i animacja z hgOverlay.dialog (ui/overlay); tu tylko treść */
-.dlg{ box-sizing:border-box; width:100%; max-height:calc(100dvh - 48px); overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; display:flex; flex-direction:column; gap:24px; padding:24px;
+.dlg{ box-sizing:border-box; width:100%; max-height:calc(100vh - 32px); max-height:calc(100dvh - 32px); overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; display:flex; flex-direction:column; gap:16px; padding:20px;
   color:#1E2023; font-variant-numeric:tabular-nums; }
 .top{ display:flex; align-items:center; gap:12px; min-width:0; }
-.top img{ width:56px; height:56px; margin:-8px -4px; flex:none; }
+.top img{ width:48px; height:48px; margin:-8px -4px; flex:none; }
 .top .tx{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
 .top .tx small{ font-size:var(--fs-sm); color:#4A4E54; } .top .tx b{ font-size:20px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .top .tx b span{ font-weight:300; }
 .cls{ width:40px; height:40px; flex:none; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.05); color:#1E2023; }
 .cls ha-icon{ width:20px; height:20px; }
-.sec{ display:flex; flex-direction:column; gap:8px; min-width:0; }
+.sec{ display:flex; flex-direction:column; gap:6px; min-width:0; }
 .sh{ font-size:var(--fs-xs); font-weight:600; color:#5A5E64; text-transform:uppercase; letter-spacing:.06em; }
 .det{ display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px; }
-.t{ display:flex; flex-direction:column; gap:4px; padding:12px; border-radius:var(--r-sm); background:rgba(0,0,0,.035); min-width:0; }
+.t{ display:flex; flex-direction:column; gap:2px; padding:8px 10px; border-radius:var(--r-sm); background:rgba(0,0,0,.035); min-width:0; }
 .t span{ display:flex; align-items:center; gap:4px; font-size:var(--fs-xs); color:#4A4E54; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .t ha-icon{ width:16px; height:16px; flex:none; color:#5A5E64; }
-.t b{ font-size:18px; font-weight:600; white-space:nowrap; } .t b em{ font-style:normal; font-size:var(--fs-xs); font-weight:400; color:#4A4E54; margin-left:2px; }
-.hs{ overflow-x:auto; overflow-y:hidden; scrollbar-width:none; overscroll-behavior-x:contain; touch-action:pan-x pan-y; padding:4px 0;
+.t b{ font-size:17px; font-weight:600; white-space:nowrap; } .t b em{ font-style:normal; font-size:var(--fs-xs); font-weight:400; color:#4A4E54; margin-left:2px; }
+.hs{ overflow-x:auto; overflow-y:hidden; scrollbar-width:none; overscroll-behavior-x:contain; touch-action:pan-x pan-y; padding:2px 0;
   -webkit-mask-image:linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 24px), transparent); mask-image:linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 24px), transparent); }
 .hs::-webkit-scrollbar{ display:none; }
 .hr{ display:grid; grid-auto-flow:column; grid-auto-columns:52px; width:max-content; padding:0 16px; }
-.hc{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+.hc{ display:flex; flex-direction:column; align-items:center; gap:2px; }
 .hc small{ font-size:var(--fs-xs); color:#5A5E64; } .hc.nw small{ color:#1E2023; font-weight:600; }
-.hc img{ width:30px; height:30px; } .hc b{ font-size:var(--fs-md); font-weight:500; }
+.hc img{ width:26px; height:26px; } .hc b{ font-size:var(--fs-md); font-weight:500; }
 .hc i{ font-style:normal; font-size:11px; color:var(--hg-accent-tx); min-height:13px; white-space:nowrap; }
 .hc .d{ width:6px; height:6px; border-radius:50%; margin-top:2px; }
 .days{ display:flex; flex-direction:column; }
-.dy{ display:grid; grid-template-columns:minmax(64px, 1.1fr) 36px 40px 34px minmax(80px, 2fr) 34px; align-items:center; gap:8px; min-height:48px; font-size:var(--fs-md); }
+.dy{ display:grid; grid-template-columns:minmax(64px, 1.1fr) 36px 40px 34px minmax(80px, 2fr) 34px; align-items:center; gap:8px; min-height:38px; font-size:var(--fs-md); }
 .dy + .dy{ border-top:1px solid rgba(0,0,0,.07); }
-.dy .n{ font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .dy img{ width:36px; height:36px; }
+.dy .n{ font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .dy .n .s{ display:none; } .dy img{ width:30px; height:30px; }
 .dy .p{ font-size:11px; color:var(--hg-accent-tx); white-space:nowrap; } .dy .lo{ color:#5A5E64; text-align:right; } .dy .hi{ text-align:right; font-weight:600; }
 .rg{ position:relative; height:6px; border-radius:3px; background:rgba(0,0,0,.07); }
 .rg i{ position:absolute; top:0; bottom:0; border-radius:3px; } .rg u{ position:absolute; top:50%; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%; background:currentColor; box-shadow:0 0 0 2px var(--hg-panel-flat, rgb(236 238 242)), 0 1px 3px rgba(0,0,0,.3); }
 .sun{ display:grid; grid-template-columns:auto 1fr auto; align-items:end; gap:12px; }
 .sun .e{ display:flex; flex-direction:column; align-items:center; gap:2px; font-size:var(--fs-xs); color:#4A4E54; white-space:nowrap; }
-.sun .e img{ width:32px; height:32px; margin:-4px 0; } .sun .e b{ font-size:var(--fs-md); font-weight:600; color:#1E2023; }
-.sun svg{ width:100%; max-width:240px; height:auto; justify-self:center; overflow:visible; }
+.sun .e img{ width:26px; height:26px; margin:-4px 0; } .sun .e b{ font-size:var(--fs-md); font-weight:600; color:#1E2023; }
+.sun svg{ width:100%; max-width:180px; height:auto; max-height:64px; justify-self:center; overflow:visible; }
 .sun .hz{ stroke:rgba(0,0,0,.18); stroke-width:1; } .sun .rem{ fill:none; stroke:rgba(0,0,0,.22); stroke-width:1.5; stroke-dasharray:4 5; } .sun .dn{ fill:none; stroke:var(--hg-accent); stroke-width:2.5; stroke-linecap:round; }
-@media (max-width: 520px){ .dlg{ padding:20px 16px; gap:20px; } .det{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
-  .dy{ grid-template-columns:minmax(56px, 1fr) 30px 30px minmax(56px, 1.6fr) 30px; } .dy .p{ display:none; } .dy img{ width:30px; height:30px; } }
+/* telefon: wszystko na jednym ekranie bez przewijania; 4 kafle w jednym rzędzie (mała nazwa + wartość, bez ikony), krótkie nazwy dni */
+@media (max-width: 520px){ .dlg{ padding:14px 14px 16px; gap:12px; } .det{ gap:6px; } .t{ padding:6px 4px; align-items:center; text-align:center; }
+  .t span{ justify-content:center; font-size:10px; } .t span ha-icon{ display:none; } .t b{ font-size:15px; display:flex; flex-direction:column; align-items:center; line-height:1.1; } .t b em{ margin:0; font-size:10px; }
+  .hr{ grid-auto-columns:46px; } .hc img{ width:24px; height:24px; } .hc i{ min-height:0; }
+  .dy{ grid-template-columns:minmax(44px, 1fr) 26px 30px minmax(56px, 2fr) 30px; min-height:34px; } .dy .p{ display:none; } .dy img{ width:26px; height:26px; }
+  .dy .n .f{ display:none; } .dy .n .s{ display:inline; } .sun svg{ max-height:52px; } }
+@media (max-height: 700px){ .dy{ min-height:30px; } .dlg{ gap:10px; } }
 `)}</style><div class="root"></div>`;
     x.addEventListener('click', (e) => { if (e.composedPath().some((n) => n.dataset && n.dataset.act === 'xclose')) this._closeX(); });
     /* okno z hgOverlay: wspólne szkło, scrim, animacja wejścia i wyjścia, Escape, kliknięcie obok, powrót fokusu */
@@ -289,6 +296,8 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     const c = this._config, h = this._hass, w = h.states[c.entity]; if (!w) return;
     const at = w.attributes, pu = at.precipitation_unit || 'mm', cond = HGWx.cn(w.state), t = parseFloat(at.temperature), night = this._night(new Date());
     const DN = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].map((k) => hgTD('cards.weather.weekdays.' + k, k)), TD = hgT('common.today');
+    const DS = [hgT('cards.month.weekdays_short.sun'), hgT('cards.month.weekdays_short.mon'), hgT('cards.month.weekdays_short.tue'), hgT('cards.month.weekdays_short.wed'), hgT('cards.month.weekdays_short.thu'), hgT('cards.month.weekdays_short.fri'), hgT('cards.month.weekdays_short.sat')];
+    const dls = (d) => { const l = dl(d), dd = new Date(d); return l === DN[dd.getDay()] ? DS[dd.getDay()] : l; };
     const dl = (d) => { const t0 = new Date(); t0.setHours(0, 0, 0, 0); const dd = new Date(d); dd.setHours(0, 0, 0, 0); const n = Math.round((dd - t0) / 86400000); return n === 0 ? TD : n === 1 ? hgT('cards.weather.tomorrow_title') : DN[dd.getDay()]; };
     // kafle szczegółów (tylko prawdziwe atrybuty)
     const WD = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'], wd = at.wind_bearing == null || at.wind_bearing === '' ? '' : isFinite(at.wind_bearing) ? WD[((Math.round(at.wind_bearing / 45) % 8) + 8) % 8] : String(at.wind_bearing);
@@ -296,7 +305,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
       at.wind_speed != null ? ['mdi:weather-windy', hgT('cards.weather.wind'), H.fmt(at.wind_speed, 0), `${at.wind_speed_unit || 'km/h'}${wd ? ' ' + wd : ''}`] : null,
       at.pressure != null ? ['mdi:gauge', hgT('cards.weather.pressure'), H.fmt(at.pressure, 0), at.pressure_unit || 'hPa'] : null,
       at.uv_index != null ? ['mdi:white-balance-sunny', 'UV', H.fmt(at.uv_index, 1), ''] : null].filter(Boolean)
-      .map(([i, l, v, u]) => `<div class="t"><span>${H.icon(i)}${l}</span><b>${H.esc(v)}${u ? `<em>${H.esc(u)}</em>` : ''}</b></div>`).join('');
+      .map(([i, l, v, u]) => `<div class="t" role="group" aria-label="${H.esc(l)}" title="${H.esc(l)}"><span>${H.icon(i)}<span class="l">${l}</span></span><b>${H.esc(v)}${u ? `<em>${H.esc(u)}</em>` : ''}</b></div>`).join('');
     // godziny
     const hr = this._hrs();
     const hrs = hr.map((f, i) => { const d = new Date(f.datetime);
@@ -308,7 +317,7 @@ ha-card.glass{ display:flex; flex-direction:column; justify-content:space-betwee
     const days = D.map((f) => { const a = f.templow ?? f.temperature, b = f.temperature, L = ((a - lo) / sp) * 100, Wd = Math.max(4, ((b - a) / sp) * 100), isT = dl(f.datetime) === TD;
       const nowDot = isT && isFinite(t) ? `<u style="left:${Math.max(0, Math.min(100, ((t - lo) / sp) * 100)).toFixed(1)}%"></u>` : '';
       return `<div class="dy" aria-label="${H.esc(H.lv(dl(f.datetime), `${HGWx.cn(f.condition)}, ${H.fmt(a, 0)}° ${hgT('cards.weather.temp_range_to')} ${H.fmt(b, 0)}°${f.precipitation > 0 ? `, ${hgT('cards.weather.precipitation')} ${H.fmt(f.precipitation, 1)} ${pu}` : ''}`))}">
-        <span class="n">${H.esc(dl(f.datetime))}</span><img src="${HGWx.icon(c, f.condition, false, false)}" alt="" title="${H.esc(HGWx.cn(f.condition))}"><span class="p">${f.precipitation > 0 ? H.fmt(f.precipitation, 1) + ' ' + pu : ''}</span>
+        <span class="n"><span class="f">${H.esc(dl(f.datetime))}</span><span class="s" aria-hidden="true">${H.esc(dls(f.datetime))}</span></span><img src="${HGWx.icon(c, f.condition, false, false)}" alt="" title="${H.esc(HGWx.cn(f.condition))}"><span class="p">${f.precipitation > 0 ? H.fmt(f.precipitation, 1) + ' ' + pu : ''}</span>
         <span class="lo">${H.fmt(a, 0)}°</span><span class="rg"><i style="left:${L.toFixed(1)}%;width:${Wd.toFixed(1)}%;background:linear-gradient(90deg, ${HGWx.tcol(a)}, ${HGWx.tcol(b)})"></i>${nowDot}</span><span class="hi">${H.fmt(b, 0)}°</span></div>`; }).join('');
     // słońce
     const st = this._sunTimes(), svg = this._sunSvg(st), ic = (n) => `${c.icon_base}static-${n}.svg?v=${c.icon_v}`;

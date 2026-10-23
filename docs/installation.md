@@ -6,7 +6,7 @@ Nuvio needs Home Assistant 2024.8.0 or newer. Back to the [README](../README.md)
 
 ## HACS (custom repository)
 
-1. HACS → ⋮ → *Custom repositories* → `https://github.com/kczepiec/nuvio`, category **Dashboard**.
+1. HACS → ⋮ → *Custom repositories* → `https://github.com/ismailpolatt/nuvio`, category **Dashboard**.
 2. Install **Nuvio**. HACS adds the resource `/hacsfiles/nuvio/nuvio.js`.
 3. Settings → Dashboards → *Add dashboard* → *New dashboard from scratch*, open it, ⋮ → *Edit* → ⋮ → *Raw configuration editor* and paste:
 

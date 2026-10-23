@@ -1,3 +1,5 @@
+> **Polat fork:** HACS: `https://github.com/ismailpolatt/nuvio` (Dashboard). Upstream v2.22.3 + Turkish/personal tablet features. [Guncelleme ve veri koruma rehberi](docs/fork-updates-tr.md).
+
 <p align="center">
   <img src="assets/brand/final/png/nuvio-horizontal-badge.png" alt="Nuvio" width="300">
 </p>
@@ -7,8 +9,9 @@
 <p align="center">
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.8.0%2B-18BCF2?style=flat-square&logo=homeassistant&logoColor=white" alt="Home Assistant 2024.8.0+">
-  <img src="https://img.shields.io/badge/version-v2.19.0-a3e635?style=flat-square" alt="v2.19.0">
+  <img src="https://img.shields.io/badge/version-v2.22.3-a3e635?style=flat-square" alt="v2.22.3">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
+  <a href="https://discord.gg/rFG9y2hFMJ"><img src="https://img.shields.io/discord/1563057427367075850?style=flat-square&logo=discord&label=Discord&color=a3e635" alt="Discord"></a>
 </p>
 
 <p align="center"><b>English</b> · <a href="README.pl.md">Polski</a> · <a href="README.fr.md">Français</a></p>
@@ -91,6 +94,11 @@ More in [docs/configuration.md](docs/configuration.md).
 | [Contributing](CONTRIBUTING.md) | Reporting bugs and sending changes |
 | [Design rules](DESIGN.md) | The UI rules every feature follows |
 | [Brand usage guide](assets/brand/guide/usage-guide.md) | How to place the Nuvio logo |
+
+## Community
+
+- Discord: [join](https://discord.gg/rFG9y2hFMJ) (support, ideas, release changelog)
+- Issues: [github.com/kczepiec/nuvio/issues](https://github.com/kczepiec/nuvio/issues)
 
 ## License and credits
 

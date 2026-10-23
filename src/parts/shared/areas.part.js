@@ -131,11 +131,28 @@ const HGAreas = {
     if (a.id === '_none') { a.temp = null; a.hum = null; }
     const devs = new Set(a.ents.map((e) => (reg[e] && reg[e].device_id) || e)); a.devN = devs.size;
     a.lights = sec.light;
-    a.watch = [...new Set([...sec.light, ...sec.mot, ...cl, a.temp && a.temp.e, a.hum && a.hum.e].filter(Boolean))];
+    const se = Object.keys(ov).filter((k) => /^(state|temp):/.test(k)).map((k) => ov[k]).filter((e) => typeof e === 'string' && h.states[e]);   // encje stanu i temperatury urządzeń klimatu
+    a.watch = [...new Set([...sec.light, ...sec.mot, ...cl, ...se, a.temp && a.temp.e, a.hum && a.hum.e].filter(Boolean))];
   },
   /* czujniki temperatury / wilgotności do wyboru dla pokoju: najpierw z pokoju, potem pozostałe (bez ukrytych) */
-  cands(h, a, dc) { const reg = h.entities || {}, inR = new Set(a.ents || []), all = Object.keys(h.states).filter((e) => e.startsWith('sensor.') && h.states[e].attributes.device_class === dc && !(reg[e] && reg[e].hidden));
+  /* dc 'heating': encje włącz/wyłącz i liczbowe urządzenia klimatu (ce) i pokoju, najpierw te z urządzenia */
+  cands(h, a, dc, ce) { const reg = h.entities || {}, inR = new Set(a.ents || []);
+    if (dc === 'heating') {
+      const dev = ce && reg[ce] && reg[ce].device_id, ok = (e) => /^(binary_sensor|switch|input_boolean)\./.test(e) || (e.startsWith('sensor.') && h.states[e].state !== '' && isFinite(Number(h.states[e].state)));
+      const all = Object.keys(h.states).filter((e) => e !== ce && ok(e) && !(reg[e] && reg[e].hidden)), onDev = (e) => !!dev && reg[e] && reg[e].device_id === dev;
+      return [...all.filter(onDev), ...all.filter((e) => !onDev(e) && inR.has(e))]; }
+    const xd = ce && reg[ce] && reg[ce].device_id, all = Object.keys(h.states).filter((e) => e.startsWith('sensor.') && h.states[e].attributes.device_class === dc && !(reg[e] && reg[e].hidden) && !(xd && reg[e] && reg[e].device_id === xd));   // ce: bez czujników samego urządzenia klimatu
     return [...all.filter((e) => inR.has(e)), ...all.filter((e) => !inR.has(e))]; },
+  /* encja „stan rzeczywisty” przypisana urządzeniu klimatu w Wygląd → Pokoje (sensors[pokój]['state:climate.x']), null gdy brak */
+  /* ustawienia źródła stanu urządzenia klimatu (patrz climate-modes): pokój z kluczami tego urządzenia, inaczej pokój urządzenia (rid) */
+  climCfg(h, e, cfg, rid) {
+    const G = this.glob(cfg || null) || {}, S = G.sensors || {}, reg = h.entities || {}, dev = reg[e] && reg[e].device_id, P = ['src:', 'state:', 'thr:', 'temp:', 'hys:'];
+    let r = Object.keys(S).find((k) => S[k] && P.some((p) => S[k][p + e] != null));
+    if (!r) r = rid || (G.assign && G.assign[e]) || this.areaOf(h, G, e);
+    const o = (r && S[r]) || {}, ok = (x) => (x && x !== '-' && h.states[x] && !(dev && reg[x] && reg[x].device_id === dev) ? x : null);
+    return { src: o['src:' + e] || 'auto', ent: o['state:' + e] && h.states[o['state:' + e]] ? o['state:' + e] : null, thr: o['thr:' + e], hys: o['hys:' + e], temp: ok(o['temp:' + e]) || ok(o.temperature) };
+  },
+  stateOf(h, e, cfg) { const S = (this.glob(cfg || null) || {}).sensors || {}; for (const r in S) { const v = S[r] && S[r]['state:' + e]; if (v && h.states[v]) return v; } return null; },
   val(h, ref) {
     if (!ref) return null;
     const s = h.states[ref.e]; if (!H.ok(s)) return null;

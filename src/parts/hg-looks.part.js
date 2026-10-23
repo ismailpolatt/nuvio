@@ -4,7 +4,7 @@
    przy rozmyciu wyłączonym (Wydajność) zostaje gęste wypełnienie z motywu, żeby tekst był czytelny. Kolory przez '#' + … i rgb+a(…): tokenizer motywu ich nie zmienia. */
 const HG_LK_C = (r, g, b, a) => 'rgb' + `a(${r},${g},${b},${a})`;
 const HG_LK_X = (s) => '#' + s;
-const HG_LK_BG = (id) => ({ kind: 'image', v: HG_ASSET + 'nuvio-bg-' + id + '-wide.webp', v2p: HG_ASSET + 'nuvio-bg-' + id + '-portrait.webp' });
+const HG_LK_BG = (id) => ({ kind: 'image', v: HG_ASSET_P + 'nuvio-bg-' + id + '-wide.webp', v2p: HG_ASSET_P + 'nuvio-bg-' + id + '-portrait.webp' });
 const HG_LK_GR = (a, b) => ({ kind: 'gradient', v: HG_LK_X(a), v2: HG_LK_X(b) });
 /* g = [jasny, ciemny] wypełnienie szkła [karta, kafel, panel]; r = zaokrąglenia [--r-lg, --r-md, --r-sm]; bl = rozmycie szkła */
 const HG_LOOKS = [
@@ -60,7 +60,7 @@ const HGLooks = window.HGLooks = {
       const st = `--bg:${this.thumb(L)};--a:${HG_LK_X(L.acc)};--on:${t.light['--hg-on-accent']};--g:${g[0]};--t:${g[1]};--p:${g[2]};--bl:${L.bl ? parseFloat(L.bl) / 4 : 3.5}px;--rr:calc(${rr} / 3.2);--ink:${dk ? HG_LK_X('FFFFFF') : HG_LK_X('1C1C1E')};--dim:${dk ? HG_LK_C(6, 8, 12, (L.dim * 0.55).toFixed(2)) : 'transparent'}`;
       return `<button type="button" class="lk-lk" role="radio" data-hge="lk-look" data-v="${L.k}" aria-checked="${on}" style="${H.esc(st)}"><span class="lk-lp" aria-hidden="true"><span class="lkp-r"></span><span class="lkp-h"></span><span class="lkp-h lkp-h2"></span><span class="lkp-p">${'<span></span>'.repeat(6)}</span></span>
         <span class="lk-ll">${on ? ck : ''}<span>${H.esc(L.n)}<small>${H.esc(L.d)}</small></span></span></button>`; };
-    return `<section class="lk-g" data-tab="look"><style>${HG_LK_CSS}</style><h4>${H.icon('mdi:palette-swatch-outline')}${hgT('looks.dashboard_style')}</h4>
+    return `<section class="lk-g" data-tab="look" data-pg="theme"><style>${HG_LK_CSS}</style><h4>${H.icon('mdi:palette-swatch-outline')}${hgT('looks.dashboard_style')}</h4>
       <small class="lk-hn">${hgT('looks.a_ready_made_set')}</small>
       <div class="lk-lks" role="radiogroup" aria-label="${H.esc(hgT('looks.dashboard_style'))}">${HG_LOOKS.map(card).join('')}</div></section>`; },
   act(page, b, a) { if (a !== 'lk-look') return; const L = this.get(b.dataset.v); if (!L) return;

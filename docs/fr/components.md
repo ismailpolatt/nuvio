@@ -111,6 +111,10 @@ Chaque carte s’utilise aussi seule sous la forme `custom:nuvio-<nom>-card` (pa
 <td width="50%" valign="top"><img src="../components/eprice.webp" alt="Prix de l’électricité" width="100%"><br><b>Prix de l’électricité</b> <code>custom:nuvio-eprice-card</code><br>Prix horaires d’aujourd’hui et de demain, créneau le moins cher.</td>
 <td width="50%" valign="top"><img src="../components/fuel.webp" alt="Prix des carburants" width="100%"><br><b>Prix des carburants</b> <code>custom:nuvio-fuel-card</code><br>Prix depuis des capteurs avec tendance pour demain.</td>
 </tr>
+<tr>
+<td width="50%" valign="top"><img src="../components/yield.webp" alt="Prévision de production" width="100%"><br><b>Prévision de production</b> <code>custom:nuvio-yield-card</code><br>Énergie attendue pour les prochains jours, bons et faibles jours.</td>
+<td width="50%" valign="top"></td>
+</tr>
 </table>
 </details>
 
@@ -266,6 +270,10 @@ Grille, pile verticale et pile horizontale fonctionnent comme dans Home Assistan
 | `custom:nuvio-grid-card` | Cartes en colonnes ; moins de colonnes sur les écrans étroits | `cards`, `columns` (1 à 6, 0 = automatique), `min_width`, `square`, `gap`, `glass`, `title` ; par carte `span` |
 | `custom:nuvio-stack-card` | Cartes les unes sous les autres ou côte à côte dans un même verre ; côte à côte devient vertical sous `wrap_below` px | `cards`, `direction`, `gap`, `ratio` (ex. `[2, 1]`), `wrap_below`, `divider`, `glass`, `title` |
 
+Ordre (2.21.1) : les conteneurs et les cartes YAML ajoutés dans l’éditeur restent là où vous les placez. Avant, le panneau comblait les trous avec des cartes plus petites, si bien qu’une pile ou une grille large pouvait passer au dessus de cartes ajoutées avant elle. Réorganisez par glisser déposer comme d’habitude. Depuis 2.21.1, les tuiles simples sont aussi des cartes séparées (sans zones de grille), tuiles et conteneurs se mélangent dans n’importe quel ordre.
+
+**Météo** comme composant a un interrupteur **Style hero** (YAML `variant: hero`) : grand texte blanc directement sur le fond d’écran, sans carte, comme la météo de l’en tête. Idéal avec **Fond du panneau** désactivé.
+
 ## Cartes et conteneurs génériques (0.16.0)
 
 Douze cartes construites uniquement à partir des blocs en verre partagés : elles ressemblent au design de référence et fonctionnent avec toute entité du bon domaine. Chacune s’adapte à sa largeur : en petit (jusqu’à 220 px), elle masque le texte secondaire ; en grand (à partir de 420 px), elle affiche des détails supplémentaires. Elles fonctionnent aussi dans une vue Home Assistant classique, où elles floutent elles-mêmes le fond. Un tableau de bord prêt à l’emploi construit uniquement avec elles se trouve dans [examples/inspiration-dashboard.yaml](../examples/inspiration-dashboard.yaml) (fonctionne avec l’intégration de démonstration de HA).
@@ -282,7 +290,7 @@ Douze cartes construites uniquement à partir des blocs en verre partagés : el
 | `custom:nuvio-room-compact-card` | Température, humidité, un interrupteur et une réglette de luminosité | `name`, `temperature`, `humidity`, `entity` |
 | `custom:nuvio-actions-card` | Une pastille en verre de boutons ronds pour les scènes, scripts, services ou liens | `actions: [{ entity }, { icon, name, service, data }, { navigate }]` |
 | `custom:nuvio-family-card` | Avatars, qui est à la maison, un bouton pour ajouter une personne | `persons` (vide = tout le monde) |
-| `custom:nuvio-cover-card` | Position d’un volet ou d’un portail sur une barre à faire glisser, ouvrir, arrêter, fermer | `entity` |
+| `custom:nuvio-cover-card` | Position d’un volet ou d’un portail sur une barre à faire glisser, ouvrir, arrêter, fermer ; sans position (portail, garage) l’état en toutes lettres ; icône selon la classe de l’appareil | `entity` |
 | `custom:nuvio-lock-card` | État de la serrure ; le déverrouillage demande une confirmation, ou le code quand la serrure en exige un | `entity`, `confirm` |
 | `custom:nuvio-fan-card` | Vitesse du ventilateur sur l’arc et modes préréglés en pastilles | `entity` |
 | `custom:nuvio-todo-card` | Une liste de tâches : ajouter une tâche, la cocher | `entity`, `show_done` |
@@ -315,7 +323,7 @@ Tous ces composants sont dans **+ Ajouter** en mode édition, avec un aperçu, u
 | Personne | `custom:nuvio-person-card` | personne, libellés à la maison et absent |
 | Enfant (LiveKid) | `custom:nuvio-kid-card` | titre, enfant (prénom) ou entité quand il y a plusieurs enfants ; les entités de l’intégration LiveKid sont trouvées automatiquement |
 
-**Apparence, Pièces** : renommez les pièces, choisissez leurs icônes et leur ordre, masquez des pièces, choisissez le capteur de température et d’humidité de chaque tuile de pièce (automatique, n’importe quel capteur ou aucun) et créez des pièces personnalisées avec n’importe quelles entités, indépendamment des pièces de Home Assistant. Les entités peuvent aussi être attribuées à la main aux pièces existantes.
+**Apparence, Pièces** : renommez les pièces, choisissez leurs icônes et leur ordre, masquez des pièces, choisissez le capteur de température et d’humidité de chaque tuile de pièce (automatique, n’importe quel capteur ou aucun) et créez des pièces personnalisées avec n’importe quelles entités, indépendamment des pièces de Home Assistant. Les entités peuvent aussi être attribuées à la main aux pièces existantes. Chaque appareil de climat de la pièce a aussi une **Détection de l’activité**. **Automatique** (par défaut) utilise l’entité **État réel** (marche/arrêt, ou une valeur comme une puissance au-dessus du **Seuil de fonctionnement**, 5 W par défaut), puis ce qu’indique l’appareil lui-même (`hvac_action`), puis la température de la pièce par rapport à la consigne si vous choisissez un capteur de pièce distinct (estimation avec une hystérésis de 0,5° par défaut). Sinon, seul le mode est affiché (par exemple **Chauffage**), si bien qu’un appareil qui n’indique rien n’est jamais affiché au repos. **Depuis une entité**, **Depuis la température de la pièce** et **Afficher le mode seul** n’utilisent que cette source. La température de l’appareil lui-même n’est jamais utilisée pour cela. La pastille de la tuile Pièces a la couleur du mode (chauffage, refroidissement, déshumidification, ventilation, auto) : pleine quand l’appareil fonctionne, atténuée quand il ne fonctionne pas ou que l’état est estimé, et seulement entourée quand seul le mode est connu. Les réglages sont enregistrés à côté des capteurs de la pièce (`state:`, `src:`, `thr:`, `temp:` et `hys:` suivis de l’identifiant de l’entité climat), donc l’export et l’import les transportent et les versions plus anciennes les ignorent.
 
 **Apparence, En-tête et navigation** : titre et sous-titre du foyer (ou pas de bandeau du foyer), prix des carburants dans l’en-tête du tableau de bord et les quatre vues de la barre sur téléphone.
 
@@ -364,4 +372,32 @@ forecast_entities:
   - sensor.solcast_pv_forecast_forecast_day_7
 # forecast_attribute: detailedHourly   # toutes les heures au lieu de toutes les 30 minutes
 # forecast_value: pv_estimate90        # variante optimiste (pv_estimate10 = pessimiste)
+```
+
+## Prévision de production
+
+**Prévision de production** (`custom:nuvio-yield-card`) affiche l’énergie attendue pour les prochains jours sous forme de barres, un capteur par jour : le premier capteur correspond à aujourd’hui, le deuxième à demain, et ainsi de suite. Chaque jour est classé **bon**, **moyen** ou **faible**. Touchez un jour pour voir sa date, sa valeur et son niveau. Les noms des jours suivent le fuseau horaire de Home Assistant.
+
+| Option | Par défaut | Rôle |
+|---|---|---|
+| `entities` | | capteurs dans l’ordre des jours, l’état est l’énergie du jour. Les valeurs en Wh, MWh ou GWh sont converties en kWh pour le classement. Un capteur indisponible est affiché comme indisponible |
+| `capacity` | aucune | puissance de référence en kW, un nombre (`3.4` ou `"3,4"`) ou une entité en W ou kW (aussi Wp, kWp). Avec elle, un jour est classé selon son énergie en kWh par kW. Si l’entité est indisponible ou vaut 0, la carte l’indique sous le graphique et compare les jours au meilleur jour |
+| `good` / `poor` | `3.5` / `1.5` | avec `capacity` : kWh par kW à partir desquels un jour est bon, et en dessous desquels il est faible. Sans `capacity`, un jour est comparé au meilleur jour de la période (75 % et plus : bon, moins de 40 % : faible) |
+| `title`, `icon` | | en-tête |
+| `unit` | unité du premier capteur ayant une valeur | libellé après les valeurs (les valeurs sont affichées dans l’unité de ce capteur) |
+| `decimals` | `1` | nombre de décimales |
+
+```yaml
+type: custom:nuvio-yield-card
+entities:            # un capteur par jour, le premier est aujourd’hui
+  - sensor.production_forecast_today
+  - sensor.production_forecast_day_2
+  - sensor.production_forecast_day_3
+  - sensor.production_forecast_day_4
+  - sensor.production_forecast_day_5
+  - sensor.production_forecast_day_6
+  - sensor.production_forecast_day_7
+capacity: 3.4        # kW, ou une entité comme sensor.installed_power
+# good: 3.5          # kWh par kW à partir desquels un jour est bon
+# poor: 1.5          # kWh par kW en dessous desquels un jour est faible
 ```
