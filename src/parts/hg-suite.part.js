@@ -28,6 +28,18 @@ const HGDataQuality = window.HGDataQuality = {
 };
 
 const HGApps = window.HGApps = {
+  chrome(frame, every=setInterval, stop=clearInterval) {
+    let closed=false;
+    const apply=()=>{if(closed || frame.isConnected===false)return;try{
+      const doc=frame.contentDocument;if(!doc || doc.hidden)return;
+      const main=doc.querySelector('home-assistant')?.shadowRoot?.querySelector('home-assistant-main'),root=main?.shadowRoot;if(!root)return;
+      const style=(r,css)=>{if(!r || r.querySelector('style[data-nuvio-app-chrome]'))return;const s=doc.createElement('style');s.dataset.nuvioAppChrome='';s.textContent=css;r.appendChild(s);};
+      style(root,'ha-sidebar,[slot="sidebar"]{display:none!important}ha-drawer{--ha-sidebar-width:0px!important;--mdc-drawer-width:0px!important;--app-drawer-width:0px!important}');
+      for(const k of ['--ha-sidebar-width','--mdc-drawer-width'])if(main.style.getPropertyValue(k)!=='0px')main.style.setProperty(k,'0px');
+      const drawer=root.querySelector('ha-drawer');style(drawer?.shadowRoot,':host{--ha-sidebar-width:0px!important;--mdc-drawer-width:0px!important}.sidebar-shell,aside.mdc-drawer{display:none!important}.app-content{padding-inline-start:0!important}.mdc-drawer-app-content{margin-left:0!important;margin-inline-start:0!important}');
+    }catch(e){/* Only same-origin embedded HA documents may be adjusted. */}};
+    const timer=every(apply,500);apply();return ()=>{closed=true;stop(timer);};
+  },
   groups: [
     ['hacs','HACS','mdi:store-outline', /(?:^|\s)hacs(?:\s|$)/i, true],
     ['music','Music Assistant','mdi:music-circle-outline', /music.?assistant/i, false],
@@ -56,7 +68,7 @@ class HGAppsCard extends HGBase {
     if(this._appDialog && (this._appUid!==this._hass.user?.id || this._appAdmin!==!!this._hass.user?.is_admin || !HGApps.list(this._hass).some(p=>p.id===this._appId && p.path===this._appPath)))this._closeApp();
     return `<ha-card class="glass">${HGApps.html(this._hass)}</ha-card>`;
   }
-  _closeApp(){const d=this._appDialog;this._appDialog=null;this._appId=this._appPath=this._appUid=null;if(d){d.close();d.remove();}if(this._appOpener?.isConnected)this._appOpener.focus();this._appOpener=null;}
+  _closeApp(){this._appChromeCleanup?.();this._appChromeCleanup=null;const d=this._appDialog;this._appDialog=null;this._appId=this._appPath=this._appUid=null;if(d){d.close();d.remove();}if(this._appOpener?.isConnected)this._appOpener.focus();this._appOpener=null;}
   _openApp(id,opener){
     const apps=HGApps.list(this._hass).filter(p=>p.path),app=apps.find(p=>p.id===id),uid=this._hass.user?.id;
     if(!app || !uid)return;
@@ -69,6 +81,7 @@ class HGAppsCard extends HGBase {
       this.shadowRoot.appendChild(d);this._appDialog=d;this._appOpener=opener;this._appUid=uid;this._appAdmin=!!this._hass.user?.is_admin;
     }
     const d=this._appDialog,f=d.querySelector('iframe');d.setAttribute('aria-label',app.title);d.querySelector('[data-app-title]').textContent=app.title;f.title=app.title;
+    f.onload=()=>{if(this._appDialog!==d)return;this._appChromeCleanup?.();this._appChromeCleanup=HGApps.chrome(f);};
     if(this._appPath!==app.path)f.src=app.path;
     this._appId=id;this._appPath=app.path;
     for(const b of d.querySelectorAll('[data-app]'))b.setAttribute('aria-pressed',String(b.dataset.app===id));

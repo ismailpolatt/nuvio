@@ -164,6 +164,25 @@ const HG_TILE_KIND = (e) => { const d = e.split('.')[0];
   if (['light', 'switch', 'fan', 'input_boolean', 'automation', 'lock', 'siren', 'humidifier', 'valve'].includes(d)) return 'tog';
   if (d === 'climate') return 'clim'; if (d === 'media_player') return 'media'; if (d === 'camera') return 'cam'; if (d === 'cover') return 'cover';
   if (['scene', 'script', 'button', 'input_button'].includes(d)) return 'run'; return 'val'; };
+/* Search the actual states; explicit queries also explain normally hidden choices. */
+const hgPickerRows = (h, { query = '', filter = 'all', replacement = null, shown = new Set() } = {}) => {
+  const norm = s => hgNorm(String(s || '').replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '').trim()).replace(/ı/g, 'i');
+  const q = norm(query), reg = h.entities || {}, areas = h.areas || {}, devs = h.devices || {};
+  const skip = new Set(['zone','sun','persistent_notification','update','tts','stt','conversation','event','image','device_tracker','group','input_text','input_datetime','todo','calendar','weather','wake_word','assist_satellite','select','number','text','time','date','datetime','notify','ai_task']);
+  const rows = [];
+  for (const [e,s] of Object.entries(h.states || {})) {
+    const d=e.split('.')[0],r=reg[e]||{},k=HG_TILE_KIND(e),nm=H.name(h,e),aid=r.area_id||(r.device_id&&devs[r.device_id]?.area_id),an=areas[aid]?.name||'',exact=!!q&&norm(e)===q;
+    if(q && ![nm,e,an].some(v=>norm(v).includes(q)))continue;
+    if(!q && ((skip.has(d)&&!replacement?.doms?.includes(d)) || r.hidden || r.hidden_by || r.entity_category))continue;
+    if(!exact && filter!=='all' && !(filter==='light'?d==='light':filter==='tog'?k==='tog'&&d!=='light':filter===k))continue;
+    const incompatible=replacement && ((replacement.doms&&!replacement.doms.includes(d)) || (replacement.flt&&!replacement.flt(e)));
+    const duplicate=replacement ? replacement.excl?.includes(e) : shown.has(e);
+    const block=r.disabled_by?'disabled':incompatible?'incompatible':duplicate?'duplicate':null;
+    if(block&&!q)continue;
+    rows.push({e,nm,an,k,s,block,hidden:!!(r.hidden||r.hidden_by||r.entity_category),exact});
+  }
+  const coll=new Intl.Collator(HG_LOC());return rows.sort((a,b)=>Number(b.exact)-Number(a.exact)||Number(!!a.block)-Number(!!b.block)||coll.compare(a.nm,b.nm));
+};
 /* typy wyświetlania zgodne z domeną encji */
 /* nazwy typów: gettery – język rozwiązywany przy użyciu */
 const HG_TYPES = hgTO({}, { tog: 'edit.switch', btn: 'edit.button', compact: 'edit.compact', minimal: 'edit.minimal', val: 'edit.reading', chart: 'edit.with_chart', clim: 'edit.climate', media: 'common.media', cam: 'edit.camera', cover: 'edit.cover', run: 'edit.action' });
@@ -1921,23 +1940,11 @@ const HG_EDIT = {
       lst.innerHTML = list.length ? list.map((a) => `<button class="hs-r" role="listitem" data-hge="pick" data-sc="rooms" data-e="${H.esc(a.id)}" data-n="${H.esc(a.name)}"><span class="hs-i">${H.icon(a.icon)}</span><span class="hs-t"><b>${H.esc(a.name)}</b><small>${hgT('edit.entities_count', { count: a.ents.length })}${hid.has(a.id) ? hgT('common.hidden_suffix') : ''}</small></span><span class="hs-p">${H.icon('mdi:plus')}</span></button>`).join('') : `<p class="hs-e">${hgT('edit.all_areas_are_already')}</p>`;
       return;
     }
-    const shown = this._eShown(), f = this._eF, reg = h.entities || {}, areas = h.areas || {}, devs = h.devices || {};
-    const skip = new Set(['zone', 'sun', 'persistent_notification', 'update', 'tts', 'stt', 'conversation', 'event', 'image', 'device_tracker', 'group', 'input_text', 'input_datetime', 'todo', 'calendar', 'weather', 'wake_word', 'assist_satellite', 'select', 'number', 'text', 'time', 'date', 'datetime', 'notify', 'ai_task']);
-    const arr = [];
-    for (const e of Object.keys(h.states)) {
-      const d = e.split('.')[0]; if ((skip.has(d) && !(this._eRepl && this._eRepl.doms && this._eRepl.doms.includes(d))) || (!this._eRepl && shown.has(e))) continue;   /* slot komponentu prosi o tę domenę (np. kalendarze) -> nie pomijamy */ if (this._eRepl && ((this._eRepl.doms && !this._eRepl.doms.includes(d)) || (this._eRepl.excl && this._eRepl.excl.includes(e)) || (this._eRepl.flt && !this._eRepl.flt(e)))) continue;
-      const r = reg[e]; if (r && (r.hidden || r.entity_category)) continue;
-      const k = HG_TILE_KIND(e);
-      if (f !== 'all' && !(f === 'light' ? d === 'light' : f === 'tog' ? k === 'tog' && d !== 'light' : f === k)) continue;
-      const s = h.states[e], nm = H.name(h, e), aid = r && (r.area_id || (r.device_id && devs[r.device_id] && devs[r.device_id].area_id)), an = aid && areas[aid] ? areas[aid].name : '';
-      if (q && !(hgNorm(nm).includes(hgNorm(q)) || e.includes(q) || hgNorm(an).includes(hgNorm(q)))) continue;
-      arr.push({ e, nm, an, k, s });
-    }
-    const coll = new Intl.Collator(HG_LOC()); arr.sort((a, b) => coll.compare(a.nm, b.nm));
+    const shown = this._eShown(), arr = hgPickerRows(h, { query: this._eQ, filter: this._eF || 'all', replacement: this._eRepl, shown });
     const sh = arr; this._eArr = arr;
     const pv = L.querySelector('.hs-pv'); if (pv) { const fx = this._eF === 'all' ? null : this._eF;
-      pv.innerHTML = sh.length ? `<small>${hgT('edit.preview')}${fx ? ' · ' + H.esc(fx === 'light' ? hgT('edit.light') : (HG_KIND_LBL[fx] || '')) : ''}</small><div class="tg2">${hgTileHtml(h, sh[0].e)}</div>` : ''; hgSlots({ _hass: h, $: pv }); hgPvLive(pv); }
-    const row = (x) => `<button class="hs-r" role="listitem" data-hge="${this._eRepl ? 'repl' : 'pick'}" data-sc="${H.esc(sc)}" data-e="${H.esc(x.e)}" data-n="${H.esc(x.nm)}"><span class="hs-i">${H.icon(x.s.attributes.icon || HG_DOM_ICON2[x.e.split('.')[0]] || 'mdi:circle-outline')}</span><span class="hs-t"><b>${H.esc(x.nm)}</b><small>${H.esc([HG_KIND_LBL[x.k], x.an, this._eRepl && shown.has(x.e) ? hgT('edit.already_in_view') : '', H.ok(x.s) ? H.T(h, x.s) : hgT('common.state_unavailable')].filter(Boolean).join(' · '))}</small></span><span class="hs-p">${H.icon(this._eRepl ? 'mdi:swap-horizontal' : 'mdi:plus')}</span></button>`;
+      const first=sh.find(x=>!x.block);pv.innerHTML = first ? `<small>${hgT('edit.preview')}${fx ? ' · ' + H.esc(fx === 'light' ? hgT('edit.light') : (HG_KIND_LBL[fx] || '')) : ''}</small><div class="tg2">${hgTileHtml(h, first.e)}</div>` : ''; hgSlots({ _hass: h, $: pv }); hgPvLive(pv); }
+    const row = (x) => `<button class="hs-r" role="listitem" ${x.block?'disabled aria-disabled="true"':''} data-hge="${this._eRepl ? 'repl' : 'pick'}" data-sc="${H.esc(sc)}" data-e="${H.esc(x.e)}" data-n="${H.esc(x.nm)}"><span class="hs-i">${H.icon(x.s.attributes.icon || HG_DOM_ICON2[x.e.split('.')[0]] || 'mdi:circle-outline')}</span><span class="hs-t"><b>${H.esc(x.nm)}</b><small>${H.esc(x.e)}</small><small>${H.esc([x.block==='incompatible'?hgT('edit.picker_incompatible'):x.block==='disabled'?hgT('edit.picker_disabled'):x.block==='duplicate'?hgT('edit.already_in_view'):'', x.hidden?hgT('edit.picker_hidden'):'', HG_KIND_LBL[x.k], x.an, H.ok(x.s) ? H.T(h, x.s) : hgT('common.state_unavailable')].filter(Boolean).join(' · '))}</small></span><span class="hs-p">${H.icon(x.block?'mdi:information-outline':this._eRepl ? 'mdi:swap-horizontal' : 'mdi:plus')}</span></button>`;
     /* leniwe renderowanie: porcje po 60, kolejne przy przewijaniu (bez limitu) */
     if (this._eIO) this._eIO.disconnect();
     if (!sh.length) { lst.innerHTML = `<p class="hs-e">${this._eRepl ? hgT('edit.no_matching_entities') : hgT('edit.no_matching_entities_those')}</p>`; return; }

@@ -2363,7 +2363,10 @@
     "panel_backdrop_as_all": "Comme partout",
     "head_clock_hint": "{time} affiche l’heure actuelle et {date} la date du jour, mises à jour chaque minute.",
     "head_clock_add": "Ajouter une horloge",
-    "head_clock_add_desc": "Ajoute {time} au sous-titre"
+    "head_clock_add_desc": "Ajoute {time} au sous-titre",
+    "picker_incompatible": "Ce champ de carte n’accepte pas ce type d’entité.",
+    "picker_disabled": "Entité désactivée dans Home Assistant.",
+    "picker_hidden": "Entité masquée ou de diagnostic"
   },
   "lookr": {
     "add_fuel": "Ajouter un carburant",

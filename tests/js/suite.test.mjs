@@ -114,3 +114,14 @@ test('dialog cancellation returns to the dashboard and unknown application IDs d
  c.onAct('app-open',{dataset:{app:'javascript:bad'}});assert.equal(dialogs.length,0);
  c.onAct('app-open',{dataset:{app:'music'}});let prevented=false;dialogs[0].oncancel({preventDefault(){prevented=true;}});assert.equal(prevented,true);assert.equal(dialogs[0].removed,true);
 });
+test('embedded sidebar suppression waits for HA shadow roots, reuses styles and cleans polling',()=>{
+ const {HGApps:a}=setup(),styles=[],props=new Map();let tick,stopped=false,ready=false;
+ const drawerRoot={querySelector:()=>styles.find(x=>x.root==='drawer'),appendChild(s){styles.push({...s,root:'drawer'});}},root={querySelector:s=>s==='ha-drawer'?{shadowRoot:drawerRoot}:styles.find(x=>x.root==='main'),appendChild(s){styles.push({...s,root:'main'});}};
+ const main={shadowRoot:root,style:{getPropertyValue:k=>props.get(k),setProperty:(k,v)=>props.set(k,v)}};
+ const frame={isConnected:true,contentDocument:{hidden:false,querySelector:()=>ready?{shadowRoot:{querySelector:()=>main}}:null,createElement:()=>({dataset:{}})}};
+ const stop=a.chrome(frame,fn=>{tick=fn;return 7;},id=>{assert.equal(id,7);stopped=true;});assert.equal(styles.length,0);ready=true;tick();assert.equal(styles.length,2);assert.match(styles[0].textContent,/ha-sidebar/);assert.equal(props.get('--mdc-drawer-width'),'0px');assert.equal(props.get('--ha-sidebar-width'),'0px');assert.match(styles[1].textContent,/padding-inline-start:0/);tick();assert.equal(styles.length,2);stop();assert.equal(stopped,true);tick();assert.equal(styles.length,2);
+});
+test('embedded sidebar suppression tolerates cross-origin or removed frames without touching the parent',()=>{
+ const {HGApps:a}=setup();let tick;const frame={isConnected:true,get contentDocument(){throw Error('Blocked origin');}};
+ const stop=a.chrome(frame,fn=>{tick=fn;return 1;},()=>{});assert.doesNotThrow(()=>tick());frame.isConnected=false;assert.doesNotThrow(()=>tick());stop();
+});

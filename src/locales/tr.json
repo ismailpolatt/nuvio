@@ -2328,7 +2328,10 @@
     "panel_backdrop_as_all": "Genel ayarı kullan",
     "head_clock_hint": "{time} güncel saati, {date} bugünün tarihini gösterir; ikisi de dakikada bir yenilenir.",
     "head_clock_add": "Saat ekle",
-    "head_clock_add_desc": "Alt başlığa {time} ekler"
+    "head_clock_add_desc": "Alt başlığa {time} ekler",
+    "picker_incompatible": "Bu kart alanı bu varlık türünü kabul etmiyor.",
+    "picker_disabled": "Varlık Home Assistant’ta devre dışı.",
+    "picker_hidden": "Gizli veya tanılama varlığı"
   },
   "lookr": {
     "add_fuel": "Yakıt ekle",

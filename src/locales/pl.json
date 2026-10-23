@@ -2398,7 +2398,10 @@
     "panel_backdrop_as_all": "Jak wszędzie",
     "head_clock_hint": "{time} pokazuje bieżącą godzinę, a {date} dzisiejszą datę; obie odświeżają się co minutę.",
     "head_clock_add": "Dodaj zegar",
-    "head_clock_add_desc": "Dopisuje {time} do podtytułu"
+    "head_clock_add_desc": "Dopisuje {time} do podtytułu",
+    "picker_incompatible": "To pole karty nie obsługuje tego typu encji.",
+    "picker_disabled": "Encja wyłączona w Home Assistant.",
+    "picker_hidden": "Encja ukryta lub diagnostyczna"
   },
   "lookr": {
     "add_fuel": "Dodaj paliwo",

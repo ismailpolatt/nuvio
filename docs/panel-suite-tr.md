@@ -8,6 +8,12 @@ Nuvio stratejisi bütün sayfalarda aynı üst menüyü üretir. Kiosk Mode kuru
 
 Üst menüde **Uygulamalar**: HACS, Music Assistant, Zigbee2MQTT ve Blueprint Studio. Bağlantılar Home Assistant'ın kayıtlı panel listesinden bulunur; kurulum adı veya IP sabit değildir. Kayıtlı olması servisin sağlıklı çalıştığı anlamına gelmez. Yönetici panelleri normal hesapta gösterilmez; HA'nın kendi yetkileri geçerlidir. Uygulama, panelin adresini veya ana sayfasını değiştirmeyen tam ekran bir pencere içinde açılır. Üstteki uygulama sekmeleri arasında geçiş yapılabilir; Kapat düğmesi aynı panele döndürür. Aynı uygulama tekrar seçildiğinde veya HA durumları güncellendiğinde çerçeve yeniden oluşturulmaz. İçerik aynı Home Assistant sunucusundaki kayıtlı panelden yüklenir; HA oturumu ve yetkileri geçerlidir.
 
+Uygulama penceresindeki Home Assistant yan menüsü gizlenir ve ayırdığı genişlik sıfırlanır. Bu yalnız gömülü uygulama belgesine uygulanır; normal HA sekmelerinin menüleri değişmez. Pencere kapanınca görünüm izleyicisi durdurulur.
+
+## Varlık seçimi
+
+Arama; varlık kimliği, görünen ad veya oda adıyla yapılabilir. Türkçe karakterler, büyük/küçük harf ve kopyalanan görünmez işaretler eşleştirmeyi bozmaz. Tam varlık kimliği yazıldığında tür sekmesi sonucu gizlemez. Gizli/tanılama varlıkları açık aramada açıklamasıyla görünür. Zaten ekli, devre dışı veya kartın alanına uygun olmayan sonuçlar boş liste yerine nedenleriyle gösterilir; uygun olmayan seçim yapılamaz. Sonuçlarda varlık kimliği de yazılıdır.
+
 ## Veri durumu
 
 **Kontrol → Veri durumu** sunucu bağlantısını ve görünür sensör kayıtlarını gösterir. Son `last_reported`, bulunamazsa `last_updated` kullanılır; bu zaman fiziksel cihazın son kalp atışı anlamına gelmez. **Bakım ve pil** bölümünün eski kayıt eşiği kullanılır (varsayılan 24 saat). Eksik/geçersiz/gelecek zaman damgaları doğrulanmış sayılmaz. Eski değerler bu listede yalnız “Son bilinen” olarak yer alır. İlgili kartlarda güncellik uyarısı bulunur. Kapı/pencere kartı eksik veya eski veriyi “kapalı” saymaz.

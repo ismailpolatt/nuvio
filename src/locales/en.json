@@ -2328,7 +2328,10 @@
     "panel_backdrop_as_all": "As everywhere",
     "head_clock_hint": "{time} shows the current time and {date} today's date, both updated every minute.",
     "head_clock_add": "Add a clock",
-    "head_clock_add_desc": "Adds {time} to the subtitle"
+    "head_clock_add_desc": "Adds {time} to the subtitle",
+    "picker_incompatible": "This card field does not accept this entity type.",
+    "picker_disabled": "Entity disabled in Home Assistant.",
+    "picker_hidden": "Hidden or diagnostic entity"
   },
   "lookr": {
     "add_fuel": "Add fuel",
