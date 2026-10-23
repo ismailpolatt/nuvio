@@ -3612,7 +3612,7 @@
   },
   "suite": {
     "apps": "Applications",
-    "apps_help": "Applications open with your current session. Use Close on desktop or Back on mobile to return to your dashboard.",
+    "apps_help": "Switch applications using the tabs above. Use Close to return to your dashboard.",
     "app_hacs": "Custom cards, themes and integrations.",
     "app_music": "Music library, players and queues.",
     "app_zigbee": "Zigbee devices and network management.",

@@ -3,16 +3,16 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {loadParts} from './harness.mjs';
 
-function setup(){
+function setup(overrides={}){
  const store=new Map(),writes=[],values=new Map(),configs=new Map(),dialogs=[],frames=[],window={addEventListener(){},dispatchEvent(){},open(){throw Error('Must not open a new window');}},navigator={onLine:true};
- const document={createElement(tag){assert.equal(tag,'dialog');const srcs=[],frame={set src(v){srcs.push(v);},srcs},title={textContent:''};frames.push(frame);const d={open:false,attributes:{},setAttribute(k,v){this.attributes[k]=v;},querySelector:q=>q==='iframe'?frame:title,querySelectorAll:()=>[],showModal(){this.open=true;},close(){this.open=false;},remove(){this.removed=true;}};dialogs.push(d);return d;}};
+ const document={querySelector:()=>null,createElement(tag){assert.equal(tag,'dialog');const srcs=[],frame={set src(v){srcs.push(v);},srcs},title={textContent:''};frames.push(frame);const d={open:false,attributes:{},setAttribute(k,v){this.attributes[k]=v;},querySelector:q=>q==='iframe'?frame:title,querySelectorAll:()=>[],showModal(){this.open=true;},close(){this.open=false;},remove(){this.removed=true;}};dialogs.push(d);return d;}};
  const localStorage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)};
  const H={ok:s=>!!s&&!['unknown','unavailable'].includes(s.state),esc:s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;'),name:(h,e)=>h.states[e]?.attributes?.friendly_name||e,icon:s=>s,fmt:(v,n)=>Number(v).toFixed(n),stateLabel:s=>s};
  const HGL={KEY:'nuvio_layout',data:{s:{}},editing:false,notify(){},sort:(xs)=>xs};
  const HGShared={URL:'nuvio-shared',put:(h,config)=>h.callWS({type:'lovelace/config/save',url_path:'nuvio-shared',config})};
  const HGLang={KEY:'nuvio:lang',ok:x=>['tr','en'].includes(x)};
  const globals={window,navigator,document,localStorage,H,HGL,HGShared,HGLang,HGBase:class{disconnectedCallback(){}},HGDashboard:{catalog:()=>[]},HGAreas:{model:()=>({list:[]})},location:{pathname:'/dashboard-test/kontrol'},hgReg(){},hgTO:(o,m)=>Object.assign(o,m),hgTLazy:x=>x,hgT:(k,o)=>k+(o?JSON.stringify(o):''),HG_LOC:()=> 'en-GB',HG_BUILD:'2.23.1+test',CustomEvent:class{}};
- const x=loadParts(['shared/stats.part.js','hg-controlx.part.js','hg-livingx.part.js','hg-journal.part.js','hg-budget.part.js','hg-experience.part.js','hg-tablet-profile.part.js','hg-connection-status.part.js','hg-backup.part.js','cards/openings-card.part.js','hg-suite.part.js'],{...globals,hgHead:(ic,title,sub)=>title+' '+sub,hgAgo14:()=>'',hgMore(){}},['HGPersonal','HGJournal','HGTablet','HGFullBackup','HGDataQuality','HGApps','HGAppsCard','HGSuite','HGOpeningsCard']);
+ const x=loadParts(['shared/stats.part.js','hg-controlx.part.js','hg-livingx.part.js','hg-journal.part.js','hg-budget.part.js','hg-experience.part.js','hg-tablet-profile.part.js','hg-connection-status.part.js','hg-backup.part.js','cards/openings-card.part.js','hg-suite.part.js'],{...globals,hgHead:(ic,title,sub)=>title+' '+sub,hgAgo14:()=>'',hgMore(){},...overrides},['HGPersonal','HGJournal','HGTablet','HGFullBackup','HGDataQuality','HGApps','HGAppsCard','HGSuite','HGOpeningsCard']);
  const h={user:{id:'one',is_admin:true},states:{},entities:{},panels:{},callService(){throw Error('No device services allowed');},async callWS(q){
    if(q.type==='frontend/get_user_data')return {value:values.get(q.key)??null};
    if(q.type==='lovelace/config')return structuredClone(configs.get(q.url_path));
@@ -159,4 +159,36 @@ test('mobile and Companion use authenticated native SPA navigation without an if
  const c=new C();c._hass=h;navigator.userAgent='Mozilla Android';c._openApp('hacs');assert.deepEqual(paths,['/hacs']);assert.equal(dialogs.length,0);
  h.user.is_admin=false;c._openApp('hacs');assert.equal(paths.length,1);
  h.user.is_admin=true;navigator.userAgent='Desktop';h.auth={external:{}};assert.equal(a.native(h),true);c._openApp('hacs');assert.equal(paths.length,2);assert.equal(dialogs.length,0);
+});
+
+function nativeSetup(){
+ const listeners=new Map(),nodes=[],properties=new Map(),attrs=new Map(),route={pathname:'/dashboard-test/uygulamalar',search:'',hash:''};let tick,stopped=0;
+ const root={style:{setProperty:(k,v)=>properties.set(k,v),removeProperty:k=>properties.delete(k)},setAttribute:(k,v)=>attrs.set(k,v),removeAttribute:k=>attrs.delete(k)};
+ const doc={querySelector:()=>root,body:{appendChild:n=>nodes.push(n)},head:{appendChild:n=>nodes.push(n)},createElement(tag){
+  return {tag,style:{},remove(){this.removed=true;},getBoundingClientRect:()=>({height:108}),attachShadow(){return this.shadowRoot={addEventListener(k,fn){this[k]=fn;}};}};
+ }};
+ const win={addEventListener:(k,fn)=>listeners.set(k,fn),removeEventListener:k=>listeners.delete(k)};
+ const x=setup({document:doc,window:win,location:route,setInterval:fn=>{tick=fn;return 9;},clearInterval:()=>stopped++});root.hass=x.h;
+ const paths=[];x.H.navigate=path=>{paths.push(path);route.pathname=path;listeners.get('location-changed')?.();};
+ x.h.panels={hacs:{title:'HACS',require_admin:true},music:{title:'Music Assistant'}};
+ return {...x,root,route,paths,nodes,listeners,properties,attrs,tick:()=>tick(),stopped:()=>stopped};
+}
+test('mobile application bar survives card departure, switches apps and closes to the original dashboard without iframe auth',()=>{
+ const {HGApps:a,h,paths,nodes,properties,attrs,listeners,stopped}=nativeSetup();a.openNative(h,a.list(h)[0]);
+ const s=a._nativeSession;assert.equal(s.started,true);assert.match(s.shadow.innerHTML,/HACS/);assert.match(s.shadow.innerHTML,/Music Assistant/);assert.equal(properties.get('--nuvio-app-bar-height'),'108px');assert.equal(attrs.has('data-nuvio-app-shell'),true);
+ s.shadow.click({composedPath:()=>[{dataset:{app:'music'}}]});assert.equal(paths.at(-1),'/music');assert.equal(a._nativeSession,s);assert.match(s.shadow.innerHTML,/aria-pressed="true">Music Assistant/);
+ s.shadow.click({composedPath:()=>[{dataset:{close:''}}]});assert.equal(paths.at(-1),'/dashboard-test/uygulamalar');assert.equal(a._nativeSession,null);assert.equal(properties.size,0);assert.equal(attrs.size,0);assert.equal(listeners.size,0);assert.equal(stopped(),1);assert.ok(nodes.every(n=>n.removed));
+});
+test('mobile bar cleans itself on Back, account change, or lost application permission and rejects forged tab IDs',()=>{
+ for(const mode of ['back','account','permission']){
+  const {HGApps:a,h,root,route,paths,tick}=nativeSetup();a.openNative(h,a.list(h)[0]);const s=a._nativeSession;
+  s.shadow.click({composedPath:()=>[{dataset:{app:'javascript:bad'}}]});assert.equal(paths.length,1);
+  if(mode==='back')route.pathname='/dashboard-test/uygulamalar';if(mode==='account')root.hass={...h,user:{id:'two'}};if(mode==='permission')root.hass={...h,user:{...h.user,is_admin:false}};
+  tick();assert.equal(a._nativeSession,null);assert.equal(s.bar.removed,true);
+ }
+});
+
+test('a personally added panel remains available while it is the current mobile route',()=>{
+ const {HGApps:a,HGPersonal:p,h,tick}=nativeSetup();h.panels.esphome={title:'ESPHome Builder'};p.data.apps=[{id:'panel:esphome',title:'My app'}];
+ a.openNative(h,a.list(h)[0]);tick();assert.ok(a._nativeSession);assert.match(a._nativeSession.shadow.innerHTML,/My app/);a.endNative();
 });

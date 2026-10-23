@@ -29,12 +29,46 @@ const HGDataQuality = window.HGDataQuality = {
 
 const HGApps = window.HGApps = {
   native(h){return !!h.auth?.external || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'') || (navigator.maxTouchPoints>0 && window.innerWidth<=700);},
+  endNative(){
+    const s=this._nativeSession;if(!s)return;this._nativeSession=null;clearInterval(s.timer);s.observer?.disconnect();
+    window.removeEventListener('location-changed',s.update);window.removeEventListener('popstate',s.update);
+    s.root.removeAttribute('data-nuvio-app-shell');s.root.style.removeProperty('--nuvio-app-bar-height');s.style.remove();s.bar.remove();
+  },
+  openNative(h,app){
+    let s=this._nativeSession;
+    if(s && s.uid!==h.user?.id){this.endNative();s=null;}
+    if(!s){
+      const root=document.querySelector('home-assistant');if(!root)return H.navigate(app.path);
+      const bar=document.createElement('div'),shadow=bar.attachShadow({mode:'open'}),style=document.createElement('style');
+      style.textContent='home-assistant[data-nuvio-app-shell]{position:fixed!important;top:var(--nuvio-app-bar-height)!important;bottom:0!important;left:0!important;width:100%!important;height:calc(100% - var(--nuvio-app-bar-height))!important;min-height:0!important}';document.head.appendChild(style);
+      s=this._nativeSession={root,bar,shadow,style,uid:h.user.id,back:location.pathname+location.search+location.hash,id:app.id,started:false,at:Date.now()};
+      bar.style.cssText='position:fixed;inset:0 0 auto;z-index:2147483000;color:var(--primary-text-color,#fff);background:var(--primary-background-color,#171b24);font:14px/1.4 sans-serif;';
+      const size=()=>{if(this._nativeSession!==s)return;root.style.setProperty('--nuvio-app-bar-height',Math.ceil(bar.getBoundingClientRect().height)+'px');};
+      s.update=()=>{
+        if(this._nativeSession!==s)return;
+        const live=root.hass;if(!live || live.user?.id!==s.uid){this.endNative();return;}
+        const apps=this.list(live).filter(p=>p.path),path='/'+location.pathname.split('/').filter(Boolean)[0],current=apps.find(p=>p.path===path);
+        if(current){s.id=current.id;s.started=true;}else if(s.started || location.pathname!==s.back.split(/[?#]/)[0] || Date.now()-s.at>10000){this.endNative();return;}
+        const active=apps.find(p=>p.id===s.id);if(!active){this.endNative();return;}
+        const sig=JSON.stringify([apps,s.id]);if(sig!==s.sig){s.sig=sig;shadow.innerHTML=`<style>:host{display:block}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top))}b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}button{font:inherit;color:inherit;background:#ffffff16;border:0;border-radius:12px;min-height:44px;padding:8px 14px;flex:none;cursor:pointer}button:focus-visible{outline:2px solid #49a3ff}nav{display:flex;gap:6px;overflow-x:auto;padding:0 12px 8px;scrollbar-width:thin}nav button{white-space:nowrap}nav [aria-pressed=true]{background:#49a3ff;color:#081a2b}</style><header><b>${H.esc(active.title)}</b><button data-close>${H.esc(hgT('common.close'))}</button></header><nav aria-label="${H.esc(hgT('suite.apps'))}">${apps.map(p=>`<button data-app="${H.esc(p.id)}" aria-pressed="${p.id===s.id}">${H.esc(p.title)}</button>`).join('')}</nav>`;size();}
+      };
+      shadow.addEventListener('click',e=>{const b=e.composedPath().find(n=>n.dataset && ('app' in n.dataset || 'close' in n.dataset));if(!b)return;
+        const live=root.hass;if(live?.user?.id!==s.uid){this.endNative();return;}
+        if('close' in b.dataset){const back=s.back;this.endNative();H.navigate(back);return;}
+        const target=this.list(live).find(p=>p.id===b.dataset.app && p.path);if(target)H.navigate(target.path);
+      });
+      document.body.appendChild(bar);root.setAttribute('data-nuvio-app-shell','');
+      if(typeof ResizeObserver!=='undefined'){s.observer=new ResizeObserver(size);s.observer.observe(bar);}
+      s.timer=setInterval(s.update,500);window.addEventListener('location-changed',s.update);window.addEventListener('popstate',s.update);
+    }
+    s.id=app.id;H.navigate(app.path);s.update();
+  },
   clean(v) {
     if(!Array.isArray(v))return null;
     const seen=new Set();return v.filter(r=>r && typeof r.id==='string' && /^(hacs|music|zigbee|blueprint|panel:[a-zA-Z0-9_-]+)$/.test(r.id) && !seen.has(r.id) && seen.add(r.id)).slice(0,32).map(r=>({id:r.id,title:typeof r.title==='string'?r.title.trim().slice(0,60):''}));
   },
   available(h) {
-    return Object.entries(h.panels||{}).filter(([path,p])=>/^[a-zA-Z0-9_-]+$/.test(path) && typeof p.title==='string' && p.title.trim() && (!p.require_admin || h.user?.is_admin) && path!==location.pathname.split('/').filter(Boolean)[0]).map(([path,p])=>({id:'panel:'+path,title:p.title,icon:/^mdi:[a-z0-9-]+$/.test(p.icon||'')?p.icon:'mdi:application-outline',admin:!!p.require_admin,path:'/'+path})).sort((a,b)=>a.title.localeCompare(b.title));
+    return Object.entries(h.panels||{}).filter(([path,p])=>/^[a-zA-Z0-9_-]+$/.test(path) && typeof p.title==='string' && p.title.trim() && (!p.require_admin || h.user?.is_admin) && path!==(this._nativeSession?.back||location.pathname).split('/').filter(Boolean)[0]).map(([path,p])=>({id:'panel:'+path,title:p.title,icon:/^mdi:[a-z0-9-]+$/.test(p.icon||'')?p.icon:'mdi:application-outline',admin:!!p.require_admin,path:'/'+path})).sort((a,b)=>a.title.localeCompare(b.title));
   },
   prefs(h){return HGPersonal.uid===h.user?.id?this.clean(HGPersonal.data.apps):null;},
   chrome(frame, every=setInterval, stop=clearInterval) {
@@ -92,7 +126,7 @@ class HGAppsCard extends HGBase {
   _openApp(id,opener){
     const apps=HGApps.list(this._hass).filter(p=>p.path),app=apps.find(p=>p.id===id),uid=this._hass.user?.id;
     if(!app || !uid)return;
-    if(HGApps.native(this._hass)){this._closeApp();return H.navigate(app.path);}
+    if(HGApps.native(this._hass)){this._closeApp();return HGApps.openNative(this._hass,app);}
     if(this._appDialog && this._appUid!==uid)this._closeApp();
     if(!this._appDialog){
       const d=document.createElement('dialog');d.className='suite-app-viewer';d.setAttribute('aria-label',app.title);
