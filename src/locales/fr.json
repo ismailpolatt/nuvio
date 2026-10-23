@@ -3471,5 +3471,29 @@
     "automation": "Automatisation",
     "room": "Commandes de la pièce",
     "pending": "Enregistrement"
+  },
+  "budget": {
+    "title": "Budget énergétique mensuel",
+    "help": "Objectif personnel par mois civil pour l’énergie du réseau. Utilise le compteur d’accueil ou les sources d’énergie Home Assistant.",
+    "target": "Objectif mensuel (0 : désactivé)",
+    "unit": "Unité de l’objectif",
+    "off": "Aucun objectif de budget défini.",
+    "configure": "Réglages du budget",
+    "used": "Consommation",
+    "remaining": "Budget restant",
+    "over": "Dépassement",
+    "forecast": "Prévision de fin de mois",
+    "no_forecast": "La prévision nécessite au moins 24 heures de relevés continus ce mois-ci.",
+    "incomplete": "Relevés horaires ou de début de mois manquants. Consommation et prévision indisponibles.",
+    "stale": "Le dernier relevé est ancien. Prévision suspendue.",
+    "rate_needed": "Pour un objectif monétaire, saisissez un prix unitaire positif dans Tarif.",
+    "normal": "Dans l’objectif",
+    "near": "Seuil d’avertissement atteint",
+    "exceeded": "Objectif mensuel atteint ou dépassé",
+    "risk": "À ce rythme, l’objectif de fin de mois pourrait être dépassé",
+    "as_of": "Données au",
+    "source": "Source d’énergie",
+    "threshold": "Seuil d’avertissement à l’écran (%)",
+    "note": "Prévision basée sur la consommation enregistrée. Coût approximatif à prix unitaire unique, hors taxes et tarifs par paliers. Les avertissements ne commandent aucun appareil."
   }
 }

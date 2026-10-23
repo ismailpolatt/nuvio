@@ -20,3 +20,13 @@ Kontrol → İşlem günlüğü, bu panelden favoriler, ev modları, çıkış k
 Komut kabul edildi, kısmen tamamlandı ve başarısız durumları ayrı gösterilir. Kabul edilen adım sayısı, hedefler ve istenen aç/kapat komutları incelenebilir. Kabul, fiziksel cihaz durumunun doğrulandığı anlamına gelmez; diğer uygulamalar ve geçmiş işlemler içe aktarılmaz.
 
 Günlük okuma/yazma hatası cihaz komutunu tekrar göndermez ve komut sonucunu değiştirmez. Aynı tarayıcıdaki eklemeler sıraya alınır ve her eklemeden önce sunucudaki son kayıt okunur. Home Assistant bu veri alanında koşullu yazma sunmadığı için farklı tarayıcıların tam eşzamanlı yazıları arasında kayıt kaybı yine mümkündür; bu bir eksiksiz denetim kaydı değildir. Hesap değişiminde eski yanıtlar yeni hesabın ekranını değiştirmez.
+
+## Aylık enerji bütçesi (2026-10-23)
+
+Kontrol → Enerji geçmişi → Bütçe ayarları üzerinden aylık kWh veya para birimi hedefi ve ekran uyarısı eşiği belirlenir. Hedef 0 ise kapalıdır; varsayılan hedef uydurulmaz. Ayarlar yalnız ilgili hesabın kişisel tercihlerine kaydedilir. TL/para birimi hedefi için Tarife bölümündeki pozitif birim fiyat gerekir.
+
+Takvim ayı Home Assistant saat dilimine göre hesaplanır. Ana sayfada seçilen enerji sayacı veya Home Assistant enerji ayarlarındaki şebekeden alım kaynakları kullanılır; bunların toplamı tüm ev tüketimiyle aynı olmak zorunda değildir (örneğin güneş üretimi varsa). Recorder saatlik `sum` verileri kWh olarak istenir; ay başı referansı, kesintisiz saatlik kayıt ve çoklu kaynaklarda ortak son zaman gereklidir. Eksik kayıt sıfır tüketim sayılmaz. Kümülatif toplamın düşmesi de eksik/geçersiz veri kabul edilir.
+
+Kullanılan, kalan, aşım ve ay sonu tahmini gösterilir. Tahmin en az 24 saat kayıt gerektirir; son kayıt iki saatten eskiyse durdurulur. Hedefe ulaşma, uyarı yüzdesi ve tahmini aşım yalnız bu ekranda gösterilir; bildirim servisi veya cihaz komutu gönderilmez. Tek fiyatlı maliyet yaklaşık olup vergi/kademeli tarife içermez. Sıfır tüketim geçerlidir. Yenile düğmesi bütçe verisini de yeniler.
+
+API biçimi: [Home Assistant Recorder WebSocket kaynağı](https://github.com/home-assistant/core/blob/dev/homeassistant/components/recorder/websocket_api.py) (`statistics_during_period`, saatlik `sum`, enerji birimi dönüşümü).

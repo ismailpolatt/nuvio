@@ -3418,5 +3418,29 @@
     "automation": "Otomasyon",
     "room": "Oda kontrolü",
     "pending": "Kaydediliyor"
+  },
+  "budget": {
+    "title": "Aylık enerji bütçesi",
+    "help": "Takvim ayı boyunca şebekeden alınan enerji için hesabına özel hedef. Ana sayfada seçilen sayaç veya Home Assistant enerji kaynakları kullanılır.",
+    "target": "Aylık hedef (0: kapalı)",
+    "unit": "Hedef birimi",
+    "off": "Bütçe hedefi henüz belirlenmedi.",
+    "configure": "Bütçe ayarları",
+    "used": "Kullanılan",
+    "remaining": "Kalan bütçe",
+    "over": "Bütçe aşımı",
+    "forecast": "Ay sonu tahmini",
+    "no_forecast": "Tahmin için ay içinde en az 24 saatlik kesintisiz kayıt gerekir.",
+    "incomplete": "Ay başı veya saatlik kayıt eksik. Tüketim ve tahmin gösterilemiyor.",
+    "stale": "Son kayıt güncel değil. Ay sonu tahmini durduruldu.",
+    "rate_needed": "Para birimiyle hedef için Tarife bölümünde sıfırdan büyük birim fiyat gir.",
+    "normal": "Hedef sınırları içinde",
+    "near": "Uyarı eşiğine ulaşıldı",
+    "exceeded": "Aylık hedefe ulaşıldı veya aşıldı",
+    "risk": "Bu hızla ay sonunda hedef aşılabilir",
+    "as_of": "Verinin zamanı",
+    "source": "Enerji kaynağı",
+    "threshold": "Ekran uyarısı eşiği (%)",
+    "note": "Tahmin, kayıtlı tüketim hızına dayanır. Maliyet tek birim fiyatla yaklaşık hesaplanır; vergi ve kademeli tarife içermez. Uyarılar bu ekranda görünür, cihazları değiştirmez."
   }
 }

@@ -3418,5 +3418,29 @@
     "automation": "Automation",
     "room": "Room controls",
     "pending": "Saving"
+  },
+  "budget": {
+    "title": "Monthly energy budget",
+    "help": "An account-specific calendar-month target for grid import. Uses the home meter selection or Home Assistant energy sources.",
+    "target": "Monthly target (0: off)",
+    "unit": "Target unit",
+    "off": "No budget target has been set.",
+    "configure": "Budget settings",
+    "used": "Used",
+    "remaining": "Remaining budget",
+    "over": "Over budget",
+    "forecast": "Month-end forecast",
+    "no_forecast": "A forecast needs at least 24 hours of continuous records this month.",
+    "incomplete": "Month-start or hourly records are missing. Usage and forecast cannot be shown.",
+    "stale": "The latest record is stale. Forecast paused.",
+    "rate_needed": "For a monetary target, enter a positive unit price under Tariff.",
+    "normal": "Within target",
+    "near": "Warning threshold reached",
+    "exceeded": "Monthly target reached or exceeded",
+    "risk": "At this rate the month-end target may be exceeded",
+    "as_of": "Data as of",
+    "source": "Energy source",
+    "threshold": "On-screen warning threshold (%)",
+    "note": "Forecast follows recorded consumption. Cost uses one approximate unit price, excluding taxes and tiered rates. Warnings appear here and do not control devices."
   }
 }

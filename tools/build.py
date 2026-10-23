@@ -119,10 +119,11 @@ PAGE.append('hg-dashboardx.part.js')
 PAGE.append('hg-controlx.part.js')
 PAGE.append('hg-livingx.part.js')
 PAGE.append('hg-journal.part.js')
+PAGE.append('hg-budget.part.js')
 PARTS = CORE + UI + SHARED + CARDS + PAGE
 import re
 def brand_tags(js):
-    """element tags to rename: every hgReg('hg-…') of the (unbranded) bundle, plus hg-page"""
+    """element tags to rename: every hgReg('hg-â€¦') of the (unbranded) bundle, plus hg-page"""
     return sorted(set(re.findall(r"hgReg\('(hg-[a-z-]+)'", js)) | {'hg-page'}, key=len, reverse=True)
 def brand(js, tags=None):
     """Nuvio branding at build time: element tags hg-* -> nuvio-*, storage keys, names. Sources stay in sync with the private build.
@@ -132,7 +133,7 @@ def brand(js, tags=None):
         js = re.sub(r'(?<![-\w])' + re.escape(t) + r'(?![-\w])', n, js)
         js = re.sub(r'(?<![-\w])' + re.escape(t.upper()) + r'(?![-\w])', n.upper(), js)
     for a, b in [('ll-strategy-dashboard-home-glass', 'll-strategy-dashboard-nuvio'), ('home_glass_layout', 'nuvio_layout'), ('/hacsfiles/home-glass/', '/hacsfiles/nuvio/'),
-                 ('home-glass:', 'nuvio:'), ("'home-glass'", "'nuvio'"), ('Home Glass – ', 'Nuvio – '), ('Home Glass', 'Nuvio'), ('home-glass', 'nuvio'), ('Witaj w nuvio', 'Witaj w Nuvio'), ('Welcome to nuvio', 'Welcome to Nuvio')]:
+                 ('home-glass:', 'nuvio:'), ("'home-glass'", "'nuvio'"), ('Home Glass â€“ ', 'Nuvio â€“ '), ('Home Glass', 'Nuvio'), ('home-glass', 'nuvio'), ('Witaj w nuvio', 'Witaj w Nuvio'), ('Welcome to nuvio', 'Welcome to Nuvio')]:
         js = js.replace(a, b)
     # window globals get their own namespace, so a private hg-* build loaded as another Lovelace resource cannot share state with Nuvio
     # (a shared window.__hgL made Nuvio save to the other build's layout key, without the screensaver settings). Test hooks keep their names.
@@ -207,7 +208,7 @@ def main():
         try:
             manifest, en, idx, cats = i18n_compile.compile_locales(os.path.join(R, 'src', 'locales'), text=lambda t: brand(t, tags))
             js = i18n_compile.rewrite_keys(js, idx)
-        except ValueError as e: sys.exit('i18n: %s – see python3 tools/i18n_check.py (dist/ left unchanged)' % e)
+        except ValueError as e: sys.exit('i18n: %s â€“ see python3 tools/i18n_check.py (dist/ left unchanged)' % e)
         for ph, val in (('/*__HG_I18N_MANIFEST__*/[]', manifest), ('/*__HG_I18N_EN__*/null', en)):
             if js.count(ph) != 1: sys.exit('i18n placeholder %s expected once, found %d' % (ph, js.count(ph)))
             js = js.replace(ph, json.dumps(val, ensure_ascii=False, separators=(',', ':')))

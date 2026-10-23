@@ -3524,5 +3524,29 @@
     "automation": "Automatyzacja",
     "room": "Sterowanie pokojem",
     "pending": "Zapisywanie"
+  },
+  "budget": {
+    "title": "Miesięczny budżet energii",
+    "help": "Osobisty cel na miesiąc kalendarzowy dla energii z sieci. Używa licznika strony głównej lub źródeł energii Home Assistant.",
+    "target": "Cel miesięczny (0: wyłączony)",
+    "unit": "Jednostka celu",
+    "off": "Nie ustawiono celu budżetu.",
+    "configure": "Ustawienia budżetu",
+    "used": "Zużycie",
+    "remaining": "Pozostały budżet",
+    "over": "Przekroczenie",
+    "forecast": "Prognoza na koniec miesiąca",
+    "no_forecast": "Prognoza wymaga co najmniej 24 godzin ciągłych danych w tym miesiącu.",
+    "incomplete": "Brakuje danych z początku miesiąca lub godzinowych. Zużycie i prognoza niedostępne.",
+    "stale": "Ostatni zapis jest nieaktualny. Prognoza wstrzymana.",
+    "rate_needed": "Dla celu pieniężnego podaj dodatnią cenę jednostkową w sekcji Taryfa.",
+    "normal": "W granicach celu",
+    "near": "Osiągnięto próg ostrzeżenia",
+    "exceeded": "Cel miesięczny osiągnięty lub przekroczony",
+    "risk": "W tym tempie cel na koniec miesiąca może zostać przekroczony",
+    "as_of": "Dane z",
+    "source": "Źródło energii",
+    "threshold": "Próg ostrzeżenia na ekranie (%)",
+    "note": "Prognoza według zarejestrowanego zużycia. Koszt przybliżony według jednej ceny, bez podatków i taryf progowych. Ostrzeżenia nie sterują urządzeniami."
   }
 }
