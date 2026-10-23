@@ -1,8 +1,8 @@
 const HG_LIVING_TEXT = hgTO({}, { journal: 'living.journal', suggestions: 'living.suggestions', exit: 'living.exit', notices: 'living.notices', automations: 'living.automations', quick_title: 'living.quick_title', quick_help: 'living.quick_help', lights: 'living.lights', climate: 'living.climate', switches: 'living.switches', sensors: 'living.sensors', full_room: 'living.full_room', details: 'living.details', suggestions_help: 'living.suggestions_help', rule_window_climate: 'living.rule_window_climate', rule_humidity: 'living.rule_humidity', rule_battery: 'living.rule_battery', no_suggestions: 'living.no_suggestions', exit_help: 'living.exit_help', no_exit_items: 'living.no_exit_items', preview_off: 'living.preview_off', exit_confirm: 'living.exit_confirm', command_help: 'living.command_help', confirm: 'living.confirm', commands_sent: 'living.commands_sent', action_failed: 'living.action_failed', notices_help: 'living.notices_help', notification: 'living.notification', priority_0: 'living.priority_0', priority_1: 'living.priority_1', priority_2: 'living.priority_2', priority_3: 'living.priority_3', read: 'living.read', mark_read: 'living.mark_read', no_alerts: 'living.no_alerts', tablet_profile: 'living.tablet_profile', tablet_help: 'living.tablet_help', edit_lock: 'living.edit_lock', locked_help: 'living.locked_help', large_touch: 'living.large_touch', landscape: 'living.landscape', portrait: 'living.portrait', automation_help: 'living.automation_help', area: 'living.area', all: 'living.all', unassigned: 'living.unassigned', filter: 'living.filter', last_run: 'living.last_run', enable: 'living.enable', disable: 'living.disable', no_automations: 'living.no_automations', auto_confirm: 'living.auto_confirm' });
 /* Daily-use tools: derived from current HA state, with explicit actions only. */
 const HGLiving = window.HGLiving = {
-  tabs: ['suggestions', 'exit', 'notices', 'automations', 'journal'],
-  text(k) { return HG_LIVING_TEXT[k]; },
+  tabs: ['maintenance', 'comfort', 'suggestions', 'exit', 'notices', 'automations', 'journal'],
+  text(k) { return window.HGExperience && ['maintenance','comfort'].includes(k) ? HGExperience.text(k) : HG_LIVING_TEXT[k]; },
   visible(h, e) { const r = (h.entities || {})[e] || {}; return !!h.states[e] && !r.hidden && !r.hidden_by && !r.disabled_by && r.entity_category !== 'config'; },
   model(h) { return HGAreas.model(h, ((HGL.data.wiz || {}).areas || {})); },
   area(h, e) { const r = (h.entities || {})[e] || {}, d = (h.devices || {})[r.device_id] || {}; return r.area_id || d.area_id || ''; },
@@ -54,20 +54,24 @@ const HGLiving = window.HGLiving = {
   },
   page(card) { let n = card; while (n) { if (n._config && n._config.view && n._panelEl) return n; n = n.getRootNode && n.getRootNode().host; } return null; },
   tabletKey(h) { return 'nuvio:tablet-profile:' + (h.user && h.user.id || '') + ':' + location.pathname.split('/').filter(Boolean)[0]; },
-  tabletPrefs(h) { try { const p = JSON.parse(localStorage.getItem(this.tabletKey(h)) || '{}') || {}, ids = (xs) => Array.isArray(xs) ? xs.filter((s) => typeof s === 'string').slice(0,100) : []; return { locked: p.locked === true, large: p.large === true, landscape: ids(p.landscape), portrait: ids(p.portrait) }; } catch (e) { return {}; } },
+  tabletPrefs(h) { try { const p = JSON.parse(localStorage.getItem(this.tabletKey(h)) || '{}') || {}, ids = (xs) => Array.isArray(xs) ? xs.filter((s) => typeof s === 'string').slice(0,100) : []; if (window.HGTablet) return HGTablet.clean(p); return { locked: p.locked === true, large: p.large === true, landscape: ids(p.landscape), portrait: ids(p.portrait) }; } catch (e) { return {}; } },
   tabletHere() { return navigator.maxTouchPoints > 0 && window.innerWidth >= 600 && window.innerWidth <= 1600; },
   orientation() { return window.innerWidth >= window.innerHeight ? 'landscape' : 'portrait'; },
   tabletLocked(page) { return !!(this.tabletHere() && this.tabletPrefs(page._hass || {}).locked); },
   tabletApply(cards, page) {
+    if (window.HGTablet) return HGTablet.apply(cards, page);
     if (!this.tabletHere()) return cards;
     const p = this.tabletPrefs(page._hass), hidden = p[this.orientation()];
     return Array.isArray(hidden) ? cards.map((c) => hidden.includes(c._k) ? { ...c, _hid: true } : c) : cards;
   },
   tabletHtml(card) {
+    if (window.HGTablet) return HGTablet.html(card);
     const p = this.tabletPrefs(card._hass), cards = HGDashboard.catalog(), keys = cards.map((c) => c._k);
     return `<div class="cx-box" style="margin-top:12px"><h3>${HG_LIVING_TEXT.tablet_profile}</h3><p class="cx-note">${HG_LIVING_TEXT.tablet_help}</p><label class="cx-row"><input type="checkbox" name="living-lock" ${p.locked ? 'checked' : ''}><span>${HG_LIVING_TEXT.edit_lock}</span></label><label class="cx-row"><input type="checkbox" name="living-large" ${p.large ? 'checked' : ''}><span>${HG_LIVING_TEXT.large_touch}</span></label><div class="cx-grid">${['landscape', 'portrait'].map((o) => `<div><h3>${HG_LIVING_TEXT[o]}</h3>${cards.map((c, i) => `<label class="cx-row"><input type="checkbox" name="living-${o}" value="${H.esc(keys[i])}" ${!(p[o] || []).includes(keys[i]) ? 'checked' : ''}><span>${H.esc(c.title || c.entity || c.type)}</span></label>`).join('')}</div>`).join('')}</div><button class="cx-btn cx-primary" data-act="living-tablet-save">${hgT('common.save')}</button></div>`;
   },
   html(card, tab) {
+    if (tab === 'maintenance' && window.HGExperience) return HGExperience.maintenanceHtml(card);
+    if (tab === 'comfort' && window.HGExperience) return HGExperience.comfortHtml(card);
     if (tab === 'journal' && window.HGJournal) return HGJournal.html(card);
     const h = card._hass, details = (e) => `<button class="cx-btn" data-act="details" data-e="${H.esc(e)}" aria-label="${HG_LIVING_TEXT.details}">${H.icon('mdi:information-outline')}</button>`;
     if (tab === 'suggestions') {
@@ -112,6 +116,7 @@ const HGLiving = window.HGLiving = {
   },
   async act(card, action, b) {
     const h = card._hass, R = card.shadowRoot; let journal;
+    if (window.HGTablet && ['living-tablet-save','living-tablet-up','living-tablet-reset'].includes(action)) { try { HGTablet.act(card,action,b); } catch(e) {card._message=hgT('controlx.failed');} return card.rerender(); }
     try {
       if (action === 'living-journal-refresh' && window.HGJournal) await HGJournal.load(h, true);
       if (action === 'living-journal-filter' && ['all','accepted','partial','failed'].includes(b.dataset.status)) card._journalFilter = b.dataset.status;

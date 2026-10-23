@@ -30,3 +30,27 @@ Takvim ayı Home Assistant saat dilimine göre hesaplanır. Ana sayfada seçilen
 Kullanılan, kalan, aşım ve ay sonu tahmini gösterilir. Tahmin en az 24 saat kayıt gerektirir; son kayıt iki saatten eskiyse durdurulur. Hedefe ulaşma, uyarı yüzdesi ve tahmini aşım yalnız bu ekranda gösterilir; bildirim servisi veya cihaz komutu gönderilmez. Tek fiyatlı maliyet yaklaşık olup vergi/kademeli tarife içermez. Sıfır tüketim geçerlidir. Yenile düğmesi bütçe verisini de yeniler.
 
 API biçimi: [Home Assistant Recorder WebSocket kaynağı](https://github.com/home-assistant/core/blob/dev/homeassistant/components/recorder/websocket_api.py) (`statistics_during_period`, saatlik `sum`, enerji birimi dönüşümü).
+
+## Bakım ve pil (2026-10-23)
+
+Kontrol → Bakım ve pil: hesaba özel en fazla 50 görev. Ad, isteğe bağlı cihaz, planlanan tarih ve tekrar süresi girilir. Tekrar 0 ise tek seferliktir; “Yaptım” sonrası tamamlandı olarak saklanır. Tekrarlanan görev tamamlandığı tarihten belirtilen gün kadar ileri planlanır. Tarih Home Assistant saat dilimine göredir. Düzenleme ve iki aşamalı kaldırma desteklenir. Bunlar panel içi hatırlatmalardır; arka planda bildirim, takvim kaydı veya cihaz komutu oluşturulmaz.
+
+Düşük pil (%0–20), unavailable/unknown ve eski zaman damgası ayrı durumlar olarak gösterilir. `last_reported` varsa o, yoksa `last_updated` kullanılır. Varsayılan eski veri eşiği 24 saattir; 1–720 saat arası değiştirilebilir. Eski damga çevrimdışı kanıtı değildir; yalnız değişiklikte raporlayan cihazlar olabilir. Gizli/devre dışı bırakılmış varlıklar gösterilmez.
+
+## Kişisel hızlı işlemler
+
+Kontrol → Ev modları → Yapılandır: dört mevcut modun adını değiştirebilir ve “Favoriler bölümüne sabitle” seçebilirsin. Sabitlenen mod Favoriler üstünde görünür; adımlar açıkça yapılandırılmadan düğme etkinleşmez. Dokunma yalnız önizleme açar; cihaz/komut listesi onaylanınca mevcut güvenli yürütme ve sonuç günlüğü kullanılır. Yeni bir paralel mod sistemi veya varsayılan cihaz seçimi oluşturulmaz. İsim ve sabitleme hesaplar arasında taşınmaz.
+
+## Oda konforu
+
+Kontrol → Oda konforu: seçili oda sıcaklık/nem sensörleri, açık/belirsiz kontaklar ve aynı odada fiilen heating/cooling bildiren iklimlendirme birlikte gösterilir. Sıcaklık °C’ye çevrilir (°F/K destekli). Başlangıç gösterge eşikleri sıcaklık18–26°C, nem%30–65 olup kullanıcı değiştirebilir; bunlar tıbbi veya otomasyon önerisi değildir. Eksik/boş/ölçü dışı/eski veya zaman damgasız veri uygun kabul edilmez. Veri eskiliği bakım bölümündeki kişisel saat eşiğini kullanır. Açık kontak ve çalışan iklimlendirme ayrıca işaretlenir; otomatik müdahale yoktur.
+
+## Tablet yön profilleri
+
+Kontrol → Tablet: aynı tarayıcı/hesap/dashboard için yatay ve dikeyde bağımsız görünürlük, yukarı taşıma ve genişlik seçimi. Mevcut görünürlük tercihleri korunur. Genişlik varsayılan/yarım/tam olabilir. Açık kişisel tablet sırası CSS boşluk doldurmasıyla bozulmaz; yeni kartlar listenin sonuna eklenir. Ortak düzende gizlenen kart açılamaz. Ayarlar yalnız dokunmatik600–1600px görünümünde uygulanır; telefon etkilenmez. “Varsayılanları forma getir” yalnız taslaktır; Kaydet olmadan uygulanmaz. Düzenleme kilidi ve büyük dokunma hedefleri korunur. Profil yerel tarayıcı saklamasıdır; HA izinlerini değiştirmez.
+
+## Canlı bağlantı ve veri zamanı
+
+Aktif panel açıkken dakikada en fazla bir salt okunur WebSocket ping ile sunucu erişimi kontrol edilir; sekiz saniye yanıt alınamazsa bekleme uyarısı gösterilir. Tarayıcı offline ve HA disconnected/ready olayları izlenir; gizli/ayrılmış sayfalar kontrol döngüsü çalıştırmaz. Bağlantı hatasında sayfalarda bilgi şeridi görünür; normale dönünce kaybolur. Kontrol → Tablet altında son başarılı kontrol, yanıt süresi ve favori/seçili tablet sensörlerinin zaman damgaları incelenebilir. “Bağlantıyı kontrol et” yalnız ping gönderir, cihaz komutu göndermez. Sunucu bağlantısı fiziksel sensör tazeliğinin kanıtı değildir.
+
+İstemci olayları ve pong davranışı: [Home Assistant WebSocket istemcisi](https://github.com/home-assistant/home-assistant-js-websocket/blob/master/lib/connection.ts). Kullanıcı isteğiyle bu toplu sürümün fiziksel A9+ ve canlı form/cihaz kontrolü sonraki aşamaya bırakılmıştır; model/render testleri gerçek cihaz testi değildir.

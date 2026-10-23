@@ -177,6 +177,7 @@ class HGPage extends HTMLElement {
     if (HGShell.root === this && this._hgHidden) { this._hgPend = h; HGShell.fwd(h); return; }
     const first = !this._hass, old = this._hass;
     this._hass = h;
+    if (window.HGConnection) HGConnection.bind(this);
     if (this._editing && this._eSheetEl && old && old.states !== h.states) { try { this._ePvTick(h); } catch (e) { /* */ } }
     if (!this._config) return;
     if (this._config.redirect) { this._redirect(); return; }
@@ -253,12 +254,14 @@ class HGPage extends HTMLElement {
     this._ro = new ResizeObserver(() => this._layout()); this._ro.observe(this);
     if (this._hass && !this._unsub) this._subscribe();
     this._layout();
+    if (window.HGConnection) HGConnection.bind(this);
     if (this._built) this._enter();     // widok z pamięci HA: podłączony ponownie
   }
   /* zmiana języka bez przeładowania: strona przerysowana od razu (karty, pasek); konfiguracja strategii w innym języku (etykiety nawigacji,
      tytuły widoków: katalog spóźniony) -> HA generuje dashboard od nowa (config-refresh, HGLang.stale) */
   _langChanged() { if (this._editing || !this._hass || !this._config || this._config.redirect) return; this._menuOpen = false; HGLang.stale(this); this._build(); }
   disconnectedCallback() {
+    if (window.HGConnection) HGConnection.unbind(this);
     HGL.subs.delete(this._hglSub); window.removeEventListener('hg-lang', this._onLang); window.removeEventListener('hg-perf', this._onPerf);
     if (this._editing) this._editExit(this._eDirty());   /* przejście do innego widoku / wstecz w trakcie edycji: zmiany zapisane, nie odrzucone */
     document.removeEventListener('keydown', this._sheetKey, true); document.removeEventListener('keydown', this._menuKey, true); this._menuOpen = false;
@@ -396,7 +399,7 @@ class HGPage extends HTMLElement {
     const pw = this._pwSet(), wd = pw ? pw === 'wide' : !!p.wide;
     if (pw === 'narrow' && mode === 'wide' && !p.areas) { const cs = el.style.gridTemplateColumns || '', m = /repeat\((\d+)/.exec(cs), n = m ? +m[1] : cs.split(/\s+/).filter(Boolean).length; if (n > 2) el.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))'; }
     { const cs = el.style.gridTemplateColumns || '', m = /^repeat\((\d+), minmax\(0(px)?, 1fr\)\)$/.exec(cs); if (m && mode !== 'phone' && !p.areas) el.style.setProperty('--hg-vcols-tpl', 'repeat(' + m[1] + ', minmax(0, 1fr))'); else el.style.removeProperty('--hg-vcols-tpl'); } /* „dense” dosuwa wąskie karty w dziury, ale tylko w układzie domyślnym: po zmianie kolejności karty stoją dokładnie w kolejności użytkownika (inaczej przeniesiona karta wracała na stare miejsce) */
-    const ord = (() => { try { const sc = this._pageScope(); return !!sc && (HGL.get(sc).order.length > 0 || sc === 'dashboard' && !this._editing && window.HGPersonal && HGPersonal.data.active && HGPersonal.data.order.length > 0); } catch (e) { return false; } })();
+    const ord = (() => { try { const sc = this._pageScope(); return !!sc && (HGL.get(sc).order.length > 0 || sc === 'dashboard' && !this._editing && window.HGPersonal && HGPersonal.data.active && HGPersonal.data.order.length > 0 || sc === 'dashboard' && !this._editing && window.HGTablet && HGTablet.hasOrder(this._hass)); } catch (e) { return false; } })();
     el.style.gridAutoFlow = (mode !== 'phone' && !p.areas) ? (ord ? 'row' : 'row dense') : '';
     /* własne widoki: maks. szerokość treści, kolumny bez wyrównania rzędów, masonry (rzędy 4 px, span z wysokości treści) */
     el.style.maxWidth = p.max_w ? p.max_w + 'px' : ''; el.style.marginInline = p.max_w ? 'auto' : ''; el.style.width = p.max_w ? '100%' : '';
