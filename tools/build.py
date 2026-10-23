@@ -125,6 +125,7 @@ PAGE.append('hg-budget.part.js')
 PAGE.append('hg-experience.part.js')
 PAGE.append('hg-tablet-profile.part.js')
 PAGE.append('hg-connection-status.part.js')
+PAGE.append('hg-suite.part.js')
 PARTS = CORE + UI + SHARED + CARDS + PAGE
 import re
 def brand_tags(js):

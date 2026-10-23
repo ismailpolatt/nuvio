@@ -132,6 +132,7 @@ async function hgGenerate(hass, opt) {
     .filter((x) => (wiz && wiz.views ? x[0] === 'dashboard' || wiz.views.includes(x[0]) : x[3]) && !vOff(x[0])).sort((a, b) => (wiz && wiz.views ? (a[0] === 'dashboard' ? -1 : b[0] === 'dashboard' ? 1 : wiz.views.indexOf(a[0]) - wiz.views.indexOf(b[0])) : 0));
   /* wiz.vx[path] = { i: ikona, sl: krótka etykieta (pasek telefonu), cd/ct: kolumny komputer/tablet, rail: false = bez paska bocznego, ro: kolejność w pasku } */
   if (typeof HGPersonal !== 'undefined') V.push(['kontrol', hgT('controlx.title'), 'mdi:tune-variant', true]);
+  if (typeof HGApps !== 'undefined') V.push(['uygulamalar', hgT('suite.apps'), 'mdi:apps', true]);
   const VX = (wiz && wiz.vx) || {}; for (const v of V) { const o = VX[v[0]]; if (o && /^mdi:[a-z0-9-]+$/.test(o.i || '')) v[2] = o.i; } window.hgViewNames = Object.fromEntries(V.map((v) => [v[0], v[1]]));
   const nav = (v) => ({ icon: v[2], label: v[1], ...(VX[v[0]] && VX[v[0]].sl ? { short: VX[v[0]].sl } : {}), action: { navigate: HG_P(v[0]) }, match: v[0] === 'rooms' ? [HG_P('rooms'), HG_P('pokoj')] : HG_P(v[0]) });
   /* licznik na zakładce: wiz.vx[widok].badge = { m: 'on' | 'active', d: domena } albo { m, e: [encje] } -> badge.count_on / count_active (tylko > 0) */
@@ -178,6 +179,7 @@ const hint = (k) => ({ type: 'custom:hg-hint-card', hint: k });
   const view = (path, title, card, sub) => ({ title, path, type: 'panel', ...(sub ? { subview: true } : {}), cards: [card] });
   views.push(view('dashboard', hgT('nav.panel'), base('dashboard', hgT('nav.hello', { name: '{name}' }), hgT('nav.hello_sub'), dash, scroll, { tablet_home: opt.tablet_home !== false, ...(weather ? { weather } : {}), ...(wiz && Array.isArray(wiz.fuel) && wiz.fuel.length ? { fuel: wiz.fuel.filter((f) => f && f.entity) } : {}) })));
   if (typeof HGPersonal !== 'undefined') views.push(view('kontrol', hgT('controlx.title'), base('kontrol', hgT('controlx.title'), hgT('controlx.description'), [{ type: 'custom:hg-control-card', area: 'controls', min_h: 300 }], one('controls'))));
+  if (typeof HGApps !== 'undefined') views.push(view('uygulamalar', hgT('suite.apps'), base('uygulamalar', hgT('suite.apps'), hgT('suite.apps_help'), [{ type: 'custom:hg-apps-card', area: 'apps', min_h: 260 }], one('apps'))));
   if (V.some((v) => v[0] === 'rooms')) {
     views.push(view('rooms', hgT('nav.rooms'), base('rooms', hgT('nav.rooms'), hgT('nav.rooms_sub'), [{ type: 'custom:hg-areas-card', area: 'grid', min_h: 200, room_path: HG_P('pokoj'), areas: areasCfg }], one('grid'))));
     views.push(view('pokoj', hgT('nav.room'), base('pokoj', hgT('nav.room'), '', [{ type: 'custom:hg-room-card', area: 'room', min_h: 200, areas: areasCfg }], one('room'), { room_back: HG_P('rooms'), room_head: true }), true));
@@ -199,7 +201,7 @@ const hint = (k) => ({ type: 'custom:hg-hint-card', hint: k });
   for (const v of views) { const o = VX[v.path], pg = v.cards && v.cards[0], P = pg && pg.panel; if (!o || !P || P.areas) continue;
     if (+o.cd) P.columns = rp(+o.cd); if (+o.ct) P.tablet = Object.assign({}, P.tablet, { columns: rp(+o.ct) }); }
   if (wiz && (wiz.hubPos === 'right' || wiz.hubPos === 'left')) for (const v of views) { const pg = v.cards && v.cards[0]; if (pg && pg.hub) pg.hub = Object.assign({}, pg.hub, { pos: wiz.hubPos }); }
-  return { title: brand, views, _hgWizard: !wiz, ...(opt.kiosk_mode ? { kiosk_mode: opt.kiosk_mode } : {}) };
+  return { title: brand, views, _hgWizard: !wiz, kiosk_mode: { hide_header: true, hide_sidebar: true, ...(opt.kiosk_mode || {}) } };
 }
 
 /* --- puste stany: zamiast pustego szkła podpowiedź, co dodać (integracja, krótki opis, przyciski) --- */

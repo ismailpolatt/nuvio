@@ -270,7 +270,7 @@ class HGBase extends HTMLElement {
     const hr = this._hass, rk = this._regK; if (!rk || rk[0] !== hr.entities || rk[1] !== hr.devices || rk[2] !== hr.areas) { this._regK = [hr.entities, hr.devices, hr.areas]; if (rk) { this._entsC = null; this._prevStates = null; } }
     const ents = this._entsC || (this._entsC = this.ents());
     const st = this._hass.states, prev = this._prevStates;
-    const ex = JSON.stringify(this._extraSig ? this._extraSig() : '');
+    const ex = JSON.stringify([this._extraSig ? this._extraSig() : '', window.HGDataQuality ? Math.floor(Date.now() / 60000) : 0]);
     let ch = !prev || ex !== this._prevEx;
     if (!ch) for (let i = 0; i < ents.length; i++) if (st[ents[i]] !== prev[i]) { ch = true; break; }
     if (ch) { this._prevStates = ents.map((e) => st[e]); this._prevEx = ex; }
@@ -308,6 +308,7 @@ class HGBase extends HTMLElement {
     let html;
     /* błąd renderu: karta pokazuje komunikat zamiast rzucać wyjątek w pętli przekazującej hass (to zatrzymywało inne karty) */
     try { html = this.render(); } catch (e) { if (!this._rErr) { this._rErr = 1; console.warn('Nuvio: render failed', this.localName, e); } html = `<ha-card class="glass" style="padding:12px;opacity:.7">${hgT('core.card_error')}</ha-card>`; }
+    if (window.HGDataQuality) { try { html = HGDataQuality.decorate(this, html); } catch (e) { /* keep the card usable if quality metadata is missing */ } }
     if (html === this._html) return;      // treść bez zmian (np. zmienił się tylko atrybut GPS) -> zero pracy DOM
     const first = this._html == null; this._html = html;
     /* na żywo: łatanie istniejących węzłów (ui/morph). Węzły przeżywają aktualizację, więc afterRender musi być idempotentne:

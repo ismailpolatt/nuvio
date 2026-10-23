@@ -2,7 +2,7 @@
 
 Bu depo, [orijinal Nuvio](https://github.com/kczepiec/nuvio) üzerine Türkçe ve kişisel kullanım geliştirmelerini ekler. Kurulum kaynağı **ismailpolatt/nuvio**, ana dal **main** olmalıdır. İlk birleşim: upstream v2.22.3.
 
-Fork sürümleri `X.Y.Z` biçimindedir. Güncel fork sürümü **2.22.5**, orijinal tabanı **2.22.3**’tür. GitHub etiketi `v2.22.5`, paket ve ekranda `2.22.5` kullanılır. Önceden yayımlanan etiketin içeriği değiştirilmez; düzeltmede yama numarası artırılır. Önbellek için kullanılan dahili derleme özeti kullanıcıya sürüm numarası olarak gösterilmez. Gelecek aday birleştirilirken paket sürümü mevcut fork sürümünden ileri olmalı; daha düşük upstream sürümüne geçilmez.
+Fork sürümleri `X.Y.Z` biçimindedir. Güncel fork sürümü **2.23.0**, orijinal tabanı **2.22.3**’tür. GitHub etiketi `v2.23.0`, paket ve ekranda `2.23.0` kullanılır. Önceden yayımlanan etiketin içeriği değiştirilmez; düzeltmede yama numarası artırılır. Önbellek için kullanılan dahili derleme özeti kullanıcıya sürüm numarası olarak gösterilmez. Gelecek aday birleştirilirken paket sürümü mevcut fork sürümünden ileri olmalı; daha düşük upstream sürümüne geçilmez.
 
 ## HACS geçişi
 
@@ -26,4 +26,4 @@ Hiçbir otomatik birleşim bütün gelecek değişikliklerin sorunsuz olacağın
 
 ## Veri ve yedekleme
 
-HACS JavaScript/asset dosyalarını kurar. Ortak düzen, kişisel kullanıcı verileri ve tarayıcıdaki tablet profili ayrı tutulur. Dosya güncellemesi bunları normalde silmez; uyumsuz kod ise veriler dururken özellikleri gösteremeyebilir. Bu nedenle güncellemeden önce Home Assistant yedeği ve Nuvio düzen dışa aktarımı alınmalıdır. Düzen dışa aktarımı tek başına özel kişisel kontrol/journal alanlarını ve tarayıcıdaki tablet profilini kapsamaz; bunlar ayrıca korunmalıdır. Depoya token, parola, kişisel kullanıcı verisi veya canlı Home Assistant yedeği yüklenmez.
+HACS JavaScript/asset dosyalarını kurar. Ortak düzen, kişisel kullanıcı verileri ve tarayıcıdaki tablet profili ayrı tutulur. Dosya güncellemesi bunları normalde silmez; uyumsuz kod ise veriler dururken özellikleri gösteremeyebilir. Güncellemeden önce Home Assistant yedeği ve **Kontrol → Tam Nuvio yedeği** alınmalıdır. Bu yeni yedek kişisel kontrol/journal alanlarını ve mevcut tarayıcının tablet profilini de kapsar. Eski Ayarlar → Yedekleme düzen dışa aktarımı yalnız önceki kapsamını korur. Görsel dosyalarının kendisi ve HA sistem verileri tam Nuvio JSON'una dahil değildir. Ayrıntılar: [Panel araçları](panel-suite-tr.md). Depoya token, parola, kişisel kullanıcı verisi veya canlı Home Assistant yedeği yüklenmez.

@@ -124,6 +124,7 @@ class HGControlCard extends HGBase {
   }
   async onAct(a, b) {
     if (this._running || this._saving) return;
+    if (a.startsWith('suite-') && window.HGSuite) return HGSuite.act(this, a, b);
     if (a.startsWith('experience-') && window.HGExperience) return HGExperience.act(this, a, b);
     if (a.startsWith('living-') && window.HGLiving) return HGLiving.act(this, a, b);
     const R = this.shadowRoot, h = this._hass, checked = (n) => [...R.querySelectorAll(`[name=${n}]:checked`)].map((x) => x.value);
