@@ -753,8 +753,8 @@ class HGPage extends HTMLElement {
       const use = (tag) => { U.v = tag && cmp(tag, run) > 0 ? String(tag).replace(/^v/, '') : null; done(); };
       if (c && Date.now() - c.ts < 6 * 3600e3) use(c.tag);
       else fetch('https://api.github.com/repos/kczepiec/nuvio/releases/latest', { headers: { Accept: 'application/vnd.github+json' } }).then((r) => (r.ok ? r.json() : null)).then((j) => { const tag = j && j.tag_name; try { localStorage.setItem('nuvio:upd', JSON.stringify({ ts: Date.now(), tag })); } catch (e) { /* tryb prywatny */ } use(tag); }).catch(() => {}); }
-    if (typeof HG_ASSET === 'string' && !String(HG_BUILD).startsWith('__')) fetch(HG_ASSET + 'nuvio.js?nocache=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((t) => {
-      const m = new RegExp('HG_BUILD = ' + "'" + "([^']+)'").exec(t || ''); U.stale = m && m[1] !== HG_BUILD ? m[1].split('+')[0] : null; done(); }).catch(() => {});
+    U.stale=null;
+    if (typeof HG_ASSET === 'string' && !String(HG_BUILD).startsWith('__')) HGVersion.server().then((build) => { U.stale=HGVersion.reload(build); done(); }).catch(() => {});
     done(); }
   _vEmpty() { clearTimeout(this._veT); this._veT = setTimeout(() => { const P = this._panelEl; if (!P || !P.isConnected) return;
     const vis = [...P.children].some((c) => c.classList.contains('cw') && c.dataset.hgk && !c.hidden && c.style.display !== 'none' && getComputedStyle(c).display !== 'none');

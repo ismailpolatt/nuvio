@@ -11,6 +11,7 @@ CORE = ['hg-i18n.part.js', 'hg-select.part.js', 'hg-oss.part.js', 'hg-core.part.
 UI = ['ui/ui.part.js', 'ui/morph.part.js', 'ui/icon-button.part.js', 'ui/pill.part.js', 'ui/switch.part.js', 'ui/card-header.part.js', 'ui/big-value.part.js',
       'ui/progress.part.js', 'ui/arc.part.js', 'ui/sparkline.part.js', 'ui/avatar-stack.part.js','ui/toast.part.js','ui/overlay.part.js','ui/history.part.js','ui/form.part.js','ui/color.part.js']
 SHARED = [
+    'shared/version-check.part.js',
     'shared/card-utils.part.js',
     'shared/climate-modes.part.js',
     'shared/stats.part.js',

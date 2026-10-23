@@ -1273,8 +1273,8 @@ const HG_EDIT = {
     if (window.HGLiving && HGLiving.tabletLocked(this)) { this._eToast(hgT('living.locked_help')); return; }
     /* paczka z pamięci przeglądarki starsza niż na serwerze: raz na sesję komunikat z prośbą o odświeżenie */
     if (!window.__hgVerChk && typeof HG_ASSET === 'string' && typeof HG_BUILD === 'string' && !HG_BUILD.startsWith('__')) { window.__hgVerChk = 1;
-      fetch(HG_ASSET + 'nuvio.js?nocache=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((t) => { const m = new RegExp('HG_BUILD = ' + "'" + "([^']+)'").exec(t || '');
-        if (m && m[1] !== HG_BUILD) this._eToast(hgT('edit.version_mismatch', { version: HG_BUILD.split('+')[0], server: m[1].split('+')[0] })); }).catch(() => {}); }
+      HGVersion.server().then((build) => {
+        if (HGVersion.reload(build)) this._eToast(hgT('edit.version_mismatch', { version: HG_BUILD.split('+')[0], server: build.split('+')[0] })); }).catch(() => {}); }
     if (this._editing || !this._canEdit()) return;
     if (window.HGDashboard) { HGDashboard.draft = null; HGDashboard.energyDraft = null; }
     this._editing = true; HGL.editing = true; this._eSnap = JSON.stringify(HGL.data);
