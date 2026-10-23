@@ -3661,7 +3661,7 @@
   },
   "suite": {
     "apps": "Applications",
-    "apps_help": "Open your home systems here. Applications open in a new tab, keeping this dashboard available.",
+    "apps_help": "Les applications s’ouvrent dans ce tableau de bord. Utilisez les onglets pour changer d’application ou Fermer pour revenir.",
     "app_hacs": "Custom cards, themes and integrations.",
     "app_music": "Music library, players and queues.",
     "app_zigbee": "Zigbee devices and network management.",

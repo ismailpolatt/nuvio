@@ -4,14 +4,15 @@ import {readFileSync} from 'node:fs';
 import {loadParts} from './harness.mjs';
 
 function setup(){
- const store=new Map(),writes=[],values=new Map(),configs=new Map(),window={addEventListener(){},dispatchEvent(){}},navigator={onLine:true};
+ const store=new Map(),writes=[],values=new Map(),configs=new Map(),dialogs=[],frames=[],window={addEventListener(){},dispatchEvent(){},open(){throw Error('Must not open a new window');}},navigator={onLine:true};
+ const document={createElement(tag){assert.equal(tag,'dialog');const srcs=[],frame={set src(v){srcs.push(v);},srcs},title={textContent:''};frames.push(frame);const d={open:false,attributes:{},setAttribute(k,v){this.attributes[k]=v;},querySelector:q=>q==='iframe'?frame:title,querySelectorAll:()=>[],showModal(){this.open=true;},close(){this.open=false;},remove(){this.removed=true;}};dialogs.push(d);return d;}};
  const localStorage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)};
  const H={ok:s=>!!s&&!['unknown','unavailable'].includes(s.state),esc:s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;'),name:(h,e)=>h.states[e]?.attributes?.friendly_name||e,icon:s=>s,fmt:(v,n)=>Number(v).toFixed(n),stateLabel:s=>s};
  const HGL={KEY:'nuvio_layout',data:{s:{}},editing:false,notify(){},sort:(xs)=>xs};
  const HGShared={URL:'nuvio-shared',put:(h,config)=>h.callWS({type:'lovelace/config/save',url_path:'nuvio-shared',config})};
  const HGLang={KEY:'nuvio:lang',ok:x=>['tr','en'].includes(x)};
- const globals={window,navigator,localStorage,H,HGL,HGShared,HGLang,HGBase:class{},HGDashboard:{catalog:()=>[]},HGAreas:{model:()=>({list:[]})},location:{pathname:'/dashboard-test/kontrol'},hgReg(){},hgTO:(o,m)=>Object.assign(o,m),hgTLazy:x=>x,hgT:(k,o)=>k+(o?JSON.stringify(o):''),HG_LOC:()=> 'en-GB',HG_BUILD:'2.23.0+test',CustomEvent:class{}};
- const x=loadParts(['shared/stats.part.js','hg-controlx.part.js','hg-livingx.part.js','hg-journal.part.js','hg-budget.part.js','hg-experience.part.js','hg-tablet-profile.part.js','hg-connection-status.part.js','hg-backup.part.js','cards/openings-card.part.js','hg-suite.part.js'],{...globals,hgHead:(ic,title,sub)=>title+' '+sub,hgAgo14:()=>'',hgMore(){}},['HGPersonal','HGJournal','HGTablet','HGFullBackup','HGDataQuality','HGApps','HGSuite','HGOpeningsCard']);
+ const globals={window,navigator,document,localStorage,H,HGL,HGShared,HGLang,HGBase:class{disconnectedCallback(){}},HGDashboard:{catalog:()=>[]},HGAreas:{model:()=>({list:[]})},location:{pathname:'/dashboard-test/kontrol'},hgReg(){},hgTO:(o,m)=>Object.assign(o,m),hgTLazy:x=>x,hgT:(k,o)=>k+(o?JSON.stringify(o):''),HG_LOC:()=> 'en-GB',HG_BUILD:'2.23.1+test',CustomEvent:class{}};
+ const x=loadParts(['shared/stats.part.js','hg-controlx.part.js','hg-livingx.part.js','hg-journal.part.js','hg-budget.part.js','hg-experience.part.js','hg-tablet-profile.part.js','hg-connection-status.part.js','hg-backup.part.js','cards/openings-card.part.js','hg-suite.part.js'],{...globals,hgHead:(ic,title,sub)=>title+' '+sub,hgAgo14:()=>'',hgMore(){}},['HGPersonal','HGJournal','HGTablet','HGFullBackup','HGDataQuality','HGApps','HGAppsCard','HGSuite','HGOpeningsCard']);
  const h={user:{id:'one',is_admin:true},states:{},entities:{},panels:{},callService(){throw Error('No device services allowed');},async callWS(q){
    if(q.type==='frontend/get_user_data')return {value:values.get(q.key)??null};
    if(q.type==='lovelace/config')return structuredClone(configs.get(q.url_path));
@@ -24,7 +25,7 @@ function setup(){
  configs.set('dashboard-test',{strategy:{type:'custom:nuvio'}});
  configs.set('nuvio-shared',{nuvio_shared:1,own:['one'],data:{s:{},wiz:{hiddenPersons:['person.hidden']}},views:[]});
  const card={_hass:h,rerender(){},shadowRoot:{querySelector:()=>null}};
- return {...x,h,card,values,configs,writes,store,navigator};
+ return {...x,h,card,values,configs,writes,store,navigator,dialogs,frames};
 }
 const stamp=(age=0)=>new Date(Date.now()-age).toISOString();
 
@@ -36,7 +37,7 @@ test('data distinguishes unavailable, missing, future and old timestamps; unchan
 });
 test('application links use registered safe panels and respect panel and user admin permissions',()=>{
  const {HGApps:a,h}=setup();h.panels={hacs:{title:'HACS',require_admin:true},d5369777_music_assistant:{title:'Music Assistant'},'45df7312_zigbee2mqtt':{title:'Zigbee2MQTT',require_admin:true},blueprint_studio:{title:'Blueprint Studio',require_admin:true},'javascript:bad':{title:'Music Assistant'}};
- assert.deepEqual(a.list(h).map(x=>x.path),['/hacs','/d5369777_music_assistant','/45df7312_zigbee2mqtt','/blueprint_studio']);assert.match(a.html(h),/rel="noopener noreferrer"/);
+ assert.deepEqual(a.list(h).map(x=>x.path),['/hacs','/d5369777_music_assistant','/45df7312_zigbee2mqtt','/blueprint_studio']);assert.match(a.html(h),/data-act="app-open"/);assert.doesNotMatch(a.html(h),/target=|href=/);
  h.user.is_admin=false;assert.deepEqual(a.list(h).map(x=>x.id),['music']);h.panels={};assert.equal(a.list(h)[0].path,null);
 });
 test('complete backup round trips all fork preferences, shared layout and local profiles but never arbitrary storage',async()=>{
@@ -92,4 +93,24 @@ test('failure saving dashboard rolls back account, shared and local profile chan
 test('failed source read blocks backup rather than creating an incomplete snapshot',async()=>{
  const {HGFullBackup:b,card,h,writes}=setup(),old=h.callWS;h.callWS=q=>q.type==='frontend/get_user_data'?Promise.reject(Error('Read failed')):old(q);
  await assert.rejects(b.snapshot(card),/Read failed/);assert.equal(writes.length,0);
+});
+test('application opens in an owned dialog without navigation and state updates do not reload its frame',()=>{
+ const {HGAppsCard:C,h,dialogs,frames}=setup(),c=new C();c._hass=h;c.shadowRoot={appendChild(){}};h.panels={music_assistant:{title:'Music Assistant'},hacs:{title:'HACS',require_admin:true}};
+ let focused=0;const opener={dataset:{app:'music'},isConnected:true,focus(){focused++;}};
+ c.onAct('app-open',opener);assert.equal(dialogs.length,1);assert.equal(dialogs[0].open,true);assert.deepEqual(frames[0].srcs,['/music_assistant']);
+ c.render();c._hass={...h,states:{'sensor.new':{state:'1'}}};c.render();c.onAct('app-open',opener);assert.equal(dialogs.length,1);assert.deepEqual(frames[0].srcs,['/music_assistant']);
+ c.onAct('app-open',{dataset:{app:'hacs'}});assert.deepEqual(frames[0].srcs,['/music_assistant','/hacs']);assert.equal(dialogs.length,1);
+ c.onAct('app-close',{});assert.equal(dialogs[0].removed,true);assert.equal(c._appDialog,null);assert.equal(focused,1);
+});
+test('application permission loss, account change and disconnect close embedded sessions',()=>{
+ const {HGAppsCard:C,h,dialogs}=setup(),c=new C();c._hass=h;c.shadowRoot={appendChild(){}};h.panels={hacs:{title:'HACS',require_admin:true}};
+ c.onAct('app-open',{dataset:{app:'hacs'}});h.user={id:'two',is_admin:false};c.render();assert.equal(dialogs[0].removed,true);
+ c.onAct('app-open',{dataset:{app:'hacs'}});assert.equal(dialogs.length,1);
+ h.user={id:'one',is_admin:true};c.onAct('app-open',{dataset:{app:'hacs'}});delete h.panels.hacs;c.render();assert.equal(dialogs[1].removed,true);
+ h.panels.hacs={title:'HACS'};c.onAct('app-open',{dataset:{app:'hacs'}});c.disconnectedCallback();assert.equal(dialogs[2].removed,true);
+});
+test('dialog cancellation returns to the dashboard and unknown application IDs do nothing',()=>{
+ const {HGAppsCard:C,h,dialogs}=setup(),c=new C();c._hass=h;c.shadowRoot={appendChild(){}};h.panels={music_assistant:{title:'Music Assistant'}};
+ c.onAct('app-open',{dataset:{app:'javascript:bad'}});assert.equal(dialogs.length,0);
+ c.onAct('app-open',{dataset:{app:'music'}});let prevented=false;dialogs[0].oncancel({preventDefault(){prevented=true;}});assert.equal(prevented,true);assert.equal(dialogs[0].removed,true);
 });

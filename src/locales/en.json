@@ -3606,7 +3606,7 @@
   },
   "suite": {
     "apps": "Applications",
-    "apps_help": "Open your home systems here. Applications open in a new tab, keeping this dashboard available.",
+    "apps_help": "Applications open inside this dashboard. Switch using the tabs above, or Close to return to your dashboard.",
     "app_hacs": "Custom cards, themes and integrations.",
     "app_music": "Music library, players and queues.",
     "app_zigbee": "Zigbee devices and network management.",

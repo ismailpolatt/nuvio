@@ -3606,7 +3606,7 @@
   },
   "suite": {
     "apps": "Uygulamalar",
-    "apps_help": "Ev sistemlerine buradan ulaşın. Uygulamalar yeni sekmede açılır; paneliniz burada kalır.",
+    "apps_help": "Uygulamalar panel içinde açılır. Üstteki sekmelerden geçiş yapabilir, Kapat ile panelinize dönebilirsiniz.",
     "app_hacs": "Özel kartlar, temalar ve entegrasyonlar.",
     "app_music": "Müzik arşivi, oynatıcılar ve kuyruklar.",
     "app_zigbee": "Zigbee cihazları ve ağ yönetimi.",

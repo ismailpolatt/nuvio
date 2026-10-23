@@ -6,7 +6,7 @@ Nuvio stratejisi bütün sayfalarda aynı üst menüyü üretir. Kiosk Mode kuru
 
 ## Uygulamalar
 
-Üst menüde **Uygulamalar**: HACS, Music Assistant, Zigbee2MQTT ve Blueprint Studio. Bağlantılar Home Assistant'ın kayıtlı panel listesinden bulunur; kurulum adı veya IP sabit değildir. Kayıtlı olması servisin sağlıklı çalıştığı anlamına gelmez. Yönetici panelleri normal hesapta gösterilmez; HA'nın kendi yetkileri geçerlidir. Uygulama yeni sekmede açılır.
+Üst menüde **Uygulamalar**: HACS, Music Assistant, Zigbee2MQTT ve Blueprint Studio. Bağlantılar Home Assistant'ın kayıtlı panel listesinden bulunur; kurulum adı veya IP sabit değildir. Kayıtlı olması servisin sağlıklı çalıştığı anlamına gelmez. Yönetici panelleri normal hesapta gösterilmez; HA'nın kendi yetkileri geçerlidir. Uygulama, panelin adresini veya ana sayfasını değiştirmeyen tam ekran bir pencere içinde açılır. Üstteki uygulama sekmeleri arasında geçiş yapılabilir; Kapat düğmesi aynı panele döndürür. Aynı uygulama tekrar seçildiğinde veya HA durumları güncellendiğinde çerçeve yeniden oluşturulmaz. İçerik aynı Home Assistant sunucusundaki kayıtlı panelden yüklenir; HA oturumu ve yetkileri geçerlidir.
 
 ## Veri durumu
 
